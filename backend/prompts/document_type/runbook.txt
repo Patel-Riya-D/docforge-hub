@@ -1,0 +1,207 @@
+doc_type: runbook
+
+purpose: "Operational guide for handling specific technical scenarios, incidents, or routine operations"
+
+structure: |
+  # [RUNBOOK TITLE]
+  
+  ## Runbook Information
+  - Runbook ID: [RB-XXX]
+  - Version: [X.X]
+  - Last Updated: [YYYY-MM-DD]
+  - Owner: [Team/Role]
+  - On-Call Contact: [Contact info/rotation]
+  - Severity Level: [P0/P1/P2/P3]
+  
+  ## 1. Overview
+  
+  ### 1.1 Purpose
+  [What scenario this runbook covers]
+  
+  ### 1.2 When to Use This Runbook
+  [Specific symptoms, alerts, or situations]
+  
+  ### 1.3 Severity & Urgency
+  - **Severity:** [Critical/High/Medium/Low]
+  - **User Impact:** [Description of impact]
+  - **SLA:** [Response/resolution time requirement]
+  
+  ## 2. Symptoms & Detection
+  
+  ### 2.1 How to Identify This Issue
+  - Symptom 1
+  - Symptom 2
+  - Symptom 3
+  
+  ### 2.2 Monitoring Alerts
+  - Alert name: [Alert details]
+  - Dashboard: [Link to monitoring dashboard]
+  - Threshold: [What triggers the alert]
+  
+  ### 2.3 Customer Reports
+  [Common ways customers report this issue]
+  
+  ## 3. Impact Assessment
+  
+  ### 3.1 Affected Systems
+  - System/Service 1
+  - System/Service 2
+  
+  ### 3.2 User Impact
+  [What users experience]
+  
+  ### 3.3 Business Impact
+  [Revenue, SLA, reputation impact]
+  
+  ## 4. Immediate Actions (First 5 Minutes)
+  
+  **STOP! Before proceeding:**
+  - [ ] Acknowledge the incident in [system]
+  - [ ] Join incident Slack channel: #incident-[ID]
+  - [ ] Notify on-call manager if P0/P1
+  
+  ### 4.1 Triage Steps
+  
+  1. **Verify the issue is occurring**
+```bash
+     # Check system health
+     kubectl get pods -n production
+     curl https://api.example.com/health
+```
+     Expected: [What you should see]
+     
+  2. **Assess severity**
+     - If [condition]: Escalate to P0
+     - If [condition]: Treat as P1
+  
+  3. **Contain if possible**
+```bash
+     # Emergency mitigation command
+     [command with explanation]
+```
+  
+  ## 5. Diagnosis
+  
+  ### 5.1 Data to Collect
+  - Logs: [Where to find them, what to look for]
+  - Metrics: [Which dashboards, what patterns]
+  - Recent changes: [Check deployment log]
+  
+  ### 5.2 Diagnostic Procedure
+  
+  **Step 1: Check [System A]**
+```bash
+  # Command to run
+  aws cloudwatch get-metric-statistics ...
+```
+  Look for: [What indicates the problem]
+  
+  **Step 2: Verify [System B]**
+```bash
+  # Command
+```
+  Expected result: [Normal state]
+  Abnormal: [What indicates an issue]
+  
+  ### 5.3 Common Root Causes
+  
+  | Symptom | Likely Cause | Verification |
+  |---------|--------------|--------------|
+  | [Symptom] | [Cause] | [How to confirm] |
+  
+  ## 6. Resolution Steps
+  
+  ### 6.1 Fix Procedure
+  
+  **Solution 1: [Most Common Fix]**
+  
+  Prerequisites:
+  - [ ] Access to [system]
+  - [ ] Approval from [role] if production
+  
+  Steps:
+  1. Step 1
+```bash
+     # Exact command
+```
+     Verify: [How to confirm it worked]
+  
+  2. Step 2
+```bash
+     # Command
+```
+     Verify: [Confirmation]
+  
+  **Solution 2: [Alternative Fix]**
+  [Same structure as Solution 1]
+  
+  ### 6.2 Rollback Procedure
+  [How to undo changes if fix doesn't work]
+  
+  ## 7. Verification
+  
+  ### 7.1 Health Checks
+  - [ ] Service responding: `curl https://api.example.com/health`
+  - [ ] Metrics back to normal: [Dashboard link]
+  - [ ] No error logs: `kubectl logs -n production pod-name`
+  - [ ] Customer reports stopped
+  
+  ### 7.2 Monitoring Period
+  Monitor for [X hours] to ensure stability
+  
+  ## 8. Escalation
+  
+  ### 8.1 When to Escalate
+  - If not resolved in [X minutes]
+  - If impact increases
+  - If root cause unclear after [X attempts]
+  
+  ### 8.2 Escalation Path
+  
+  1. **L1:** On-call engineer (you)
+  2. **L2:** [Team lead name/contact]
+  3. **L3:** [Senior engineer/contact]
+  4. **L4:** [Director/VP contact]
+  
+  ### 8.3 Emergency Contacts
+  
+  | Role | Name | Phone | Slack |
+  |------|------|-------|-------|
+  | On-call Eng | [Rotation] | [PagerDuty] | @oncall |
+  | Engineering Lead | [Name] | [Phone] | @lead |
+  | CTO | [Name] | [Phone] | @cto |
+  
+  ## 9. Post-Resolution
+  
+  ### 9.1 Immediate Actions
+  - [ ] Update incident ticket with resolution
+  - [ ] Notify stakeholders of resolution
+  - [ ] Update status page
+  - [ ] Confirm monitoring alerts cleared
+  
+  ### 9.2 Follow-up Tasks
+  - [ ] Schedule postmortem within 24 hours (for P0/P1)
+  - [ ] Document lessons learned
+  - [ ] Create tasks for preventive measures
+  - [ ] Update this runbook if needed
+  
+  ## 10. Related Resources
+  - Architecture diagram: [link]
+  - Monitoring dashboard: [link]
+  - Related runbooks: [links]
+  - System documentation: [link]
+  
+  ## 11. Revision History
+  
+  | Version | Date | Changes | Author |
+  |---------|------|---------|--------|
+  | 1.0 | [Date] | Initial creation | [Name] |
+
+quality_requirements:
+  - Severity/impact clearly defined
+  - Immediate actions (first 5 min) explicit
+  - All commands tested and include expected output
+  - Escalation path with contacts
+  - Verification steps included
+  - Links to dashboards/tools
+  - Assumes on-call pressure (clear, concise)

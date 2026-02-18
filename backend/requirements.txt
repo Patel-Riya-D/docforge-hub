@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+gunicorn
+sqlalchemy
+psycopg2-binary
+python-dotenv
+pydantic
+alembic
+openai
+azure-ai-openai
+python-docx
+reportlab
+openpyxl

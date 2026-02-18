@@ -1,0 +1,79 @@
+doc_type: HANDBOOK
+
+purpose: "Comprehensive reference guide covering policies, procedures, and guidelines for a specific domain"
+
+structure: |
+  # [HANDBOOK TITLE]
+  
+  ## Document Control
+  - Version: [X.X]
+  - Effective Date: [YYYY-MM-DD]
+  - Owner: [Department/Role]
+  - Last Reviewed: [YYYY-MM-DD]
+  - Next Review: [YYYY-MM-DD]
+  
+  ## Table of Contents
+  [Auto-generated list of all sections]
+  
+  ## Introduction
+  
+  ### Purpose
+  [Why this handbook exists]
+  
+  ### Scope
+  [Who this applies to, what it covers]
+  
+  ### How to Use This Handbook
+  [Navigation guidance, when to reference, etc.]
+  
+  ## Part 1: [Major Section - e.g., Policies]
+  
+  ### Chapter 1.1: [Topic]
+  
+  #### Overview
+  [Introduction to the topic]
+  
+  #### Policy Statement
+  [Clear policy or guideline]
+  
+  #### Procedures
+  [How to comply with policy]
+  
+  #### Examples
+  [Concrete scenarios]
+  
+  #### Frequently Asked Questions
+  [Common questions and answers]
+  
+  #### Related Policies/Resources
+  [Links to related content]
+  
+  [Repeat structure for all chapters]
+  
+  ## Appendices
+  
+  ### Appendix A: [Supporting Information]
+  [Forms, templates, additional resources]
+  
+  ## Glossary
+  [Definitions of key terms]
+  
+  ## Index
+  [Alphabetical index for easy reference]
+  
+  ## Acknowledgments
+  [Contributors, reviewers, sources]
+  
+  ## Revision History
+  | Version | Date | Major Changes | Author |
+  |---------|------|---------------|--------|
+
+quality_requirements:
+  - Comprehensive table of contents
+  - Consistent chapter structure
+  - Cross-references between sections
+  - Glossary of terms
+  - Examples and FAQs included
+  - Minimum 5,000 words
+  - Clear navigation aids
+  - Regular review schedule defined

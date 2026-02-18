@@ -1,0 +1,199 @@
+doc_type: report
+
+purpose: "Analytical document presenting findings, data, and insights on a specific topic or period"
+
+structure: |
+  # [REPORT TITLE]
+  [e.g., "Q4 2025 Customer Success Report"]
+  
+  ## Report Information
+  - Report Type: [Quarterly/Annual/Ad-hoc/Incident/etc.]
+  - Reporting Period: [Date range]
+  - Date Prepared: [YYYY-MM-DD]
+  - Prepared by: [Name, Role]
+  - Distribution: [Who receives this report]
+  
+  ## Executive Summary
+  
+  ### Key Findings
+  1. [Finding 1]
+  2. [Finding 2]
+  3. [Finding 3]
+  
+  ### Key Metrics
+  - [Metric 1]: [Value] ([% change vs last period])
+  - [Metric 2]: [Value] ([% change vs last period])
+  
+  ### Recommendations
+  1. [Recommendation 1]
+  2. [Recommendation 2]
+  
+  ## 1. Introduction
+  
+  ### 1.1 Purpose
+  [Why this report exists, what questions it answers]
+  
+  ### 1.2 Scope
+  [What's covered, what's not, time period]
+  
+  ### 1.3 Methodology
+  [How data was collected and analyzed]
+  
+  ## 2. Performance Overview
+  
+  ### 2.1 Summary Dashboard
+  
+  | Metric | This Period | Last Period | YoY | Target | Status |
+  |--------|-------------|-------------|-----|--------|--------|
+  | [Metric 1] | [Value] | [Value] | [%] | [Goal] | 🟢/🟡/🔴 |
+  | [Metric 2] | [Value] | [Value] | [%] | [Goal] | 🟢/🟡/🔴 |
+  
+  ### 2.2 Trend Analysis
+  [Charts showing trends over time]
+  
+  ### 2.3 Performance vs Targets
+  [How actual performance compares to goals]
+  
+  ## 3. Detailed Findings
+  
+  ### 3.1 [Topic Area 1]
+  
+  **Overview:**
+  [Summary of this area]
+  
+  **Key Data Points:**
+  - Data point 1: [Value and interpretation]
+  - Data point 2: [Value and interpretation]
+  
+  **Analysis:**
+  [What the data means, patterns observed, insights]
+  
+  **Contributing Factors:**
+  - Factor 1
+  - Factor 2
+  
+  ### 3.2 [Topic Area 2]
+  [Same structure as 3.1]
+  
+  ## 4. Segment Analysis
+  
+  [Break down by relevant segments]
+  
+  ### 4.1 By [Segment Type 1 - e.g., Customer Size]
+  
+  | Segment | Metric A | Metric B | Trend |
+  |---------|----------|----------|-------|
+  | Enterprise | [Value] | [Value] | ↑/↓/→ |
+  | Mid-Market | [Value] | [Value] | ↑/↓/→ |
+  | SMB | [Value] | [Value] | ↑/↓/→ |
+  
+  **Insights:** [What this tells us]
+  
+  ### 4.2 By [Segment Type 2 - e.g., Geography]
+  [Same structure]
+  
+  ## 5. Highlights & Achievements
+  
+  ### 5.1 Successes
+  - Achievement 1: [Description and impact]
+  - Achievement 2: [Description and impact]
+  
+  ### 5.2 Milestones Reached
+  - Milestone 1
+  - Milestone 2
+  
+  ## 6. Challenges & Issues
+  
+  ### 6.1 Key Challenges
+  
+  **Challenge 1: [Title]**
+  - Description: [What happened]
+  - Impact: [Effect on metrics/business]
+  - Root cause: [Analysis]
+  - Mitigation: [What was done]
+  
+  **Challenge 2: [Title]**
+  [Same structure]
+  
+  ### 6.2 Missed Targets
+  
+  | Target | Goal | Actual | Gap | Reason |
+  |--------|------|--------|-----|--------|
+  | [Target 1] | [Value] | [Value] | [%] | [Explanation] |
+  
+  ## 7. Comparative Analysis
+  
+  ### 7.1 Period-over-Period Comparison
+  [This period vs last period]
+  
+  ### 7.2 Year-over-Year Comparison
+  [This period vs same period last year]
+  
+  ### 7.3 Benchmark Comparison
+  [How we compare to industry benchmarks]
+  
+  ## 8. Insights & Analysis
+  
+  ### 8.1 Key Insights
+  1. Insight 1: [What we learned]
+  2. Insight 2: [What we learned]
+  
+  ### 8.2 Patterns & Trends
+  [Recurring patterns observed]
+  
+  ### 8.3 Correlations
+  [Relationships between metrics]
+  
+  ## 9. Recommendations
+  
+  ### 9.1 Immediate Actions
+  1. **Recommendation 1**
+     - Action: [What to do]
+     - Owner: [Who]
+     - Timeline: [When]
+     - Expected Impact: [What will improve]
+  
+  2. **Recommendation 2**
+     [Same structure]
+  
+  ### 9.2 Strategic Recommendations
+  [Longer-term suggestions]
+  
+  ## 10. Next Period Outlook
+  
+  ### 10.1 Forecasts
+  [Projected performance for next period]
+  
+  ### 10.2 Risks & Opportunities
+  - Risk 1: [Description and mitigation]
+  - Opportunity 1: [How to capture]
+  
+  ### 10.3 Planned Initiatives
+  [What's planned that will impact metrics]
+  
+  ## 11. Appendices
+  
+  ### Appendix A: Detailed Data Tables
+  [Raw data supporting the report]
+  
+  ### Appendix B: Methodology Details
+  [In-depth explanation of calculations]
+  
+  ### Appendix C: Additional Charts
+  [Supporting visualizations]
+  
+  ## 12. Glossary
+  [Definitions of metrics and terms used]
+  
+  ## 13. Contact Information
+  [Who to contact with questions about this report]
+
+quality_requirements:
+  - Executive summary under 1 page
+  - Data visualizations (charts/graphs) included
+  - All metrics defined clearly
+  - Trend analysis (period-over-period)
+  - Recommendations actionable and specific
+  - Sources cited for data
+  - Minimum 2,000 words
+  - Professional formatting for presentation

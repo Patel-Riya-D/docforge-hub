@@ -1,0 +1,204 @@
+doc_type: sop
+
+purpose: "Step-by-step instructions for routine, repeatable processes to ensure consistency"
+
+structure: |
+  # [SOP TITLE]
+  
+  ## Document Control
+  - SOP ID: [SOP-XXX]
+  - Version: [X.X]
+  - Effective Date: [YYYY-MM-DD]
+  - Owner: [Department/Role]
+  - Last Reviewed: [YYYY-MM-DD]
+  - Next Review: [YYYY-MM-DD]
+  - Approved by: [Name, Role, Date]
+  
+  ## 1. Purpose & Objective
+  [Why this SOP exists, what it accomplishes, business value]
+  
+  ## 2. Scope & Applicability
+  
+  ### 2.1 Scope
+  **This SOP covers:**
+  - [Process/activity 1]
+  - [Process/activity 2]
+  
+  **This SOP does NOT cover:**
+  - [Exclusion 1]
+  - [Exclusion 2]
+  
+  ### 2.2 Applicability
+  **Who must follow this SOP:**
+  - [Role/team 1]
+  - [Role/team 2]
+  
+  **When to use this SOP:**
+  - [Triggering event 1]
+  - [Triggering event 2]
+  
+  ## 3. Definitions & Acronyms
+  
+  | Term | Definition |
+  |------|------------|
+  | [Term 1] | [Clear definition] |
+  | [Acronym] | [Full expansion and meaning] |
+  
+  ## 4. Prerequisites
+  
+  ### 4.1 Required Access/Permissions
+  - [ ] Access to [system/tool]
+  - [ ] Permission level: [specific permission]
+  - [ ] VPN connection (if remote)
+  
+  ### 4.2 Required Tools/Software
+  - [Tool 1]: Version [X.X] or higher
+  - [Tool 2]: [Specific configuration]
+  
+  ### 4.3 Required Knowledge/Training
+  - Completion of [training course]
+  - Familiarity with [system/process]
+  
+  ### 4.4 Pre-checks
+  - [ ] Verify [condition 1]
+  - [ ] Confirm [condition 2]
+  - [ ] Check [system status]
+  
+  ## 5. Roles & Responsibilities
+  
+  | Role | Responsibilities |
+  |------|------------------|
+  | [Role 1] | • Responsibility A<br>• Responsibility B |
+  | [Role 2] | • Responsibility C<br>• Responsibility D |
+  | [Approver] | • Final approval<br>• Exception handling |
+  
+  ## 6. Procedure
+  
+  ### 6.1 [Phase/Stage 1 Name]
+  
+  **Step 1: [Action]**
+  
+  [Detailed description of what to do]
+  
+  [For technical SOPs, include commands:]
+```bash
+  # Command with explanation
+  kubectl apply -f deployment.yaml
+```
+  
+  **Expected Result:** [What should happen]
+  
+  **Verification:**
+```bash
+  # How to verify success
+  kubectl rollout status deployment/my-app
+```
+  Expected output: `deployment "my-app" successfully rolled out`
+  
+  **If something goes wrong:**
+  - [Common error 1]: [Solution]
+  - [Common error 2]: [Solution]
+  
+  ---
+  
+  **Step 2: [Action]**
+  
+  [Same structure as Step 1]
+  
+  [Continue for all steps...]
+  
+  ### 6.2 [Phase/Stage 2 Name]
+  
+  [Continue with same step structure]
+  
+  ## 7. Verification & Quality Checks
+  
+  After completing all steps, verify:
+  
+  - [ ] Check 1: [What to verify] - [How to verify]
+  - [ ] Check 2: [What to verify] - [How to verify]
+  - [ ] Check 3: [What to verify] - [How to verify]
+  
+  **Success Criteria:**
+  - Criterion 1
+  - Criterion 2
+  
+  ## 8. Rollback/Reversal Procedure
+  
+  If the procedure needs to be undone:
+  
+  **Step 1:** [Reversal action]
+```bash
+  # Rollback command
+```
+  
+  **Step 2:** [Verification of rollback]
+  
+  ## 9. Troubleshooting
+  
+  ### Common Issues
+  
+  | Issue/Symptom | Possible Cause | Solution | Prevention |
+  |---------------|----------------|----------|------------|
+  | [Symptom] | [Root cause] | [Fix steps] | [How to avoid] |
+  
+  ### When to Escalate
+  - Escalate if [condition 1]
+  - Escalate if [condition 2]
+  
+  ## 10. Escalation Path
+  
+  | Level | Contact | When to Contact |
+  |-------|---------|-----------------|
+  | L1 | [Name/Role] | [Condition] |
+  | L2 | [Name/Role] | [Condition] |
+  | L3 | [Name/Role] | [Condition] |
+  
+  ## 11. Documentation & Record Keeping
+  
+  **What to document:**
+  - [Item 1 to record]
+  - [Item 2 to record]
+  
+  **Where to document:**
+  - [System/location]
+  
+  **Retention period:**
+  - [How long to keep records]
+  
+  ## 12. Compliance & Audit Requirements
+  
+  [If applicable:]
+  - Regulatory requirement: [Citation]
+  - Audit evidence needed: [What auditors look for]
+  - Compliance checkpoint: [Where in process]
+  
+  ## 13. Related Documents
+  - Related SOP: [Link]
+  - Policy: [Link]
+  - Runbook: [Link]
+  - Training materials: [Link]
+  
+  ## 14. Appendices
+  
+  ### Appendix A: [Supporting Information]
+  [Additional details, screenshots, examples]
+  
+  ### Appendix B: [Checklists/Forms]
+  [Downloadable resources]
+  
+  ## 15. Revision History
+  
+  | Version | Date | Summary of Changes | Author | Approved By |
+  |---------|------|-------------------|--------|-------------|
+  | 1.0 | [Date] | Initial release | [Name] | [Name] |
+
+quality_requirements:
+  - Clear, numbered steps
+  - Each step has expected result
+  - Verification steps included
+  - Troubleshooting section comprehensive
+  - Rollback procedure (if applicable)
+  - Prerequisites explicit
+  - Minimum 800 words
+  - Screenshots/diagrams where helpful (for UI-based SOPs)

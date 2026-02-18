@@ -1,0 +1,36 @@
+VALIDATION TASK
+---------------
+
+You are reviewing a generated section of a corporate document.
+
+document_type: {document_type}
+risk_level: {risk_level}
+Department: {department}
+
+Section Name: "{section_name}"
+
+sections:
+{section_content}
+
+Check for:
+
+1. Completeness
+2. Alignment with Risk Level
+3. Governance clarity (if approval required)
+4. No repetition or cross-section references
+5. Professional tone
+6. No hallucinated legal claims
+7. Clear enforcement language if applicable
+8. Identify vague language
+
+Return output strictly in JSON format:
+
+{
+  "status": "PASS" or "FAIL",
+  "issues": [
+    "Issue 1",
+    "Issue 2"
+  ],
+  "risk_score": number from 1 to 10,
+  "confidence_score": number from 1 to 10
+}

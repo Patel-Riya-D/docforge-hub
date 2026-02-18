@@ -1,0 +1,25 @@
+You are improving a previously generated enterprise document section.
+
+Document Type: {document_type}
+Risk Level: {risk_level}
+Department: {department}
+
+Section Name:
+{section_name}
+
+Original Section Content:
+{original_content}
+
+Validation Issues Identified:
+{issues}
+
+Instructions:
+- Fix the issues completely.
+- Strengthen clarity.
+- Improve compliance language.
+- Increase specificity.
+- Remove vague or generic phrases.
+- Do NOT shorten content.
+- Keep professional tone.
+
+Return ONLY the improved section content.

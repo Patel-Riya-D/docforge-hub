@@ -1,0 +1,107 @@
+doc_type: policy
+
+purpose: "Formal statement of rules, guidelines, or principles that govern decisions and actions"
+
+structure: |
+  # [POLICY TITLE]
+  
+  ## Document Control
+  - Policy Number: [POL-XXX]
+  - Version: [X.X]
+  - Effective Date: [YYYY-MM-DD]
+  - Policy Owner: [Role/Department]
+  - Approval Authority: [Role - e.g., CEO, Board]
+  - Review Frequency: [Annual/Biennial]
+  - Last Reviewed: [YYYY-MM-DD]
+  - Next Review: [YYYY-MM-DD]
+  
+  ## 1. Purpose & Scope
+  
+  ### 1.1 Purpose
+  [Why this policy exists, what problem it solves, business need]
+  
+  ### 1.2 Scope
+  **Applies to:**
+  - [Who must follow this policy]
+  - [What situations/activities it covers]
+  - [Geographic/organizational scope]
+  
+  **Does not apply to:**
+  - [Explicit exclusions]
+  
+  ## 2. Policy Statement
+  [Clear, declarative statement of the policy - the core rules]
+  
+  [Company name] requires/prohibits/mandates that [specific requirement].
+  
+  ## 3. Definitions
+  
+  **Term 1:** [Precise definition]
+  **Term 2:** [Precise definition]
+  
+  ## 4. Roles & Responsibilities
+  
+  | Role | Responsibilities |
+  |------|------------------|
+  | [Role 1] | - Responsibility A<br>- Responsibility B |
+  | [Role 2] | - Responsibility C<br>- Responsibility D |
+  
+  ## 5. Policy Details
+  
+  ### 5.1 [Requirement Category 1]
+  [Detailed requirements, procedures, or guidelines]
+  
+  ### 5.2 [Requirement Category 2]
+  [Detailed requirements, procedures, or guidelines]
+  
+  [Continue for all categories]
+  
+  ## 6. Exceptions & Waivers
+  
+  ### 6.1 Exception Process
+  [How to request an exception]
+  
+  ### 6.2 Approval Authority
+  [Who can approve exceptions]
+  
+  ### 6.3 Documentation Requirements
+  [What must be documented for exceptions]
+  
+  ## 7. Compliance & Enforcement
+  
+  ### 7.1 Monitoring
+  [How compliance is monitored]
+  
+  ### 7.2 Consequences of Non-Compliance
+  [Disciplinary actions, escalation]
+  
+  ### 7.3 Reporting Violations
+  [How to report violations, whistleblower protection]
+  
+  ## 8. Related Documents
+  - [Related Policy 1]
+  - [Related Procedure/SOP]
+  - [Applicable Laws/Regulations]
+  - [External Standards]
+  
+  ## 9. Approval
+  
+  **Prepared by:** [Name, Title, Date]
+  **Reviewed by:** [Name, Title, Date]
+  **Approved by:** [Name, Title, Date, Signature]
+  
+  ## 10. Revision History
+  
+  | Version | Date | Summary of Changes | Author |
+  |---------|------|-------------------|--------|
+  | 1.0 | [Date] | Initial release | [Name] |
+
+quality_requirements:
+  - Clear policy statement
+  - Defined scope and applicability
+  - Roles and responsibilities explicit
+  - Compliance/enforcement section included
+  - Exceptions process defined
+  - Approval signatures present
+  - Minimum 1,000 words
+  - References to laws/regulations where applicable

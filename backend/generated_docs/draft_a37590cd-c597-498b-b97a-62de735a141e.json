@@ -1,0 +1,101 @@
+{
+  "draft_id": "a37590cd-c597-498b-b97a-62de735a141e",
+  "source_document": {
+    "department": "hr",
+    "document_filename": "Paid Time Off (PTO) Policy",
+    "document_name": "Paid Time Off (PTO) Policy",
+    "internal_type": "POLICY",
+    "risk_level": "HIGH",
+    "compliance_alignment": []
+  },
+  "version": "v1.0",
+  "status": "DRAFT",
+  "generation_metadata": {
+    "generated_at": "2026-02-13T09:41:51.458589+00:00",
+    "generated_by": "azure_openai",
+    "deterministic": true,
+    "prompt_version": "v1"
+  },
+  "sections": [
+    {
+      "name": "Our Commitment",
+      "mandatory": true,
+      "content": "abc is committed to fostering a supportive work environment that recognizes the importance of work-life balance. To this end, the company provides eligible employees with a Paid Time Off (PTO) entitlement of 20 days annually, effective February 13, 2026. This PTO allocation is designed to support employees\u2019 personal and professional well-being, ensuring they have adequate time to rest, recover, and attend to personal matters. The policy applies exclusively to employees based in India and does not permit the carry forward of unused PTO days beyond the current calendar year. Compliance with this PTO policy is mandatory, and all employees must adhere to the procedures established for requesting and recording time off to maintain operational efficiency and uphold abc\u2019s commitment to SOC 2 compliance standards."
+    },
+    {
+      "name": "Purpose",
+      "mandatory": true,
+      "content": "The purpose of this Paid Time Off (PTO) Policy is to establish clear and enforceable guidelines for the accrual, usage, and management of paid time off for employees of abc. This policy ensures that employees in India receive a consistent and fair allocation of PTO, supporting their work-life balance while maintaining operational efficiency. It defines the entitlement of 20 days of PTO annually, effective from February 13, 2026, and specifies that unused PTO cannot be carried forward to subsequent years. By adhering to this policy, abc aims to promote employee well-being, comply with applicable regulatory requirements, and uphold the company\u2019s commitment to a structured and transparent leave management system."
+    },
+    {
+      "name": "Scope",
+      "mandatory": true,
+      "content": "This Paid Time Off (PTO) Policy applies exclusively to all employees of abc located within India. It governs the accrual, usage, and management of PTO entitlements as specified herein. The policy is mandatory and enforceable for all eligible employees, regardless of employment status or role, ensuring consistent application across the organization. Compliance with this policy is required to maintain operational integrity and alignment with abc\u2019s internal controls and SOC 2 compliance obligations. This policy does not extend to contractors, consultants, or employees working outside the specified geographic location."
+    },
+    {
+      "name": "Definitions",
+      "mandatory": true,
+      "content": "Definitions\n\nFor the purposes of this Paid Time Off (PTO) Policy, the following terms shall have the meanings set forth below:\n\n1. \"Paid Time Off (PTO)\" means the allotted number of paid days an employee is entitled to take off from work for personal time, vacation, or illness, as specified in this policy.\n\n2. \"Employee\" refers to any individual employed by abc in India who is eligible to accrue and utilize PTO in accordance with this policy.\n\n3. \"PTO Accrual\" means the process by which an employee earns PTO days over a specified period, subject to the terms outlined in this policy.\n\n4. \"PTO Carry Forward\" refers to the transfer of unused PTO days from one calendar year to the next. Under this policy, PTO carry forward is not permitted.\n\n5. \"Policy Owner\" denotes the role responsible for the oversight and administration of this PTO policy, identified as the employee role in this context.\n\n6. \"Effective Date\" is the date on which this policy becomes operational and enforceable, specified as February 13, 2026.\n\n7. \"Applicable Locations\" indicates the geographical regions where this policy is applicable, limited to India for the purposes of this document.\n\nAll definitions are integral to the interpretation and enforcement of this policy and must be adhered to by all employees and management within the scope of this document."
+    },
+    {
+      "name": "Eligibility Criteria",
+      "mandatory": true,
+      "content": "Eligibility Criteria\n\nAll employees of abc located in India are eligible to accrue and utilize Paid Time Off (PTO) benefits under this policy. Eligibility commences from the employee\u2019s date of hire and continues throughout the term of active employment. PTO entitlement is fixed at 20 days per calendar year and is not subject to carry forward or encashment. Temporary, contract, or part-time employees are not eligible for PTO unless explicitly stated in their employment agreement. The policy owner, designated as the employee role, is responsible for ensuring adherence to these eligibility requirements. Any exceptions or deviations from this policy must receive prior written approval from the designated company authority."
+    },
+    {
+      "name": "Types of Leave Covered",
+      "mandatory": false,
+      "content": "Types of Leave Covered\n\nThis Paid Time Off (PTO) Policy encompasses all forms of leave that contribute to the total PTO entitlement of 20 days per calendar year for employees located in India. The types of leave included under this policy are annual leave, personal leave, and vacation leave. Sick leave, maternity leave, paternity leave, and any statutory or government-mandated leaves are excluded from this policy and are governed separately in accordance with applicable Indian labor laws and company-specific guidelines. Employees are required to utilize their PTO within the calendar year it is granted, as no carry forward of unused PTO days is permitted. All leave requests must be submitted and approved in accordance with the procedures established by the policy owner role to ensure compliance with company standards and SOC 2 requirements."
+    },
+    {
+      "name": "Accrual Rates & Carryover Rules",
+      "mandatory": false,
+      "content": "Accrual Rates & Carryover Rules\n\nEmployees at abc are entitled to accrue a total of 20.0 paid time off (PTO) days per calendar year. PTO accrual begins on the employee\u2019s start date and is credited on a pro-rata basis throughout the year. Accrued PTO must be utilized within the calendar year it is earned; there is no provision for carrying forward unused PTO days to subsequent years. Any unused PTO at the end of the calendar year will be forfeited without compensation. This policy applies exclusively to employees based in India and is effective as of February 13, 2026. Compliance with these accrual and carryover rules is mandatory and monitored by the employee role designated as the policy owner."
+    },
+    {
+      "name": "Maximum Allowable Days Off",
+      "mandatory": false,
+      "content": "Maximum Allowable Days Off\n\nEmployees are entitled to a maximum of 20.0 paid time off (PTO) days per calendar year. Under no circumstances shall the total PTO taken exceed this limit within the applicable year. PTO days are granted exclusively for the purpose of rest, personal matters, or illness and must be approved in accordance with company procedures. PTO is not eligible for carry forward beyond the calendar year; any unused PTO days will be forfeited at year-end. Compliance with this maximum limit is mandatory to ensure operational continuity and adherence to company policy."
+    },
+    {
+      "name": "Advance Notice Requirements",
+      "mandatory": true,
+      "content": "Employees are required to provide advance notice of at least five (5) business days prior to the intended start date of any Paid Time Off (PTO) request. This notice period allows for adequate planning and ensures minimal disruption to business operations. All PTO requests must be submitted through the company\u2019s designated leave management system and receive approval from the employee\u2019s immediate supervisor or authorized approver before the leave period commences. In cases of unforeseen emergencies or urgent situations, employees must notify their supervisor as soon as practicable, providing appropriate documentation if requested. Failure to comply with the advance notice requirement may result in denial of the PTO request or disciplinary action, consistent with company policies."
+    },
+    {
+      "name": "PTO Request and Approval Process",
+      "mandatory": true,
+      "content": "Employees must submit PTO requests through the designated company system at least ten (10) business days prior to the intended leave start date. Requests should include the specific dates and duration of the requested time off. Approval of PTO is contingent upon business needs and staffing requirements and will be granted on a first-come, first-served basis. The employee\u2019s immediate supervisor is responsible for reviewing and either approving or denying the request within five (5) business days of submission. In cases where the supervisor is unavailable, the request will escalate to the next level of management for timely decision-making. Employees are prohibited from commencing PTO without prior written approval. Any changes or cancellations to approved PTO must be communicated promptly and are subject to management approval. Non-compliance with this process may result in denial of PTO or disciplinary action."
+    },
+    {
+      "name": "Exceptions",
+      "mandatory": false,
+      "content": "Exceptions to this Paid Time Off (PTO) Policy at abc are strictly limited. PTO entitlements and usage as outlined in this policy apply uniformly to all employees based in India, without deviation. No carry forward of unused PTO days is permitted under any circumstances. Any requests for exceptions to the PTO allocation, accrual, or usage must be submitted in writing to the policy owner and will only be considered under extraordinary and documented circumstances. Approval of exceptions is at the sole discretion of the policy owner and must comply with applicable regulatory requirements and abc\u2019s SOC 2 compliance obligations. Unauthorized deviations from this policy will be subject to review and may result in corrective action."
+    },
+    {
+      "name": "Payout Policies",
+      "mandatory": true,
+      "content": "Payout Policies\n\nEmployees of abc are not entitled to any payout for unused Paid Time Off (PTO) days upon termination of employment or at any other time. PTO is provided solely for the purpose of taking time off during employment and cannot be converted into monetary compensation. Since PTO days do not carry forward to subsequent years, any unused PTO at the end of the calendar year will be forfeited without compensation. This policy applies uniformly to all employees located in India and is effective as of February 13, 2026. Compliance with this payout policy is mandatory and will be enforced consistently to maintain alignment with company standards and SOC 2 requirements."
+    },
+    {
+      "name": "Compliance With Laws",
+      "mandatory": true,
+      "content": "Compliance With Laws\n\nabc is committed to ensuring that its Paid Time Off (PTO) Policy fully complies with all applicable laws and regulations in India. The policy is designed to meet or exceed statutory requirements related to employee leave entitlements, including but not limited to the Shops and Establishment Act and relevant labor laws. Employees are entitled to 20 days of PTO annually, with no provision for carry forward, in alignment with local legal standards. Any updates or changes in legislation will be promptly reviewed and incorporated to maintain compliance. It is the responsibility of the policy owner to monitor legal developments and ensure ongoing adherence to all applicable statutory obligations. Non-compliance with this policy or related laws may result in disciplinary action, up to and including termination of employment."
+    },
+    {
+      "name": "Questions & Support",
+      "mandatory": true,
+      "content": "Questions & Support\n\nEmployees seeking clarification or assistance regarding the Paid Time Off (PTO) Policy are required to direct their inquiries to the designated policy owner. For this policy, the policy owner is the employee role responsible for managing PTO requests and compliance. All questions must be submitted in writing via the company\u2019s official communication channels to ensure proper documentation and timely response.\n\nSupport related to PTO accrual, usage, and compliance with this policy will be provided in accordance with the company\u2019s operational procedures. Employees must adhere strictly to the guidelines outlined herein, and any deviations or exceptions require prior written approval from the policy owner.\n\nNon-compliance or unresolved issues should be escalated through the established internal reporting mechanisms to maintain adherence to company standards and SOC 2 compliance requirements. Employees are encouraged to review this policy thoroughly and seek support promptly to avoid any disruption to their PTO benefits."
+    }
+  ],
+  "validation": {
+    "status": "PASS",
+    "issues": []
+  },
+  "approval": {
+    "required": true,
+    "approved": false,
+    "approved_by": null,
+    "approved_at": null
+  }
+}

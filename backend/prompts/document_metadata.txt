@@ -1,0 +1,15 @@
+DOCUMENT METADATA
+-----------------
+Document Name: {document_name}
+Document Type: {internal_type}
+Department: {department}
+Risk Level: {risk_level}
+Approval Required: {approval_required}
+Versioning Strategy: {versioning_strategy}
+Compliance Alignment: {compliance_alignment}
+
+INSTRUCTIONS:
+- Adjust strictness based on risk level.
+- If risk_level is HIGH → include enforcement, monitoring, and audit controls.
+- If approval_required is true → include governance and authority language.
+- Maintain structure suitable for enterprise documentation.

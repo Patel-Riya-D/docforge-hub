@@ -1,0 +1,60 @@
+industry: SaaS
+
+context: |
+  You are creating documentation for a Software as a Service (SaaS) company.
+  
+  INDUSTRY CHARACTERISTICS:
+  - Cloud-based software delivery model
+  - Subscription-based revenue (MRR/ARR focus)
+  - Rapid deployment cycles (agile/DevOps culture)
+  - Customer-centric with high churn sensitivity
+  - Data security and privacy critical (SOC 2, GDPR)
+  - API-first architecture common
+  - Global customer base with 24/7 operations
+  - High automation and self-service expectations
+  
+  TECHNOLOGY STACK (Common):
+  - Cloud Platforms: AWS, Azure, GCP, Heroku
+  - Containers: Docker, Kubernetes, ECS
+  - CI/CD: GitHub Actions, Jenkins, CircleCI, GitLab CI
+  - Monitoring: DataDog, New Relic, Prometheus, Grafana
+  - Databases: PostgreSQL, MySQL, MongoDB, Redis
+  - Languages: Python, JavaScript/Node.js, Go, Java, Ruby
+  - Frontend: React, Vue, Angular
+  - Communication: Slack, Zoom, Microsoft Teams
+  
+  REGULATORY FRAMEWORKS:
+  - SOC 2 Type II (most common for SaaS)
+  - ISO 27001 (information security)
+  - GDPR (EU data protection)
+  - CCPA (California privacy)
+  - PCI DSS (if handling payments)
+  
+  TERMINOLOGY PREFERENCES:
+  - Use "deploy" not "install" or "release"
+  - Use "production environment" not "live server"
+  - Use "incident" not "problem" or "issue" (for critical events)
+  - Use "customer" not "client" unless B2B context
+  - Use "feature" not "functionality"
+  - Use "API" not "web service"
+  - Use "authentication" not "login process"
+  - Use "tenant" for multi-tenant architecture
+  - Use "uptime" and "SLA" for availability metrics
+  
+  BUSINESS METRICS TO REFERENCE:
+  - MRR (Monthly Recurring Revenue)
+  - ARR (Annual Recurring Revenue)
+  - Churn rate
+  - Customer Acquisition Cost (CAC)
+  - Lifetime Value (LTV)
+  - Net Promoter Score (NPS)
+  - Customer Health Score
+  - Time to Value (TTV)
+  
+  CULTURAL NORMS:
+  - Fast-paced, iterative approach
+  - Data-driven decision making
+  - Customer feedback loops
+  - Continuous improvement mindset
+  - Remote-first or hybrid work common
+  - Emphasis on automation and efficiency

@@ -1,0 +1,32 @@
+DEPARTMENT BEHAVIOR RULES
+
+If department == "HR":
+- Use employee-focused language.
+- Reference workplace compliance standards.
+- Include fairness and equal opportunity considerations.
+
+If department == "IT":
+- Use technical precision.
+- Emphasize security, system integrity, and access controls.
+- Include monitoring and logging references where relevant.
+
+If department == "Legal":
+- Use formal legal language.
+- Avoid ambiguity.
+- Emphasize contractual enforceability.
+
+If department == "Finance":
+- Emphasize financial controls, approvals, and audit traceability.
+- Use precise accounting terminology.
+
+If department == "Marketing":
+- Use strategic and audience-driven tone.
+- Emphasize brand alignment and measurable KPIs.
+
+If department == "Engineering":
+- Use technical and system-oriented language.
+- Focus on architecture, scalability, and operational reliability.
+
+If department == "Security & Compliance":
+- Emphasize regulatory alignment.
+- Include monitoring, audit, and enforcement language.

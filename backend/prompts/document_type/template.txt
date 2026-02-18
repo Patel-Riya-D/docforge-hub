@@ -1,0 +1,171 @@
+doc_type: template
+
+purpose: "Reusable, fill-in-the-blank format for common communications or documents"
+
+structure: |
+  # [TEMPLATE NAME]
+  
+  ## Template Information
+  - Template ID: [TMPL-XXX]
+  - Version: [X.X]
+  - Last Updated: [YYYY-MM-DD]
+  - Owner: [Department/Role]
+  - Category: [Email/Letter/Contract/Report/etc.]
+  
+  ## Purpose
+  [When and why to use this template]
+  
+  ## When to Use
+  - Scenario 1
+  - Scenario 2
+  - Scenario 3
+  
+  ## Instructions
+  
+  ### Before You Begin
+  1. [Preparation step 1]
+  2. [Preparation step 2]
+  
+  ### How to Complete
+  1. **Placeholders:** Replace all [BRACKETED TEXT] with appropriate information
+  2. **Optional Sections:** Sections marked (OPTIONAL) can be removed if not needed
+  3. **Tone:** Adjust language to match [recipient/situation]
+  4. **Review:** Have [role] review before sending/publishing
+  
+  ### Required vs Optional Fields
+  
+  **Required:**
+  - [FIELD 1]
+  - [FIELD 2]
+  
+  **Optional:**
+  - [FIELD 3]
+  - [FIELD 4]
+  
+  ## Template
+  
+  ---
+  
+  **[If email: Subject Line]**
+  
+  Subject: [TOPIC] - [ACTION REQUIRED / FYI / UPDATE]
+  
+  ---
+  
+  [SALUTATION],
+  
+  [OPENING PARAGRAPH - State purpose clearly]
+  
+  Example:
+  I'm writing to [inform/request/update] you about [topic]. [Brief context if needed].
+  
+  ---
+  
+  [BODY SECTION 1 - Main Content]
+  
+  [Provide details, background, or information]
+  
+  Key points:
+  - [POINT 1]
+  - [POINT 2]
+  - [POINT 3]
+  
+  ---
+  
+  [BODY SECTION 2 - Supporting Information] (OPTIONAL)
+  
+  [Additional context, data, or explanation]
+  
+  ---
+  
+  [CALL TO ACTION / NEXT STEPS]
+  
+  Please [specific action required] by [deadline].
+  
+  OR
+  
+  Next steps:
+  1. [STEP 1] - [OWNER] - [DATE]
+  2. [STEP 2] - [OWNER] - [DATE]
+  
+  ---
+  
+  [CLOSING PARAGRAPH]
+  
+  [Offer to answer questions, express appreciation, etc.]
+  
+  If you have questions, please [contact method].
+  
+  [SIGN-OFF],
+  [YOUR NAME]
+  [YOUR TITLE]
+  [CONTACT INFORMATION]
+  
+  ---
+  
+  ## Example Usage
+  
+  ### Example 1: [Scenario Name]
+  
+  [Show completed template with realistic content]
+  
+  ### Example 2: [Different Scenario]
+  
+  [Show variation for different use case]
+  
+  ## Tone Guidelines
+  
+  **For this template, use:**
+  - [Tone 1: e.g., "Professional and formal"]
+  - [Tone 2: e.g., "Empathetic and supportive"]
+  
+  **Avoid:**
+  - [Thing to avoid: e.g., "Overly casual language"]
+  - [Thing to avoid: e.g., "Technical jargon"]
+  
+  ## Legal/Compliance Notes
+  
+  [If applicable:]
+  - Required disclaimers: [Text]
+  - Privacy considerations: [Guidelines]
+  - Approval needed: [From whom, when]
+  
+  ## Template Variations
+  
+  ### Variation A: [Alternative Use Case]
+  [Adjusted template for different situation]
+  
+  ### Variation B: [Another Use Case]
+  [Another adjusted version]
+  
+  ## Customization Options
+  
+  **You may customize:**
+  - [Element 1]
+  - [Element 2]
+  
+  **Do NOT customize:**
+  - [Element 3 - explain why]
+  - [Element 4 - explain why]
+  
+  ## Related Templates
+  - [Related template 1]
+  - [Related template 2]
+  
+  ## Frequently Asked Questions
+  
+  **Q: [Common question]?**
+  A: [Answer]
+  
+  ## Revision History
+  
+  | Version | Date | Changes | Author |
+  |---------|------|---------|--------|
+
+quality_requirements:
+  - Clear placeholders marked with [BRACKETS]
+  - At least 2 filled-out examples
+  - Tone guidelines explicit
+  - Optional vs required sections marked
+  - Instructions for customization
+  - Related templates linked

@@ -1,0 +1,73 @@
+doc_type: form
+
+purpose: "Standardized data collection tool for consistent information gathering"
+
+structure: |
+  # [FORM TITLE]
+  
+  ## Form Information
+  - Form ID: [Unique identifier]
+  - Version: [X.X]
+  - Effective Date: [YYYY-MM-DD]
+  - Owner: [Department/Role]
+  - Review Frequency: [Annual/Quarterly/etc.]
+  
+  ## Purpose
+  [Brief description of why this form exists and when to use it]
+  
+  ## Instructions
+  [Clear guidance on how to complete the form]
+  - Who should complete this form
+  - When to submit
+  - Where to submit
+  - Required vs optional fields
+  - Special formatting requirements
+  
+  ## Form Fields
+  
+  ### Section 1: [Section Name]
+  
+  **Field 1: [Field Name]** (Required/Optional)
+  - Type: [Text/Number/Date/Dropdown/Checkbox]
+  - Description: [What information to provide]
+  - Example: [Sample entry]
+  
+  [Repeat for all fields]
+  
+  ## Approval & Signatures
+  
+  **Completed by:**
+  - Name: ___________________
+  - Title: ___________________
+  - Date: ___________________
+  - Signature: ___________________
+  
+  **Approved by:**
+  - Name: ___________________
+  - Title: ___________________
+  - Date: ___________________
+  - Signature: ___________________
+  
+  ## Privacy & Data Handling
+  [How form data will be used, stored, and protected]
+  
+  ## Supporting Documentation
+  [List any documents that must accompany this form]
+  
+  ## Submission Process
+  [Step-by-step submission instructions]
+  
+  ## Contact Information
+  [Who to contact with questions]
+  
+  ## Revision History
+  | Version | Date | Changes | Author |
+  |---------|------|---------|--------|
+
+quality_requirements:
+  - All required fields clearly marked
+  - Instructions clear and unambiguous
+  - Privacy/data handling addressed
+  - Approval workflow defined
+  - Contact information included
+  - Accessible format (consider ADA compliance)

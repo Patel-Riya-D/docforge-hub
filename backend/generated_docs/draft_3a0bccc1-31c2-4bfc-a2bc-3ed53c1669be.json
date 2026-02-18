@@ -1,0 +1,106 @@
+{
+  "draft_id": "3a0bccc1-31c2-4bfc-a2bc-3ed53c1669be",
+  "source_document": {
+    "department": "hr",
+    "document_filename": "Remote Work Policy",
+    "document_name": "Remote Work Policy",
+    "internal_type": "POLICY",
+    "risk_level": "HIGH",
+    "compliance_alignment": []
+  },
+  "version": "v1.0",
+  "status": "DRAFT",
+  "generation_metadata": {
+    "generated_at": "2026-02-13T10:16:55.682023+00:00",
+    "generated_by": "azure_openai",
+    "deterministic": true,
+    "prompt_version": "v1"
+  },
+  "sections": [
+    {
+      "name": "Title",
+      "mandatory": true,
+      "content": "Remote Work Policy \u2013 Effective February 13, 2026"
+    },
+    {
+      "name": "Purpose",
+      "mandatory": true,
+      "content": "The purpose of this Remote Work Policy is to establish clear and enforceable guidelines for employees of abc engaged in remote work arrangements within India. This policy aims to ensure the security, productivity, and compliance of remote work practices in alignment with abc\u2019s SaaS operational requirements and SOC 2 standards. It defines eligibility, security protocols including mandatory VPN usage, and expectations for availability during core working hours to safeguard company data and maintain service integrity. By adhering to this policy, abc ensures that remote work supports business continuity, protects sensitive information, and upholds the company\u2019s commitment to high-risk operational controls."
+    },
+    {
+      "name": "Scope",
+      "mandatory": true,
+      "content": "This Remote Work Policy applies exclusively to employees of abc operating within the India region who hold roles in the IT department. Eligibility for remote work is granted without a minimum tenure requirement. All remote work arrangements must comply with the company\u2019s core working hours of 10:00 AM to 8:00 PM local time. Employees covered under this policy are required to maintain a maximum response time of four hours during these core hours. Use of a company-approved Virtual Private Network (VPN) is mandatory for all remote access to abc\u2019s internal systems to ensure data security and compliance with SOC 2 standards. This policy governs all remote work activities and must be adhered to without exception by eligible personnel."
+    },
+    {
+      "name": "Definitions",
+      "mandatory": true,
+      "content": "Definitions\n\nFor the purposes of this Remote Work Policy, the following terms are defined as follows:\n\n\"Remote Work\" refers to the practice of performing job duties and responsibilities from a location outside of the company\u2019s primary business premises, utilizing technology and communication tools to maintain productivity and connectivity.\n\n\"Eligible Roles\" are positions within the company\u2019s IT department authorized to participate in remote work arrangements, subject to compliance with this policy.\n\n\"Core Working Hours\" designate the mandatory period of ten consecutive hours during which remote employees must be available and responsive to work-related communications and tasks.\n\n\"Response Time\" means the maximum allowable duration of four hours within which remote employees must acknowledge and respond to work-related communications during core working hours.\n\n\"VPN (Virtual Private Network)\" is a secure network connection required for remote employees to access company systems and data, ensuring confidentiality, integrity, and compliance with SOC 2 security standards.\n\n\"Minimum Tenure\" indicates the minimum employment duration of zero months required before an employee becomes eligible to engage in remote work under this policy.\n\n\"Applicable Locations\" specify the geographic regions, in this case, India, where this Remote Work Policy is enforced and applicable to employees.\n\nAll employees engaged in remote work must adhere strictly to these definitions to ensure consistent understanding and compliance with the company\u2019s operational and security requirements."
+    },
+    {
+      "name": "Eligibility (Positions and Employees)",
+      "mandatory": true,
+      "content": "Eligibility for remote work under this policy is strictly limited to employees holding positions within the Information Technology (IT) department. All eligible employees must be based in India, consistent with the company\u2019s operational jurisdiction. There is no minimum tenure requirement; however, eligibility is contingent upon the employee\u2019s role aligning with the IT function as defined by abc\u2019s organizational structure. Employees must maintain compliance with all security protocols, including mandatory use of a company-approved VPN, to qualify for remote work privileges. Eligibility is subject to ongoing verification to ensure adherence to policy requirements and operational needs."
+    },
+    {
+      "name": "Policy Statements / Work Expectations",
+      "mandatory": true,
+      "content": "All employees in eligible IT roles working remotely within India must adhere to core working hours from 10:00 AM to 8:00 PM IST to ensure consistent availability and collaboration. Employees are required to respond to work-related communications within four hours during these core hours. Use of a company-approved Virtual Private Network (VPN) is mandatory at all times when accessing company systems or data remotely to maintain security and compliance with SOC 2 standards. Employees must maintain a secure and professional work environment that protects company information and supports productivity. Non-compliance with these work expectations may result in disciplinary action, up to and including termination of remote work privileges or employment."
+    },
+    {
+      "name": "Responsiveness & Communication Requirements",
+      "mandatory": true,
+      "content": "Employees engaged in remote work must maintain consistent and timely communication to ensure operational efficiency and security compliance. All remote employees are required to be available and responsive during core working hours, defined as 10 consecutive hours within the standard business day, as specified by the company. Communication channels, including email, instant messaging, and telephonic contact, must be monitored regularly to guarantee a maximum response time of four hours to any work-related inquiries or requests.\n\nEmployees must utilize the company-approved Virtual Private Network (VPN) when accessing internal systems to safeguard data integrity and confidentiality. Failure to adhere to these communication and responsiveness standards may result in disciplinary action, up to and including termination of remote work privileges. Compliance with these requirements is mandatory for all eligible IT personnel working remotely within India, effective from February 13, 2026."
+    },
+    {
+      "name": "Tools, Equipment & Approved Suppliers",
+      "mandatory": false,
+      "content": "All tools and equipment used for remote work must be approved by the company\u2019s IT department to ensure compliance with security and operational standards. Employees in eligible IT roles are required to use company-provided devices configured with up-to-date security software, including endpoint protection and encryption. Personal devices are strictly prohibited for accessing company systems unless explicitly authorized in writing.\n\nAll remote work connections must be established through the company\u2019s approved Virtual Private Network (VPN) to safeguard data transmission. Employees must ensure that their VPN client is active and properly configured before accessing any company resources.\n\nSuppliers and vendors providing tools or equipment for remote work must be vetted and approved by the company\u2019s procurement and IT security teams. Only equipment sourced from these approved suppliers is permitted to connect to the company network or handle company data.\n\nEmployees are responsible for the proper use, maintenance, and security of all company-issued tools and equipment. Any loss, theft, or malfunction must be reported immediately to the IT department to initiate appropriate remediation.\n\nCompliance with these requirements is mandatory to maintain the integrity and security of company operations while working remotely. Non-compliance may result in disciplinary action, up to and including termination of employment."
+    },
+    {
+      "name": "Technical Support Options",
+      "mandatory": false,
+      "content": "Technical Support Options\n\nEmployees eligible for remote work under this policy must utilize the designated technical support channels to ensure uninterrupted access to company systems and resources. All remote work-related technical issues must be reported promptly through the company\u2019s IT support ticketing system, with an expected initial response time of no more than four hours during core working hours, defined as 10:00 AM to 8:00 PM IST. \n\nGiven the critical nature of secure access, all remote connections to abc\u2019s network must be established exclusively via the company-approved VPN. The IT department is responsible for maintaining VPN infrastructure and providing support for VPN connectivity issues. Employees must not attempt to bypass or disable VPN requirements under any circumstances.\n\nFor urgent technical issues that cannot be resolved through the ticketing system within the stipulated response time, employees must escalate the matter directly to the IT support lead via the designated communication channel. The IT team will provide remote troubleshooting, configuration assistance, and, if necessary, coordinate on-site support in compliance with security protocols.\n\nAll technical support interactions will be logged and monitored to ensure compliance with SOC 2 standards and to maintain the integrity and confidentiality of company data. Employees are required to cooperate fully with IT support personnel and adhere strictly to all security guidelines during remote work activities."
+    },
+    {
+      "name": "Security and Confidentiality Rules",
+      "mandatory": true,
+      "content": "All employees engaged in remote work must strictly adhere to the following security and confidentiality requirements to protect abc\u2019s information assets and maintain SOC 2 compliance:\n\n1. Access Control: Remote access to company systems and data is permitted only through the use of company-approved Virtual Private Network (VPN) solutions. Employees must ensure that VPN connections are active and secure before accessing any internal resources.\n\n2. Device Security: All devices used for remote work must be company-issued or approved and must have up-to-date security patches, antivirus software, and endpoint protection enabled. Personal devices are prohibited from accessing company systems unless explicitly authorized.\n\n3. Data Protection: Confidential and sensitive information must never be stored on local devices or transmitted via unsecured channels. All data transfers must occur through encrypted communication protocols approved by the company.\n\n4. Workspace Privacy: Employees must conduct remote work in a private, secure environment to prevent unauthorized viewing or access to company information. Visual and auditory confidentiality must be maintained at all times during work hours.\n\n5. Incident Reporting: Any suspected or actual security incidents, including unauthorized access, data breaches, or loss of devices, must be reported to the IT security team within four hours of discovery.\n\n6. Compliance with Core Working Hours: Employees must be available during the defined core working hours of 10:00 AM to 8:00 PM IST to ensure timely communication and incident response.\n\nFailure to comply with these security and confidentiality rules will result in disciplinary action, up to and including termination of employment, consistent with company policies and applicable laws."
+    },
+    {
+      "name": "Travel Requirements",
+      "mandatory": false,
+      "content": "Travel Requirements\n\nEmployees eligible for remote work under this policy must adhere to the following travel requirements to maintain compliance with company security standards and operational continuity:\n\n1. Prior Approval: All business-related travel must receive prior written approval from the designated supervisor or manager. Unauthorized travel during remote work periods is prohibited.\n\n2. Security Compliance: Employees must ensure that all devices used during travel are connected through the company-approved VPN to protect sensitive data in transit. Use of public or unsecured networks without VPN is strictly forbidden.\n\n3. Location Restrictions: Remote work travel is permitted only within the applicable location of India. Employees must notify their manager of any intended travel outside their primary work location within India at least 48 hours in advance.\n\n4. Core Working Hours: Regardless of travel, employees must remain available and responsive during core working hours, defined as 10:00 AM to 8:00 PM IST, with a maximum response time of four hours to any work-related communication.\n\n5. Data Protection: Employees must not leave company devices unattended in public spaces and must follow all data protection protocols outlined in the company\u2019s SOC 2 compliance framework during travel.\n\nNon-compliance with these travel requirements may result in disciplinary action, up to and including revocation of remote work privileges."
+    },
+    {
+      "name": "Compensation, Salary & Pay Considerations",
+      "mandatory": false,
+      "content": "Compensation, Salary & Pay Considerations\n\nEmployees eligible for remote work under this policy shall receive compensation consistent with their role, responsibilities, and performance, without reduction due to remote work status. Salary adjustments, bonuses, and benefits will be determined in accordance with abc\u2019s standard compensation frameworks and applicable employment laws in India. Remote work shall not affect eligibility for salary increments or performance-based pay. All payroll processes will comply with SOC 2 requirements to ensure data security and confidentiality. Any changes to compensation must be documented and approved by authorized personnel in accordance with company procedures. Employees are required to maintain active VPN connections during core working hours to ensure secure access to company systems, which is a condition for continued eligibility for remote work compensation provisions."
+    },
+    {
+      "name": "Legal & Compliance Considerations",
+      "mandatory": true,
+      "content": "The Remote Work Policy for abc mandates strict adherence to all applicable legal and regulatory requirements within India, including data protection, labor laws, and industry-specific standards relevant to the SaaS sector. Given the company\u2019s SOC 2 compliance obligations, all remote work arrangements must ensure the confidentiality, integrity, and availability of sensitive information through enforced security controls. Employees eligible for remote work, specifically those in IT roles, are required to utilize company-approved VPNs to safeguard data transmission and prevent unauthorized access. Non-compliance with these legal and compliance requirements will result in disciplinary action, up to and including termination. The policy owner is responsible for monitoring regulatory changes and ensuring ongoing compliance, with immediate updates to the policy as necessary to maintain enforceability and alignment with legal standards."
+    },
+    {
+      "name": "Consequences of Non-Compliance",
+      "mandatory": true,
+      "content": "Failure to comply with the Remote Work Policy may result in disciplinary action, up to and including termination of employment. Non-compliance with mandatory security measures, such as the use of VPN for all remote connections, will be treated as a serious breach of company security protocols and may lead to immediate suspension of remote work privileges. Repeated violations or failure to adhere to core working hours and response time requirements may impact performance evaluations and eligibility for future remote work arrangements. All employees are required to understand that adherence to this policy is critical to maintaining the company\u2019s SOC 2 compliance and protecting sensitive information. Any suspected violations must be reported promptly to management for investigation and resolution."
+    },
+    {
+      "name": "Review & Revision History",
+      "mandatory": true,
+      "content": "Review & Revision History\n\nThis Remote Work Policy is subject to periodic review to ensure ongoing compliance with applicable standards and alignment with organizational objectives. All revisions must be documented with the date of amendment, a description of the changes made, and the authorized approver\u2019s identification. The initial effective date of this policy is February 13, 2026. Any updates or modifications shall be communicated promptly to all affected employees within the applicable locations in India. Enforcement of this policy requires adherence to the latest approved version; non-compliance may result in disciplinary action."
+    }
+  ],
+  "validation": {
+    "status": "PASS",
+    "issues": []
+  },
+  "approval": {
+    "required": true,
+    "approved": false,
+    "approved_by": null,
+    "approved_at": null
+  }
+}
