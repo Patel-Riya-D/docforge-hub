@@ -1,0 +1,54 @@
+{
+  "document_name": "Brand Guidelines",
+  "department": "Marketing",
+  "internal_type": "GUIDELINE",
+  "risk_level": "MEDIUM",
+  "approval_required": true,
+  "versioning": { "review_cycle": "annual" },
+  "input_groups": [
+    {
+      "group_name": "Brand Identity",
+      "fields": [
+        {
+          "key": "brand_voice_style",
+          "label": "Brand Voice & Tone",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "key": "visual_identity_rules",
+          "label": "Logo & Visual Identity Usage Rules",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "key": "color_palette_reference",
+          "label": "Primary Color Palette",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "key": "restricted_brand_usage",
+          "label": "Restricted Brand Usage Scenarios",
+          "type": "textarea",
+          "required": false
+        }
+      ]
+    }
+  ],
+
+  "sections": [
+    { "name": "Definition", "mandatory": true },
+    { "name": "Brand Mission", "mandatory": true },
+    { "name": "Name and Tagline", "mandatory": true },
+    { "name": "Voice and Tone", "mandatory": true },
+    { "name": "Target Audience", "mandatory": true },
+    { "name": "Visual Identity", "mandatory": true },
+    { "name": "Logo", "mandatory": true },
+    { "name": "Color Palette", "mandatory": true },
+    { "name": "Typography", "mandatory": true },
+    { "name": "Photography", "mandatory": false },
+    { "name": "Iconography", "mandatory": false }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

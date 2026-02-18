@@ -1,0 +1,44 @@
+{
+  "document_name": "Paid Time Off (PTO) Policy",
+  "department": "HR",
+  "internal_type": "POLICY",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": { "review_cycle": "annual" },
+  "input_groups": [
+    {
+      "group_name": "PTO Rules",
+      "fields": [
+        {
+          "key": "pto_days",
+          "label": "Number of PTO Days",
+          "type": "number",
+          "required": true
+        },
+        {
+          "key": "pto_carry_forward",
+          "label": "Carry Forward Rules",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "sections": [
+    { "name": "Our Commitment", "mandatory": true },
+    { "name": "Purpose", "mandatory": true },
+    { "name": "Scope", "mandatory": true },
+    { "name": "Definitions", "mandatory": true },
+    { "name": "Eligibility Criteria", "mandatory": true },
+    { "name": "Types of Leave Covered", "mandatory": false },
+    { "name": "Accrual Rates & Carryover Rules", "mandatory": false },
+    { "name": "Maximum Allowable Days Off", "mandatory": false },
+    { "name": "Advance Notice Requirements", "mandatory": true },
+    { "name": "PTO Request and Approval Process", "mandatory": true },
+    { "name": "Exceptions", "mandatory": false },
+    { "name": "Payout Policies", "mandatory": true },
+    { "name": "Compliance With Laws", "mandatory": true },
+    { "name": "Questions & Support", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf", "docx"]
+}

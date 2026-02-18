@@ -1,0 +1,17 @@
+{
+  "document_name": "Profit and Loss Statement",
+  "department": "Finance & Accounting",
+  "internal_type": "REPORT",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": { "review_cycle": "monthly" },
+  "sections": [
+    { "name": "Company Name", "mandatory": true },
+    { "name": "Revenue", "mandatory": true },
+    { "name": "Cost of Goods Sold", "mandatory": true },
+    { "name": "Gross Profit", "mandatory": true },
+    { "name": "Operating Expenses", "mandatory": true },
+    { "name": "Net Income", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "excel"]
+}

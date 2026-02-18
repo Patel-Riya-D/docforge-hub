@@ -1,0 +1,32 @@
+{
+  "document_name": "Privacy Policy",
+  "department": "Legal",
+  "internal_type": "POLICY",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": { "review_cycle": "annual" },
+   "input_groups": [
+    {
+      "group_name": "Data Collection",
+      "fields": [
+        {
+          "key": "data_collected",
+          "label": "Types of Data Collected",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    }
+  ],
+
+  "sections": [
+    { "name": "Data Collected", "mandatory": true },
+    { "name": "Purpose of Collection", "mandatory": true },
+    { "name": "Data Sharing", "mandatory": true },
+    { "name": "Security Measures", "mandatory": true },
+    { "name": "User Rights", "mandatory": true },
+    { "name": "Data Retention", "mandatory": true },
+    { "name": "Contact Information", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

@@ -1,0 +1,20 @@
+{
+  "document_name": "Email Response Template",
+  "department": "Customer Success",
+  "internal_type": "TEMPLATE",
+  "risk_level": "LOW",
+  "approval_required": false,
+  "versioning": {
+    "review_cycle": "annual"
+  },
+  "sections": [
+    { "name": "Greeting", "mandatory": true },
+    { "name": "Acknowledgment of Issue", "mandatory": true },
+    { "name": "Issue Summary", "mandatory": true },
+    { "name": "Resolution and Next Steps", "mandatory": true },
+    { "name": "Additional Help Offer", "mandatory": false },
+    { "name": "Closing Statement", "mandatory": true },
+    { "name": "Signature", "mandatory": true }
+  ],
+  "allowed_formats": ["notion"]
+}

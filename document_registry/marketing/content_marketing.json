@@ -1,0 +1,19 @@
+{
+  "document_name": "Content Marketing Playbook",
+  "department": "Marketing",
+  "internal_type": "PLAYBOOK",
+  "risk_level": "MEDIUM",
+  "approval_required": true,
+  "versioning": { "review_cycle": "annual" },
+  "sections": [
+    { "name": "Marketing Objectives", "mandatory": true },
+    { "name": "Target Audience and Personas", "mandatory": true },
+    { "name": "Content Pillars", "mandatory": true },
+    { "name": "Content Formats", "mandatory": true },
+    { "name": "Distribution Channels", "mandatory": true },
+    { "name": "Publishing Workflow", "mandatory": true },
+    { "name": "KPIs and Metrics", "mandatory": true },
+    { "name": "Tools and Platforms", "mandatory": false }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

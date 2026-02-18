@@ -1,0 +1,21 @@
+{
+  "document_name": "Test Summary Report",
+  "department": "Quality Assurance",
+  "internal_type": "REPORT",
+  "risk_level": "MEDIUM",
+  "approval_required": true,
+  "versioning": { "review_cycle": "per-cycle" },
+  "sections": [
+    { "name": "Purpose", "mandatory": true },
+    { "name": "Application Overview", "mandatory": true },
+    { "name": "Testing Scope", "mandatory": true },
+    { "name": "Metrics", "mandatory": true },
+    { "name": "Types of Testing Performed", "mandatory": true },
+    { "name": "Test Environment and Tools", "mandatory": true },
+    { "name": "Lessons Learned", "mandatory": false },
+    { "name": "Recommendations", "mandatory": true },
+    { "name": "Appendices", "mandatory": false },
+    { "name": "Conclusion", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

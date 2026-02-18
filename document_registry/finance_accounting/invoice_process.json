@@ -1,0 +1,34 @@
+{
+  "document_name": "Invoice Processing SOP",
+  "department": "Finance & Accounting",
+  "internal_type": "SOP",
+  "risk_level": "MEDIUM",
+  "approval_required": true,
+  "versioning": { "review_cycle": "annual" },
+  "input_groups": [
+    {
+      "group_name": "Invoice Controls",
+      "fields": [
+        {
+          "key": "approval_workflow",
+          "label": "Invoice Approval Workflow",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "sections": [
+    { "name": "Purpose", "mandatory": true },
+    { "name": "Scope", "mandatory": true },
+    { "name": "Responsibility", "mandatory": true },
+    { "name": "Fiscal Administration Guideline", "mandatory": true },
+    { "name": "Procedure", "mandatory": true },
+    { "name": "Vendor Process Requirements", "mandatory": true },
+    { "name": "Payment Process", "mandatory": true },
+    { "name": "Pitfalls to Avoid", "mandatory": false },
+    { "name": "Invoice Submission Address", "mandatory": true },
+    { "name": "Process Flowchart", "mandatory": false }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

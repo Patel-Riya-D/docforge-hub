@@ -1,0 +1,39 @@
+{
+  "document_name": "Non-Disclosure Agreement",
+  "department": "Legal",
+  "internal_type": "CONTRACT",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": { "review_cycle": "per-agreement" },
+  "input_groups": [
+    {
+      "group_name": "Confidentiality Scope",
+      "fields": [
+        {
+          "key": "confidential_information_definition",
+          "label": "Definition of Confidential Information",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "key": "nda_duration",
+          "label": "Confidentiality Duration",
+          "type": "text",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "sections": [
+    { "name": "Definition of Confidential Information", "mandatory": true },
+    { "name": "Exclusions from Confidential Information", "mandatory": true },
+    { "name": "Obligations of Receiving Party", "mandatory": true },
+    { "name": "Time Periods", "mandatory": true },
+    { "name": "Relationship of Parties", "mandatory": true },
+    { "name": "Severability", "mandatory": true },
+    { "name": "Waiver", "mandatory": true },
+    { "name": "Disclosing Party", "mandatory": true },
+    { "name": "Receiving Party", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

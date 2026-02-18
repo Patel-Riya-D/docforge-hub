@@ -1,0 +1,22 @@
+{
+  "document_name": "Security Incident Report",
+  "department": "IT Operations",
+  "internal_type": "REPORT",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": {
+    "review_cycle": "per-incident"
+  },
+  "sections": [
+    { "name": "Purpose", "mandatory": true },
+    { "name": "Audience", "mandatory": true },
+    { "name": "Summary of Incident", "mandatory": true },
+    { "name": "Threat Escalation Protocol Information", "mandatory": true },
+    { "name": "Timeline of Response Actions", "mandatory": true },
+    { "name": "Damages and Business Impact", "mandatory": true },
+    { "name": "Assumptions and Future Changes", "mandatory": false },
+    { "name": "Closing Statement", "mandatory": true },
+    { "name": "Incident Response Contacts", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

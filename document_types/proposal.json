@@ -1,0 +1,18 @@
+{
+  "internal_type": "PROPOSAL",
+  "default_risk_level": "MEDIUM",
+  "approval_required": true,
+  "mandatory_sections": [
+    "Executive Summary",
+    "Background / Context",
+    "Proposed Solution",
+    "Scope",
+    "Timeline",
+    "Pricing / Commercials",
+    "Assumptions",
+    "Risks",
+    "Next Steps"
+  ],
+  "versioning_strategy": "strict",
+  "supported_formats": ["pdf", "docx"]
+}

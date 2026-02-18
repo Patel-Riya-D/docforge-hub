@@ -1,0 +1,25 @@
+{
+  "internal_type": "SOP",
+  "default_risk_level": "MEDIUM",
+  "approval_required": true,
+  "mandatory_sections": [
+    "purpose",
+    "scope",
+    "responsibilities",
+    "procedure",
+    "controls",
+    "review"
+  ],
+  "versioning_strategy": "strict",
+  "common_input_groups": [
+    {
+      "group_name": "General SOP Information",
+      "fields": [
+        { "key": "process_owner", "label": "Process Owner", "type": "text", "required": true },
+        { "key": "effective_date", "label": "Effective Date", "type": "date", "required": true },
+        { "key": "applicable_department", "label": "Applicable Department", "type": "text", "required": true }
+      ]
+    }
+  ],
+  "supported_formats": ["notion", "docx"]
+}

@@ -1,0 +1,58 @@
+{
+  "document_name": "Employee Offboarding SOP",
+  "department": "HR",
+  "internal_type": "SOP",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": { "review_cycle": "annual" },
+    "input_groups": [
+    {
+      "group_name": "Offboarding Process",
+      "fields": [
+        {
+          "key": "notice_period_rules",
+          "label": "Notice Period Rules",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "key": "exit_interview_process",
+          "label": "Exit Interview Process",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    },
+    {
+      "group_name": "Access & Asset Handling",
+      "fields": [
+        {
+          "key": "access_revocation_timeline",
+          "label": "Access Revocation Timeline",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "asset_return_policy",
+          "label": "Company Asset Return Policy",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "sections": [
+    { "name": "Introduction", "mandatory": true },
+    { "name": "Purpose", "mandatory": true },
+    { "name": "Policy", "mandatory": true },
+    { "name": "Scope", "mandatory": true },
+    { "name": "Responsibilities", "mandatory": true },
+    { "name": "Offboarding Procedure", "mandatory": true },
+    { "name": "Asset Return and Access Termination", "mandatory": true },
+    { "name": "Documentation", "mandatory": true },
+    { "name": "Compliance and Risk Considerations", "mandatory": true },
+    { "name": "Review and Revision", "mandatory": true },
+    { "name": "Approval", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf", "docx"]
+}

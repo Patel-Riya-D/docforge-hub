@@ -1,0 +1,29 @@
+{
+  "document_name": "Cash Flow Statement",
+  "department": "Finance & Accounting",
+  "internal_type": "REPORT",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": { "review_cycle": "monthly" },
+  "input_groups": [
+    {
+      "group_name": "Cash Flow Period",
+      "fields": [
+        {
+          "key": "reporting_period",
+          "label": "Reporting Period",
+          "type": "text",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "sections": [
+    { "name": "Operating Cash Flow", "mandatory": true },
+    { "name": "Investing Cash Flow", "mandatory": true },
+    { "name": "Financing Cash Flow", "mandatory": true },
+    { "name": "Net Increase or Decrease in Cash", "mandatory": true },
+    { "name": "Closing Cash Balance", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "excel"]
+}

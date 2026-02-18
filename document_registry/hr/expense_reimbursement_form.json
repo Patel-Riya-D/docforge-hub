@@ -1,0 +1,42 @@
+{
+  "document_name": "Expense Reimbursement Form",
+  "department": "HR",
+  "internal_type": "FORM",
+  "risk_level": "LOW",
+  "approval_required": true,
+  "versioning": { "review_cycle": "annual" },
+  "input_groups": [
+    {
+      "group_name": "Expense Rules",
+      "fields": [
+        {
+          "key": "eligible_expenses",
+          "label": "Eligible Expense Categories",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "key": "approval_limit",
+          "label": "Approval Limit Amount",
+          "type": "number",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "sections": [
+    { "name": "Employee Name", "mandatory": true },
+    { "name": "Employee ID", "mandatory": true },
+    { "name": "Department", "mandatory": true },
+    { "name": "Expense Date", "mandatory": true },
+    { "name": "Expense Category", "mandatory": true },
+    { "name": "Expense Description", "mandatory": true },
+    { "name": "Business Purpose", "mandatory": true },
+    { "name": "Amount Claimed", "mandatory": true },
+    { "name": "Receipt Attached", "mandatory": true },
+    { "name": "Approver", "mandatory": true },
+    { "name": "Approval Status", "mandatory": true },
+    { "name": "Employee Declaration", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf", "docx"]
+}

@@ -1,0 +1,23 @@
+{
+  "document_name": "Environment Configuration Document",
+  "department": "Quality Assurance",
+  "internal_type": "DOCUMENT",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": { "review_cycle": "per-change" },
+  "sections": [
+    { "name": "Document Control", "mandatory": true },
+    { "name": "Introduction", "mandatory": true },
+    { "name": "Purpose", "mandatory": true },
+    { "name": "Scope", "mandatory": true },
+    { "name": "Environment Overview", "mandatory": true },
+    { "name": "Infrastructure Configuration", "mandatory": true },
+    { "name": "Software Configuration", "mandatory": true },
+    { "name": "Security Settings", "mandatory": true },
+    { "name": "Change Management", "mandatory": true },
+    { "name": "Monitoring and Logging", "mandatory": true },
+    { "name": "Backup and Recovery", "mandatory": true },
+    { "name": "References", "mandatory": false }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

@@ -1,0 +1,173 @@
+{
+  "document_name": "Employee Handbook",
+  "department": "HR",
+  "internal_type": "HANDBOOK",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "index_required": true,
+  "versioning": {
+    "review_cycle": "annual"
+  },
+
+  "governance_fields": [
+    {
+      "key": "policy_owner_role",
+      "label": "Policy Owner Role",
+      "type": "text",
+      "required": true
+    },
+    {
+      "key": "applicable_locations",
+      "label": "Applicable Locations",
+      "type": "text",
+      "required": true
+    },
+    {
+      "key": "review_frequency",
+      "label": "Review Frequency",
+      "type": "text",
+      "required": true
+    }
+  ],
+
+  "input_groups": [
+    {
+      "group_name": "Company Overview",
+      "fields": [
+        {
+          "key": "company_Overview",
+          "label": "Company Overview",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "key": "company_mission",
+          "label": "Company Mission",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "key": "company_vision",
+          "label": "Company Vision",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "key": "core_values",
+          "label": "Core Values",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    },
+    {
+      "group_name": "Employment Terms",
+      "fields": [
+        {
+          "key": "employment_types",
+          "label": "Types of Employment",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "key": "probation_period",
+          "label": "Probation Period Details",
+          "type": "text",
+          "required": true
+        }
+      ]
+    },
+    {
+      "group_name": "Leave & Attendance",
+      "fields": [
+        {
+          "key": "leave_types",
+          "label": "Types of Leave Offered",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "key": "attendance_policy_summary",
+          "label": "Attendance Policy Summary",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    },
+    {
+      "group_name": "Code of Conduct",
+      "fields": [
+        {
+          "key": "workplace_behavior_rules",
+          "label": "Workplace Behavior Expectations",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "key": "anti_harassment_policy",
+          "label": "Anti-Harassment & Equal Opportunity Commitment",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    }
+  ],
+
+  "sections": [
+    { 
+      "name": "Welcome Message", 
+      "mandatory": true 
+    },
+    { 
+      "name": "Table of Contents", 
+      "mandatory": true,
+      "auto_generated": true
+    },
+    { 
+      "name": "Company Overview", 
+      "mandatory": true,
+      "maps_to_group": "Company Overview"
+    },
+    { 
+      "name": "Employment Terms", 
+      "mandatory": true,
+      "maps_to_group": "Employment Terms"
+    },
+    { 
+      "name": "Leave and Attendance Policy", 
+      "mandatory": true,
+      "maps_to_group": "Leave & Attendance"
+    },
+    { 
+      "name": "Compensation and Benefits Overview", 
+      "mandatory": true
+    },
+    { 
+      "name": "Code of Conduct", 
+      "mandatory": true,
+      "maps_to_group": "Code of Conduct"
+    },
+    { 
+      "name": "IT and Security Policy Overview", 
+      "mandatory": true
+    },
+    { 
+      "name": "Disciplinary Procedures", 
+      "mandatory": true
+    },
+    {
+      "name": "Compliance & Enforcement Framework",
+      "mandatory": true
+    },
+    { 
+      "name": "Grievance Redressal Mechanism", 
+      "mandatory": true
+    },
+    { 
+      "name": "Acknowledgment and Acceptance", 
+      "mandatory": true
+    }
+  ],
+
+  "allowed_formats": ["notion", "pdf", "docx"]
+}

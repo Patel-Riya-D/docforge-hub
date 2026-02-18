@@ -1,0 +1,42 @@
+{
+  "document_name": "Bug Report Template",
+  "department": "Customer Success",
+  "internal_type": "TEMPLATE",
+  "risk_level": "LOW",
+  "approval_required": false,
+  "versioning": {
+    "review_cycle": "annual"
+  },
+   "input_groups": [
+    {
+      "group_name": "Bug Details",
+      "fields": [
+        {
+          "key": "severity_level",
+          "label": "Severity Level",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "reproduction_steps",
+          "label": "Steps to Reproduce",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "sections": [
+    { "name": "Title", "mandatory": true },
+    { "name": "Summary", "mandatory": true },
+    { "name": "Description", "mandatory": true },
+    { "name": "Severity", "mandatory": true },
+    { "name": "Priority", "mandatory": true },
+    { "name": "Expected Result", "mandatory": true },
+    { "name": "Actual Result", "mandatory": true },
+    { "name": "Steps to Reproduce", "mandatory": true },
+    { "name": "Environment", "mandatory": false },
+    { "name": "Attachments", "mandatory": false }
+  ],
+  "allowed_formats": ["notion"]
+}

@@ -1,0 +1,37 @@
+{
+  "document_name": "Cease and Desist Letter",
+  "department": "Legal",
+  "internal_type": "LETTER",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": { "review_cycle": "per-case" },
+  "input_groups": [
+    {
+      "group_name": "Violation Details",
+      "fields": [
+        {
+          "key": "violation_description",
+          "label": "Description of Violation",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "key": "deadline_to_comply",
+          "label": "Compliance Deadline",
+          "type": "text",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "sections": [
+    { "name": "Sender Details", "mandatory": true },
+    { "name": "Recipient Details", "mandatory": true },
+    { "name": "Description of Violation", "mandatory": true },
+    { "name": "Legal Basis", "mandatory": true },
+    { "name": "Required Action", "mandatory": true },
+    { "name": "Deadline", "mandatory": true },
+    { "name": "Legal Consequences", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

@@ -1,0 +1,44 @@
+{
+  "document_name": "Scheduled Maintenance Plan",
+  "department": "IT Operations",
+  "internal_type": "RUNBOOK",
+  "risk_level": "MEDIUM",
+  "approval_required": true,
+  "versioning": {
+    "review_cycle": "per-change"
+  },
+  "input_groups": [
+    {
+      "group_name": "Maintenance Planning",
+      "fields": [
+        {
+          "key": "maintenance_frequency",
+          "label": "Maintenance Frequency",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "notification_process",
+          "label": "User Notification Process",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "sections": [
+    { "name": "Title", "mandatory": true },
+    { "name": "Maintenance Summary", "mandatory": true },
+    { "name": "Systems and Services Affected", "mandatory": true },
+    { "name": "Maintenance Window", "mandatory": true },
+    { "name": "Purpose of Maintenance", "mandatory": true },
+    { "name": "Expected Impact", "mandatory": true },
+    { "name": "User Action Required", "mandatory": false },
+    { "name": "Technical Details", "mandatory": true },
+    { "name": "Rollback Plan", "mandatory": true },
+    { "name": "Support and Contact Information", "mandatory": true },
+    { "name": "Approval Details", "mandatory": true },
+    { "name": "Communication History", "mandatory": false }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

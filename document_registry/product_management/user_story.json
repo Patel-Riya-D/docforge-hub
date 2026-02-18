@@ -1,0 +1,16 @@
+{
+  "document_name": "User Story Template",
+  "department": "Product Management",
+  "internal_type": "TEMPLATE",
+  "risk_level": "LOW",
+  "approval_required": false,
+  "versioning": { "review_cycle": "continuous" },
+  "sections": [
+    { "name": "Story Title", "mandatory": true },
+    { "name": "User Statement", "mandatory": true },
+    { "name": "Acceptance Criteria", "mandatory": true },
+    { "name": "Edge Cases", "mandatory": false },
+    { "name": "Dependencies", "mandatory": false }
+  ],
+  "allowed_formats": ["notion"]
+}

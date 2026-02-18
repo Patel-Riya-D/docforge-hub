@@ -1,0 +1,35 @@
+{
+  "document_name": "Budget Template",
+  "department": "Finance & Accounting",
+  "internal_type": "TEMPLATE",
+  "risk_level": "LOW",
+  "approval_required": false,
+  "versioning": { "review_cycle": "annual" },
+   "input_groups": [
+    {
+      "group_name": "Budget Scope",
+      "fields": [
+        {
+          "key": "fiscal_year",
+          "label": "Fiscal Year",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "department_allocations",
+          "label": "Department Allocations",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "sections": [
+    { "name": "Department", "mandatory": true },
+    { "name": "Budget Categories", "mandatory": true },
+    { "name": "Estimated Costs", "mandatory": true },
+    { "name": "Actual Costs", "mandatory": true },
+    { "name": "Variance", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "excel"]
+}

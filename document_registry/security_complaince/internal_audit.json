@@ -1,0 +1,24 @@
+{
+  "document_name": "Internal Audit Report",
+  "department": "Security & Compliance",
+  "internal_type": "REPORT",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": {
+    "review_cycle": "per-audit"
+  },
+  "sections": [
+    { "name": "Introduction", "mandatory": true },
+    { "name": "Objective and Scope", "mandatory": true },
+    { "name": "Methodology", "mandatory": true },
+    { "name": "Audit Observations", "mandatory": true },
+    { "name": "Corrective Action", "mandatory": true },
+    { "name": "Recommendations", "mandatory": true },
+    { "name": "Conclusion", "mandatory": true },
+    { "name": "Glossary", "mandatory": false },
+    { "name": "References", "mandatory": false },
+    { "name": "Action Taken Report", "mandatory": false },
+    { "name": "Guidance Notes", "mandatory": false }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

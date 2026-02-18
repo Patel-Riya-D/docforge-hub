@@ -1,0 +1,15 @@
+{
+  "document_name": "Test Plan Template",
+  "department": "Engineering",
+  "internal_type": "TEMPLATE",
+  "risk_level": "LOW",
+  "approval_required": true,
+  "versioning": { "review_cycle": "annual" },
+  "sections": [
+    { "name": "header", "mandatory": true },
+    { "name": "body", "mandatory": true },
+    { "name": "placeholders", "mandatory": true },
+    { "name": "footer", "mandatory": true }
+  ],
+  "allowed_formats": ["docx", "notion"]
+}

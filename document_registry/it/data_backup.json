@@ -1,0 +1,38 @@
+{
+  "document_name": "Data Backup and Recovery SOP",
+  "department": "IT Operations",
+  "internal_type": "SOP",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": {
+    "review_cycle": "annual"
+  },
+  "input_groups": [
+    {
+      "group_name": "Backup Strategy",
+      "fields": [
+        {
+          "key": "backup_frequency",
+          "label": "Backup Frequency",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "backup_storage_location",
+          "label": "Backup Storage Location",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "sections": [
+    { "name": "Purpose", "mandatory": true },
+    { "name": "Scope", "mandatory": true },
+    { "name": "Roles and Responsibilities", "mandatory": true },
+    { "name": "Process Steps", "mandatory": true },
+    { "name": "Documentation and Tools", "mandatory": true },
+    { "name": "Compliance and Security Requirements", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

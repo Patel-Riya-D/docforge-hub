@@ -1,0 +1,36 @@
+{
+  "document_name": "Legal Notice",
+  "department": "Legal",
+  "internal_type": "LETTER",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": { "review_cycle": "per-case" },
+  "input_groups": [
+    {
+      "group_name": "Notice Details",
+      "fields": [
+        {
+          "key": "notice_subject",
+          "label": "Notice Subject",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "legal_claim",
+          "label": "Legal Claim Description",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    }
+  ],
+
+  "sections": [
+    { "name": "Notice Subject", "mandatory": true },
+    { "name": "Parties", "mandatory": true },
+    { "name": "Legal Reference", "mandatory": true },
+    { "name": "Action Required", "mandatory": true },
+    { "name": "Deadline", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

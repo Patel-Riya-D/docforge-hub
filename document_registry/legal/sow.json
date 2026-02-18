@@ -1,0 +1,22 @@
+{
+  "document_name": "Statement of Work",
+  "department": "Legal",
+  "internal_type": "CONTRACT",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": { "review_cycle": "per-project" },
+  "sections": [
+    { "name": "Project Overview", "mandatory": true },
+    { "name": "Scope of Work", "mandatory": true },
+    { "name": "Deliverables", "mandatory": true },
+    { "name": "Project Schedule", "mandatory": true },
+    { "name": "Roles and Responsibilities", "mandatory": true },
+    { "name": "Payment Terms", "mandatory": true },
+    { "name": "Acceptance Criteria", "mandatory": true },
+    { "name": "Assumptions and Constraints", "mandatory": false },
+    { "name": "Risks and Mitigation Plans", "mandatory": false },
+    { "name": "Terms and Conditions", "mandatory": true },
+    { "name": "Signatures and Approvals", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

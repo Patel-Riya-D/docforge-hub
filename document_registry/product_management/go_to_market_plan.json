@@ -1,0 +1,21 @@
+{
+  "document_name": "Go-To-Market Plan",
+  "department": "Product Management",
+  "internal_type": "STRATEGY",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": { "review_cycle": "per-launch" },
+  "sections": [
+    { "name": "About", "mandatory": true },
+    { "name": "Summary", "mandatory": true },
+    { "name": "Launch Date", "mandatory": true },
+    { "name": "Goals", "mandatory": true },
+    { "name": "Team", "mandatory": true },
+    { "name": "Product Information", "mandatory": true },
+    { "name": "Execution Plan", "mandatory": true },
+    { "name": "Pre-Launch Checklist", "mandatory": true },
+    { "name": "Launch Day Runbook", "mandatory": true },
+    { "name": "Post Mortem", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

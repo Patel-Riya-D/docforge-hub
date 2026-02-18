@@ -1,0 +1,18 @@
+{
+  "document_name": "Product Strategy",
+  "department": "Product Management",
+  "internal_type": "STRATEGY",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": { "review_cycle": "annual" },
+  "sections": [
+    { "name": "Vision Statement", "mandatory": true },
+    { "name": "Market Opportunity", "mandatory": true },
+    { "name": "Target Customers", "mandatory": true },
+    { "name": "Value Proposition", "mandatory": true },
+    { "name": "Differentiation", "mandatory": true },
+    { "name": "Strategic Goals", "mandatory": true },
+    { "name": "Metrics", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

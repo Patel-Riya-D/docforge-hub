@@ -1,0 +1,55 @@
+{
+  "document_name": "Product Launch Checklist",
+  "department": "Product Management",
+  "internal_type": "CHECKLIST",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": { "review_cycle": "per-launch" },
+   "input_groups": [
+    {
+      "group_name": "Launch Strategy",
+      "fields": [
+        {
+          "key": "release_type",
+          "label": "Release Type (Major / Minor / Patch)",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "target_customer_segment",
+          "label": "Target Customer Segment",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "key": "go_live_approval_owner",
+          "label": "Go-Live Approval Owner",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "rollback_plan_defined",
+          "label": "Rollback Strategy Defined?",
+          "type": "boolean",
+          "required": true
+        }
+      ]
+    }
+  ],
+
+  "sections": [
+    { "name": "Objective", "mandatory": true },
+    { "name": "Market Research", "mandatory": true },
+    { "name": "Competitive Analysis", "mandatory": true },
+    { "name": "Success Metrics", "mandatory": true },
+    { "name": "Target Personas", "mandatory": true },
+    { "name": "Messaging and Positioning", "mandatory": true },
+    { "name": "Product Description", "mandatory": true },
+    { "name": "Pricing", "mandatory": true },
+    { "name": "Release Roadmap", "mandatory": true },
+    { "name": "Distribution Channels and Launch Activities", "mandatory": true },
+    { "name": "Support Plan", "mandatory": true },
+    { "name": "Reference Materials", "mandatory": false }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

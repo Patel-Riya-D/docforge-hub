@@ -1,0 +1,24 @@
+{
+  "document_name": "Security Incident Response Plan",
+  "department": "Security & Compliance",
+  "internal_type": "RUNBOOK",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": {
+    "review_cycle": "annual"
+  },
+  "sections": [
+    { "name": "Authority and Review", "mandatory": true },
+    { "name": "Purpose and Scope", "mandatory": true },
+    { "name": "Incident Response Team", "mandatory": true },
+    { "name": "Incident Response Life Cycle Process", "mandatory": true },
+    { "name": "Incident Occurrence and Awareness", "mandatory": true },
+    { "name": "Incident Response Process Detail", "mandatory": true },
+    { "name": "Communication Methods", "mandatory": true },
+    { "name": "Information Recording", "mandatory": true },
+    { "name": "Incident Response Exercises", "mandatory": false },
+    { "name": "Summary", "mandatory": true },
+    { "name": "Appendices", "mandatory": false }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

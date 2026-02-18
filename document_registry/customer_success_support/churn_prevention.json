@@ -1,0 +1,37 @@
+{
+  "document_name": "Churn Prevention and Win-Back SOP",
+  "department": "Customer Success",
+  "internal_type": "SOP",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": {
+    "review_cycle": "annual"
+  },
+  "input_groups": [
+    {
+      "group_name": "Churn Indicators",
+      "fields": [
+        {
+          "key": "churn_signals",
+          "label": "Churn Warning Signals",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "sections": [
+    { "name": "Objective", "mandatory": true },
+    { "name": "Scope", "mandatory": true },
+    { "name": "Roles and Responsibilities", "mandatory": true },
+    { "name": "Churn Risk Identification Criteria", "mandatory": true },
+    { "name": "Health Score Monitoring", "mandatory": true },
+    { "name": "Early Intervention Process", "mandatory": true },
+    { "name": "Retention Action Plan", "mandatory": true },
+    { "name": "Escalation Criteria", "mandatory": false },
+    { "name": "Win-Back Strategy", "mandatory": true },
+    { "name": "Documentation and Reporting", "mandatory": true },
+    { "name": "Review and Improvement", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

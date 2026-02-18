@@ -1,0 +1,15 @@
+{
+  "internal_type": "MATRIX",
+  "default_risk_level": "MEDIUM",
+  "approval_required": false,
+  "mandatory_columns": [
+    "Identifier",
+    "Description",
+    "Owner",
+    "Status",
+    "Priority / Risk",
+    "Last Updated"
+  ],
+  "versioning_strategy": "incremental",
+  "supported_formats": ["excel", "notion"]
+}

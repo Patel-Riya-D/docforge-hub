@@ -1,0 +1,26 @@
+{
+  "document_name": "User Access Review Policy",
+  "department": "Security & Compliance",
+  "internal_type": "POLICY",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": {
+    "review_cycle": "annual"
+  },
+  "sections": [
+    { "name": "Company Information", "mandatory": true },
+    { "name": "Company Overview", "mandatory": true },
+    { "name": "Purpose", "mandatory": true },
+    { "name": "Scope", "mandatory": true },
+    { "name": "Definitions", "mandatory": true },
+    { "name": "Policy Statement", "mandatory": true },
+    { "name": "Responsibilities", "mandatory": true },
+    { "name": "User Access Review Process", "mandatory": true },
+    { "name": "Exception Handling", "mandatory": false },
+    { "name": "Training and Awareness", "mandatory": false },
+    { "name": "Monitoring and Enforcement", "mandatory": true },
+    { "name": "Policy Review", "mandatory": true },
+    { "name": "Approval", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

@@ -1,0 +1,58 @@
+{
+  "required_fields": [
+    "document_name",
+    "department",
+    "internal_type",
+    "risk_level",
+    "approval_required",
+    "versioning",
+    "sections",
+    "allowed_formats"
+  ],
+
+  "field_types": {
+    "key": "string",
+    "document_name": "string",
+    "department": "string",
+    "internal_type": "string",
+    "risk_level": "string",
+    "approval_required": "boolean",
+    "versioning": "object",
+    "sections": "array",
+    "compliance_alignment": "array",
+    "allowed_formats": "array"
+  },
+
+  "allowed_internal_types": [
+    "POLICY",
+    "SOP",
+    "FAQ",
+    "GUIDELINE",
+    "RUNBOOK",
+    "PLAYBOOK",
+    "FORM",
+    "TEMPLATE",
+    "REPORT"
+  ],
+
+  "allowed_risk_levels": [
+    "LOW",
+    "MEDIUM",
+    "HIGH"
+  ],
+
+  "allowed_formats": [
+    "notion",
+    "pdf",
+    "excel",
+    "docx"
+  ],
+
+  "section_schema": {
+    "required_fields": ["name", "mandatory"],
+    "field_types": {
+      "name": "string",
+      "mandatory": "boolean"
+    }
+  }
+}

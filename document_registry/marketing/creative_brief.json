@@ -1,0 +1,23 @@
+{
+  "document_name": "Creative Brief Template",
+  "department": "Marketing",
+  "internal_type": "TEMPLATE",
+  "risk_level": "LOW",
+  "approval_required": true,
+  "versioning": { "review_cycle": "per-project" },
+  "sections": [
+    { "name": "Problem Description", "mandatory": true },
+    { "name": "Activity Duration", "mandatory": true },
+    { "name": "Target Audience", "mandatory": true },
+    { "name": "Behavior Change Objectives", "mandatory": true },
+    { "name": "Communication Objectives", "mandatory": true },
+    { "name": "Key Promise", "mandatory": true },
+    { "name": "Support Statements", "mandatory": false },
+    { "name": "Tone", "mandatory": true },
+    { "name": "Key Content", "mandatory": true },
+    { "name": "Call to Action", "mandatory": true },
+    { "name": "Channels", "mandatory": true },
+    { "name": "Creative Considerations", "mandatory": false }
+  ],
+  "allowed_formats": ["notion"]
+}

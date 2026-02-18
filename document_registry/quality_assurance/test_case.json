@@ -1,0 +1,19 @@
+{
+  "document_name": "Test Case",
+  "department": "Quality Assurance",
+  "internal_type": "TEMPLATE",
+  "risk_level": "LOW",
+  "approval_required": false,
+  "versioning": { "review_cycle": "continuous" },
+  "sections": [
+    { "name": "Test Case ID", "mandatory": true },
+    { "name": "Test Case Description", "mandatory": true },
+    { "name": "Prerequisites", "mandatory": false },
+    { "name": "Test Steps", "mandatory": true },
+    { "name": "Expected Results", "mandatory": true },
+    { "name": "Actual Result", "mandatory": true },
+    { "name": "Status", "mandatory": true },
+    { "name": "Comments", "mandatory": false }
+  ],
+  "allowed_formats": ["notion", "excel"]
+}

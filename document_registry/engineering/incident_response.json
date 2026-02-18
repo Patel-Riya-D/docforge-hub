@@ -1,0 +1,34 @@
+{
+  "document_name": "Incident Response SOP",
+  "department": "Engineering",
+  "internal_type": "SOP",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": { "review_cycle": "annual" },
+  "input_groups": [
+    {
+      "group_name": "Incident Levels",
+      "fields": [
+        {
+          "key": "incident_severity_levels",
+          "label": "Severity Levels",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "sections": [
+    { "name": "purpose", "mandatory": true },
+    { "name": "scope", "mandatory": true },
+    { "name": "responsibilities", "mandatory": true },
+    { "name": "procedure", "mandatory": true },
+    { "name": "controls", "mandatory": true },
+    { "name": "review", "mandatory": true },
+
+    { "name": "incident timeline", "mandatory": false },
+    { "name": "root cause analysis", "mandatory": false },
+    { "name": "lessons learned", "mandatory": false }
+  ],
+  "allowed_formats": ["notion", "docx"]
+}

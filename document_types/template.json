@@ -1,0 +1,14 @@
+{
+  "internal_type": "TEMPLATE",
+  "default_risk_level": "LOW",
+  "approval_required": false,
+  "mandatory_sections": [
+    "header",
+    "body",
+    "placeholders",
+    "footer"
+  ],
+  "versioning_strategy": "flexible",
+  "common_input_groups": [],
+  "supported_formats": ["docx", "excel", "notion"]
+}

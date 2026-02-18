@@ -1,0 +1,17 @@
+{
+  "document_name": "Blog Post Template",
+  "department": "Marketing",
+  "internal_type": "TEMPLATE",
+  "risk_level": "LOW",
+  "approval_required": false,
+  "versioning": { "review_cycle": "annual" },
+  "sections": [
+    { "name": "Title", "mandatory": true },
+    { "name": "Introduction", "mandatory": true },
+    { "name": "Main Content", "mandatory": true },
+    { "name": "Examples and Use Cases", "mandatory": false },
+    { "name": "Call to Action", "mandatory": true },
+    { "name": "Conclusion", "mandatory": true }
+  ],
+  "allowed_formats": ["notion"]
+}

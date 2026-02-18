@@ -1,0 +1,40 @@
+{
+  "document_name": "Data Processing Agreement",
+  "department": "Legal",
+  "internal_type": "CONTRACT",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": { "review_cycle": "annual" },
+  "input_groups": [
+    {
+      "group_name": "Processing Scope",
+      "fields": [
+        {
+          "key": "data_categories",
+          "label": "Categories of Data Processed",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "key": "processing_purpose",
+          "label": "Purpose of Processing",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "sections": [
+    { "name": "Whereas", "mandatory": true },
+    { "name": "Definitions", "mandatory": true },
+    { "name": "Processing of Personal Data", "mandatory": true },
+    { "name": "Confidentiality", "mandatory": true },
+    { "name": "Technical and Organizational Measures", "mandatory": true },
+    { "name": "Sub-Processors", "mandatory": true },
+    { "name": "Data Subject Rights", "mandatory": true },
+    { "name": "Personal Data Breach", "mandatory": true },
+    { "name": "Audit Rights", "mandatory": true },
+    { "name": "Governing Law and Venue", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

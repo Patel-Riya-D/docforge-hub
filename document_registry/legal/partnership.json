@@ -1,0 +1,18 @@
+{
+  "document_name": "Partnership Agreement",
+  "department": "Legal",
+  "internal_type": "CONTRACT",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": { "review_cycle": "per-agreement" },
+  "sections": [
+    { "name": "Definitions", "mandatory": true },
+    { "name": "Duties and Obligations", "mandatory": true },
+    { "name": "Payment Terms", "mandatory": true },
+    { "name": "Confidentiality", "mandatory": true },
+    { "name": "Intellectual Property", "mandatory": true },
+    { "name": "Term and Termination", "mandatory": true },
+    { "name": "General Provisions", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

@@ -1,0 +1,24 @@
+{
+  "internal_type": "GUIDELINE",
+  "default_risk_level": "MEDIUM",
+  "approval_required": false,
+  "mandatory_sections": [
+    "Introduction",
+    "Purpose",
+    "Scope",
+    "Guidelines / Principles",
+    "Do’s and Don’ts",
+    "References",
+    "Review"
+  ],
+    "common_input_groups": [
+    {
+      "group_name": "Guideline Information",
+      "fields": [
+        { "key": "guideline_owner", "label": "Owner", "type": "text", "required": true }
+      ]
+    }
+  ],
+  "versioning_strategy": "flexible",
+  "supported_formats": ["notion", "docx"]
+}

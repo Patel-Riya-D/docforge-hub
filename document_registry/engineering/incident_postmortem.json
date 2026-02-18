@@ -1,0 +1,20 @@
+{
+  "document_name": "Incident Postmortem",
+  "department": "Engineering",
+  "internal_type": "REPORT",
+  "risk_level": "MEDIUM",
+  "approval_required": true,
+  "versioning": { "review_cycle": "annual" },
+  "sections": [
+    { "name": "title", "mandatory": true },
+    { "name": "summary", "mandatory": true },
+    { "name": "methodology", "mandatory": true },
+    { "name": "analysis", "mandatory": true },
+    { "name": "findings", "mandatory": true },
+    { "name": "conclusion", "mandatory": true },
+
+    { "name": "timeline", "mandatory": false },
+    { "name": "corrective actions", "mandatory": false }
+  ],
+  "allowed_formats": ["notion", "pdf", "docx"]
+}

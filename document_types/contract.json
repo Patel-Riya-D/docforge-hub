@@ -1,0 +1,30 @@
+{
+  "internal_type": "CONTRACT",
+  "default_risk_level": "HIGH",
+  "approval_required": true,
+  "mandatory_sections": [
+    "Parties",
+    "Definitions",
+    "Scope",
+    "Obligations",
+    "Payment Terms",
+    "Confidentiality",
+    "Liability",
+    "Termination",
+    "Governing Law",
+    "Signatures"
+  ],
+  "versioning_strategy": "strict",
+  "common_input_groups": [
+    {
+      "group_name": "General Contract Information",
+      "fields": [
+        { "key": "party_a", "label": "Party A Name", "type": "text", "required": true },
+        { "key": "party_b", "label": "Party B Name", "type": "text", "required": true },
+        { "key": "effective_date", "label": "Effective Date", "type": "date", "required": true },
+        { "key": "jurisdiction", "label": "Governing Law / Jurisdiction", "type": "text", "required": true }
+      ]
+    }
+  ],
+  "supported_formats": ["pdf", "docx"]
+}

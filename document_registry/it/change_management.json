@@ -1,0 +1,44 @@
+{
+  "document_name": "Change Management Template",
+  "department": "IT Operations",
+  "internal_type": "TEMPLATE",
+  "risk_level": "MEDIUM",
+  "approval_required": true,
+  "versioning": {
+    "review_cycle": "per-change"
+  },
+   "input_groups": [
+    {
+      "group_name": "Change Categories",
+      "fields": [
+        {
+          "key": "change_types",
+          "label": "Types of Changes (Normal, Emergency, Standard)",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    },
+    {
+      "group_name": "Approval Workflow",
+      "fields": [
+        {
+          "key": "change_approval_process",
+          "label": "Change Approval Process",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    }
+  ],  
+  "sections": [
+    { "name": "Title", "mandatory": true },
+    { "name": "Summary", "mandatory": true },
+    { "name": "Change Details", "mandatory": true },
+    { "name": "Change Plans", "mandatory": true },
+    { "name": "Change Implementation Tasks", "mandatory": true },
+    { "name": "Communications", "mandatory": true },
+    { "name": "Post-Implementation Review", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

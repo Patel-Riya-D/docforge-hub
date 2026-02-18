@@ -1,0 +1,41 @@
+{
+  "document_name": "IT Operations SOP",
+  "department": "IT Operations",
+  "internal_type": "SOP",
+  "risk_level": "MEDIUM",
+  "approval_required": true,
+  "versioning": {
+    "review_cycle": "annual"
+  },
+   "input_groups": [
+    {
+      "group_name": "Operational Scope",
+      "fields": [
+        {
+          "key": "infrastructure_scope",
+          "label": "Infrastructure Scope",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "key": "monitoring_tools",
+          "label": "Monitoring Tools Used",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "sections": [
+    { "name": "Title", "mandatory": true },
+    { "name": "Objective", "mandatory": true },
+    { "name": "Scope", "mandatory": true },
+    { "name": "Roles & Responsibilities", "mandatory": true },
+    { "name": "Required Tools / Systems", "mandatory": true },
+    { "name": "Step-by-Step Procedure", "mandatory": true },
+    { "name": "Monitoring Requirements", "mandatory": false },
+    { "name": "Escalation Process", "mandatory": true },
+    { "name": "Revision History", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

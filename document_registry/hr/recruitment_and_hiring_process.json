@@ -1,0 +1,42 @@
+{
+  "document_name": "Recruitment and Hiring Process Policy",
+  "department": "HR",
+  "internal_type": "POLICY",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": { "review_cycle": "annual" },
+  "input_groups": [
+    {
+      "group_name": "Hiring Workflow",
+      "fields": [
+        {
+          "key": "interview_rounds",
+          "label": "Number and Type of Interview Rounds",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "key": "selection_criteria",
+          "label": "Selection Criteria",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    }
+  ],
+
+  "sections": [
+    { "name": "Objective", "mandatory": true },
+    { "name": "Scope", "mandatory": true },
+    { "name": "Equal Opportunity Statement", "mandatory": true },
+    { "name": "Recruitment Process", "mandatory": true },
+    { "name": "Internal Mobility and Promotion", "mandatory": false },
+    { "name": "Candidate Experience", "mandatory": false },
+    { "name": "Background Checks and References", "mandatory": true },
+    { "name": "Data Protection Compliance", "mandatory": true },
+    { "name": "Documentation and Record-Keeping", "mandatory": true },
+    { "name": "Policy Review and Updates", "mandatory": true },
+    { "name": "Frequently Asked Questions", "mandatory": false }
+  ],
+  "allowed_formats": ["notion", "pdf", "docx"]
+}

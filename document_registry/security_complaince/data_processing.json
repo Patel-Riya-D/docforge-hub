@@ -1,0 +1,27 @@
+{
+  "document_name": "Data Processing Agreement",
+  "department": "Security & Compliance",
+  "internal_type": "CONTRACT",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": {
+    "review_cycle": "annual"
+  },
+  "sections": [
+    { "name": "Whereas", "mandatory": true },
+    { "name": "Definitions and Interpretation", "mandatory": true },
+    { "name": "Processing of Company Personal Data", "mandatory": true },
+    { "name": "Processor Personnel", "mandatory": true },
+    { "name": "Security", "mandatory": true },
+    { "name": "Subprocessing", "mandatory": true },
+    { "name": "Data Subject Rights", "mandatory": true },
+    { "name": "Personal Data Breach", "mandatory": true },
+    { "name": "Data Protection Impact Assessment and Prior Consultation", "mandatory": true },
+    { "name": "Deletion or Return of Company Personal Data", "mandatory": true },
+    { "name": "Audit Rights", "mandatory": true },
+    { "name": "Data Transfer", "mandatory": true },
+    { "name": "General Terms", "mandatory": true },
+    { "name": "Governing Law and Jurisdiction", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

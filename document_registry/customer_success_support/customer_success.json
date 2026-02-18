@@ -1,0 +1,23 @@
+{
+  "document_name": "Customer Success Playbook",
+  "department": "Customer Success",
+  "internal_type": "PLAYBOOK",
+  "risk_level": "MEDIUM",
+  "approval_required": true,
+  "versioning": {
+    "review_cycle": "annual"
+  },
+  "sections": [
+    { "name": "Introduction", "mandatory": true },
+    { "name": "Customer Segmentation", "mandatory": true },
+    { "name": "Onboarding Play", "mandatory": true },
+    { "name": "Adoption Play", "mandatory": true },
+    { "name": "Risk and Churn Prevention Play", "mandatory": true },
+    { "name": "Renewal Play", "mandatory": true },
+    { "name": "Expansion and Upsell Play", "mandatory": false },
+    { "name": "Communication Guidelines", "mandatory": true },
+    { "name": "Tools Used", "mandatory": false },
+    { "name": "KPIs in Playbook", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

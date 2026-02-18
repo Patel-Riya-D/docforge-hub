@@ -1,0 +1,52 @@
+{
+  "internal_type": "POLICY",
+  "default_risk_level": "HIGH",
+  "approval_required": true,
+
+  "versioning_strategy": "strict",
+
+  "mandatory_sections": [
+    "purpose",
+    "scope",
+    "policy",
+    "compliance",
+    "roles",
+    "consequences",
+    "exceptions",
+    "review"
+  ],
+
+  "common_input_groups": [
+    {
+      "group_name": "General Policy Information",
+      "fields": [
+        {
+          "key": "effective_date",
+          "label": "Effective Date",
+          "type": "date",
+          "required": true
+        },
+        {
+          "key": "policy_owner_role",
+          "label": "Policy Owner Role",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "applicable_locations",
+          "label": "Applicable Locations",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "review_frequency",
+          "label": "Review Frequency",
+          "type": "text",
+          "required": true
+        }
+      ]
+    }
+  ],
+
+  "supported_formats": ["notion", "pdf", "docx"]
+}

@@ -1,0 +1,38 @@
+{
+  "document_name": "Escalation SOP",
+  "department": "Customer Success",
+  "internal_type": "SOP",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": {
+    "review_cycle": "annual"
+  },
+   "input_groups": [
+    {
+      "group_name": "Escalation Levels",
+      "fields": [
+        {
+          "key": "escalation_matrix",
+          "label": "Escalation Matrix",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "sections": [
+    { "name": "Document Control Section", "mandatory": true },
+    { "name": "Purpose", "mandatory": true },
+    { "name": "Scope", "mandatory": true },
+    { "name": "Roles and Responsibilities", "mandatory": true },
+    { "name": "Process and Procedure", "mandatory": true },
+    { "name": "Escalation Matrix", "mandatory": true },
+    { "name": "SLA and Timelines", "mandatory": true },
+    { "name": "Tools and References", "mandatory": false },
+    { "name": "Records and Documentation", "mandatory": false },
+    { "name": "Exceptions", "mandatory": false },
+    { "name": "Definitions", "mandatory": false },
+    { "name": "Revision History", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

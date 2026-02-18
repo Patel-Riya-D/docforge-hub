@@ -1,0 +1,52 @@
+{
+  "document_name": "SOC 2 Report",
+  "department": "Security & Compliance",
+  "internal_type": "REPORT",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": {
+    "review_cycle": "annual"
+  },
+    "input_groups": [
+    {
+      "group_name": "SOC 2 Scope",
+      "fields": [
+        {
+          "key": "trust_service_criteria",
+          "label": "Trust Service Criteria (Security, Availability, etc.)",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "key": "report_type",
+          "label": "Report Type (Type I / Type II)",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "audit_firm",
+          "label": "Audit Firm Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "audit_frequency",
+          "label": "Audit Frequency",
+          "type": "text",
+          "required": true
+        }
+      ]
+    }
+  ],
+
+  "sections": [
+    { "name": "Management Assertion Letter", "mandatory": true },
+    { "name": "Auditor’s Opinion", "mandatory": false },
+    { "name": "System Description", "mandatory": true },
+    { "name": "Trust Services Criteria and Control Mapping", "mandatory": true },
+    { "name": "Control Implementation Overview", "mandatory": true },
+    { "name": "Results of Control Testing", "mandatory": false },
+    { "name": "Appendices", "mandatory": false }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

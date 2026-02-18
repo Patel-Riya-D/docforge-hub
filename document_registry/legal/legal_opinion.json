@@ -1,0 +1,32 @@
+{
+  "document_name": "Legal Opinion Memo",
+  "department": "Legal",
+  "internal_type": "MEMO",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": { "review_cycle": "per-opinion" },
+   "input_groups": [
+    {
+      "group_name": "Opinion Scope",
+      "fields": [
+        {
+          "key": "matter_description",
+          "label": "Matter Description",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    }
+  ],
+
+  "sections": [
+    { "name": "Issue Presented", "mandatory": true },
+    { "name": "Background", "mandatory": true },
+    { "name": "Legal Analysis", "mandatory": true },
+    { "name": "Applicable Laws", "mandatory": true },
+    { "name": "Risk Assessment", "mandatory": true },
+    { "name": "Conclusion", "mandatory": true },
+    { "name": "Recommendations", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

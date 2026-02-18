@@ -1,0 +1,44 @@
+{
+  "document_name": "ISO 42001 – AI Management System",
+  "department": "Security & Compliance",
+  "internal_type": "POLICY",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": {
+    "review_cycle": "annual"
+  },
+   "input_groups": [
+    {
+      "group_name": "Compliance Scope",
+      "fields": [
+        {
+          "key": "iso_standard",
+          "label": "ISO Standard (e.g., ISO 27001)",
+          "type": "text",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "sections": [
+    { "name": "Introduction", "mandatory": true },
+    { "name": "Organizational Context", "mandatory": true },
+    { "name": "Leadership and Governance", "mandatory": true },
+    { "name": "AI Policy", "mandatory": true },
+    { "name": "Risk Management for AI", "mandatory": true },
+    { "name": "AI Lifecycle Management", "mandatory": true },
+    { "name": "Data Governance", "mandatory": true },
+    { "name": "Transparency and Explainability", "mandatory": true },
+    { "name": "Human Oversight", "mandatory": true },
+    { "name": "Security Controls for AI Systems", "mandatory": true },
+    { "name": "AI Incident Management", "mandatory": true },
+    { "name": "Compliance and Legal Requirements", "mandatory": true },
+    { "name": "Performance Monitoring and Evaluation", "mandatory": true },
+    { "name": "Training and Awareness", "mandatory": false },
+    { "name": "Documentation and Records", "mandatory": true },
+    { "name": "Internal Audit and Review", "mandatory": true },
+    { "name": "Continuous Improvement", "mandatory": true },
+    { "name": "Annex / Appendices", "mandatory": false }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

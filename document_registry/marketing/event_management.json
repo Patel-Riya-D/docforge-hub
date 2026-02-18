@@ -1,0 +1,21 @@
+{
+  "document_name": "Event Management SOP",
+  "department": "Marketing",
+  "internal_type": "SOP",
+  "risk_level": "MEDIUM",
+  "approval_required": true,
+  "versioning": { "review_cycle": "per-event" },
+  "sections": [
+    { "name": "Objective", "mandatory": true },
+    { "name": "Purpose Definition", "mandatory": true },
+    { "name": "Objective Definition", "mandatory": true },
+    { "name": "Target Audience Identification", "mandatory": true },
+    { "name": "Event Planning", "mandatory": true },
+    { "name": "Venue Booking", "mandatory": true },
+    { "name": "Event Promotion", "mandatory": true },
+    { "name": "Event Execution", "mandatory": true },
+    { "name": "Post-Event Feedback Collection", "mandatory": true },
+    { "name": "Feedback Analysis", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

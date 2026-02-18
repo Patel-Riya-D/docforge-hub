@@ -1,0 +1,47 @@
+{
+  "document_name": "Anti-Sexual Harassment Policy",
+  "department": "HR",
+  "internal_type": "POLICY",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": { "review_cycle": "annual" },
+  "input_groups": [
+    {
+      "group_name": "Reporting Mechanism",
+      "fields": [
+        {
+          "key": "reporting_channels",
+          "label": "Reporting Channels (Email, Portal, Committee)",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    },
+    {
+      "group_name": "Internal Committee",
+      "fields": [
+        {
+          "key": "committee_structure",
+          "label": "Internal Committee Structure",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "sections": [
+    { "name": "Purpose", "mandatory": true },
+    { "name": "Scope", "mandatory": true },
+    { "name": "Policy Statement", "mandatory": true },
+    { "name": "Definition of Sexual Harassment", "mandatory": true },
+    { "name": "Examples of Prohibited Conduct", "mandatory": true },
+    { "name": "Reporting Procedure", "mandatory": true },
+    { "name": "Investigation Process", "mandatory": true },
+    { "name": "Confidentiality", "mandatory": true },
+    { "name": "Protection Against Retaliation", "mandatory": true },
+    { "name": "Disciplinary Actions", "mandatory": true },
+    { "name": "Legal Compliance", "mandatory": true },
+    { "name": "Contact Information for Support", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf", "docx"]
+}

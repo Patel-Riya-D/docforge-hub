@@ -1,0 +1,22 @@
+{
+  "document_name": "Editorial Guidelines",
+  "department": "Marketing",
+  "internal_type": "GUIDELINE",
+  "risk_level": "LOW",
+  "approval_required": true,
+  "versioning": { "review_cycle": "annual" },
+  "sections": [
+    { "name": "Purpose", "mandatory": true },
+    { "name": "Scope", "mandatory": true },
+    { "name": "Writing Style", "mandatory": true },
+    { "name": "Grammar and Punctuation", "mandatory": true },
+    { "name": "Formatting", "mandatory": true },
+    { "name": "Inclusive Language", "mandatory": true },
+    { "name": "Citation and Referencing", "mandatory": false },
+    { "name": "Editorial Process", "mandatory": true },
+    { "name": "Visual Guidelines", "mandatory": false },
+    { "name": "Tone and Voice", "mandatory": true },
+    { "name": "Updating and Review", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

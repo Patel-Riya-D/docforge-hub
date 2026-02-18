@@ -1,0 +1,52 @@
+{
+  "document_name": "Offer Letter",
+  "department": "HR",
+  "internal_type": "TEMPLATE",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": { "review_cycle": "annual" },
+  "input_groups": [
+    {
+      "group_name": "Candidate Details",
+      "fields": [
+        {
+          "key": "job_title",
+          "label": "Job Title",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "salary_structure",
+          "label": "Salary Structure Description",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "key": "joining_date_policy",
+          "label": "Joining Date Terms",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "sections": [
+    { "name": "Candidate Name & Job Title", "mandatory": true },
+    { "name": "Employment Type", "mandatory": true },
+    { "name": "Job Responsibilities / Role Description", "mandatory": true },
+    { "name": "Reporting Manager", "mandatory": true },
+    { "name": "Work Location", "mandatory": true },
+    { "name": "Working Hours", "mandatory": true },
+    { "name": "Employment Start Date", "mandatory": true },
+    { "name": "Compensation (Base Salary)", "mandatory": true },
+    { "name": "Additional Compensation", "mandatory": false },
+    { "name": "Benefits Summary", "mandatory": false },
+    { "name": "Probation Period", "mandatory": true },
+    { "name": "Employment Contingencies", "mandatory": true },
+    { "name": "Confidentiality & IP Clause", "mandatory": true },
+    { "name": "Termination Conditions", "mandatory": true },
+    { "name": "Acceptance of Offer", "mandatory": true },
+    { "name": "Signature Block", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf", "docx"]
+}

@@ -1,0 +1,18 @@
+{
+  "document_name": "Internal Audit Checklist",
+  "department": "Finance & Accounting",
+  "internal_type": "CHECKLIST",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": { "review_cycle": "per-audit" },
+  "sections": [
+    { "name": "Introduction", "mandatory": true },
+    { "name": "Audit Scope", "mandatory": true },
+    { "name": "Documents Required", "mandatory": true },
+    { "name": "Compliance Checks", "mandatory": true },
+    { "name": "Findings", "mandatory": true },
+    { "name": "Risk Level", "mandatory": true },
+    { "name": "Recommendations", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

@@ -1,0 +1,60 @@
+{
+  "document_name": "Risk Assessment Template",
+  "department": "Security & Compliance",
+  "internal_type": "TEMPLATE",
+  "risk_level": "MEDIUM",
+  "approval_required": true,
+  "versioning": {
+    "review_cycle": "per-assessment"
+  },
+    "input_groups": [
+    {
+      "group_name": "Risk Framework",
+      "fields": [
+        {
+          "key": "risk_scoring_model",
+          "label": "Risk Scoring Model (e.g., Likelihood x Impact)",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "risk_categories",
+          "label": "Risk Categories (Operational, Financial, Security, etc.)",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "key": "review_frequency",
+          "label": "Risk Review Frequency",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "risk_owner_role",
+          "label": "Risk Owner Role",
+          "type": "text",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "sections": [
+    { "name": "Document Title", "mandatory": true },
+    { "name": "Purpose", "mandatory": true },
+    { "name": "Scope", "mandatory": true },
+    { "name": "Assessment Methodology", "mandatory": true },
+    { "name": "Risk Identification", "mandatory": true },
+    { "name": "Risk Description", "mandatory": true },
+    { "name": "Impact Assessment", "mandatory": true },
+    { "name": "Likelihood Assessment", "mandatory": true },
+    { "name": "Risk Rating / Risk Score", "mandatory": true },
+    { "name": "Existing Controls", "mandatory": false },
+    { "name": "Risk Treatment Plan", "mandatory": true },
+    { "name": "Mitigation Actions", "mandatory": true },
+    { "name": "Residual Risk", "mandatory": false },
+    { "name": "Risk Owner", "mandatory": true },
+    { "name": "Review Date", "mandatory": true },
+    { "name": "Approval", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "excel"]
+}

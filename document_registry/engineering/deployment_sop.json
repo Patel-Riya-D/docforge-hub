@@ -1,0 +1,40 @@
+{
+  "document_name": "Deployment SOP",
+  "department": "Engineering",
+  "internal_type": "SOP",
+  "risk_level": "MEDIUM",
+  "approval_required": true,
+  "versioning": { "review_cycle": "annual" },
+  "input_groups": [
+    {
+      "group_name": "Deployment Strategy",
+      "fields": [
+        {
+          "key": "deployment_type",
+          "label": "Deployment Type (Blue/Green, Canary)",
+          "type": "text",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "sections": [
+    { "name": "purpose", "mandatory": true },
+    { "name": "scope", "mandatory": true },
+    { "name": "responsibilities", "mandatory": true },
+    { "name": "procedure", "mandatory": true },
+    { "name": "controls", "mandatory": true },
+    { "name": "review", "mandatory": true },
+
+    { "name": "definitions", "mandatory": false },
+    { "name": "pre-deployment requirements", "mandatory": false },
+    { "name": "deployment planning", "mandatory": false },
+    { "name": "testing and validation", "mandatory": false },
+    { "name": "rollback procedure", "mandatory": false },
+    { "name": "monitoring and logging", "mandatory": false },
+    { "name": "incident handling", "mandatory": false },
+    { "name": "documentation and change records", "mandatory": false },
+    { "name": "security considerations", "mandatory": false }
+  ],
+  "allowed_formats": ["notion", "docx"]
+}

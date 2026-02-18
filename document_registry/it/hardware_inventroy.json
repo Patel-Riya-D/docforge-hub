@@ -1,0 +1,40 @@
+{
+  "document_name": "Hardware Inventory Template",
+  "department": "IT Operations",
+  "internal_type": "TEMPLATE",
+  "risk_level": "LOW",
+  "approval_required": false,
+  "versioning": {
+    "review_cycle": "annual"
+  },
+   "input_groups": [
+    {
+      "group_name": "Inventory Controls",
+      "fields": [
+        {
+          "key": "asset_tracking_method",
+          "label": "Asset Tracking Method",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "key": "inventory_audit_frequency",
+          "label": "Inventory Audit Frequency",
+          "type": "text",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "sections": [
+    { "name": "Title", "mandatory": true },
+    { "name": "Asset Identification Section", "mandatory": true },
+    { "name": "Ownership and Assignment", "mandatory": true },
+    { "name": "Procurement Details", "mandatory": false },
+    { "name": "Operational Status", "mandatory": true },
+    { "name": "Software and Security Details", "mandatory": true },
+    { "name": "Audit and Tracking", "mandatory": false },
+    { "name": "Approval and Authorization", "mandatory": false }
+  ],
+  "allowed_formats": ["notion", "excel"]
+}

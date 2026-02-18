@@ -1,0 +1,25 @@
+{
+  "internal_type": "RUNBOOK",
+  "default_risk_level": "HIGH",
+  "approval_required": true,
+  "mandatory_sections": [
+    "Objective",
+    "System Overview",
+    "Triggers",
+    "Step-by-Step Actions",
+    "Rollback / Recovery",
+    "Escalation Contacts",
+    "Post-Incident Review"
+  ],
+  "common_input_groups": [
+    {
+      "group_name": "Runbook Information",
+      "fields": [
+        { "key": "incident_type", "label": "Incident Type", "type": "text", "required": true },
+        { "key": "response_owner", "label": "Response Owner", "type": "text", "required": true }
+      ]
+    }
+  ],
+  "versioning_strategy": "strict",
+  "supported_formats": ["notion", "docx"]
+}

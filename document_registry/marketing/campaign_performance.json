@@ -1,0 +1,17 @@
+{
+  "document_name": "Campaign Performance Report",
+  "department": "Marketing",
+  "internal_type": "REPORT",
+  "risk_level": "MEDIUM",
+  "approval_required": true,
+  "versioning": { "review_cycle": "per-campaign" },
+  "sections": [
+    { "name": "Campaign Overview", "mandatory": true },
+    { "name": "Metrics", "mandatory": true },
+    { "name": "Channel Performance", "mandatory": true },
+    { "name": "ROI Analysis", "mandatory": true },
+    { "name": "Insights", "mandatory": true },
+    { "name": "Recommendations", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

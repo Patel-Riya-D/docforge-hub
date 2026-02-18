@@ -1,0 +1,54 @@
+{
+  "document_name": "Access Control Policy",
+  "department": "IT Operations",
+  "internal_type": "POLICY",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": {
+    "review_cycle": "annual"
+  },
+  "input_groups": [
+    {
+      "group_name": "Access Governance",
+      "fields": [
+        {
+          "key": "access_request_process",
+          "label": "Access Request Process",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "key": "access_review_frequency",
+          "label": "Access Review Frequency",
+          "type": "text",
+          "required": true
+        }
+      ]
+    },
+    {
+      "group_name": "Authentication Controls",
+      "fields": [
+        {
+          "key": "mfa_required",
+          "label": "Is MFA Required?",
+          "type": "boolean",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "sections": [
+    { "name": "Introduction", "mandatory": true },
+    { "name": "Purpose and Scope", "mandatory": true },
+    { "name": "Policy Statement", "mandatory": true },
+    { "name": "Roles and Responsibilities", "mandatory": true },
+    { "name": "Access Provisioning Process", "mandatory": true },
+    { "name": "Access Control Mechanisms", "mandatory": true },
+    { "name": "Information Release Protocols", "mandatory": false },
+    { "name": "Compliance", "mandatory": true },
+    { "name": "Policy Exceptions", "mandatory": false },
+    { "name": "Responsible Department", "mandatory": false },
+    { "name": "Date Issued / Date Reviewed", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

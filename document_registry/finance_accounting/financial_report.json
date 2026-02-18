@@ -1,0 +1,16 @@
+{
+  "document_name": "Financial Report Template",
+  "department": "Finance & Accounting",
+  "internal_type": "TEMPLATE",
+  "risk_level": "MEDIUM",
+  "approval_required": true,
+  "versioning": { "review_cycle": "quarterly" },
+  "sections": [
+    { "name": "Report Period", "mandatory": true },
+    { "name": "Revenue Summary", "mandatory": true },
+    { "name": "Expense Summary", "mandatory": true },
+    { "name": "Net Profit or Loss", "mandatory": true },
+    { "name": "Observations", "mandatory": false }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

@@ -1,0 +1,24 @@
+{
+  "internal_type": "REPORT",
+  "default_risk_level": "LOW",
+  "approval_required": false,
+  "mandatory_sections": [
+    "title",
+    "summary",
+    "methodology",
+    "analysis",
+    "findings",
+    "conclusion"
+  ],
+  "versioning_strategy": "flexible",
+  "common_input_groups": [
+    {
+      "group_name": "General Report Information",
+      "fields": [
+        { "key": "reporting_period", "label": "Reporting Period", "type": "text", "required": true },
+        { "key": "prepared_by", "label": "Prepared By", "type": "text", "required": true }
+      ]
+    }
+  ],
+  "supported_formats": ["notion", "pdf", "docx"]
+}

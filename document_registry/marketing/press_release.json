@@ -1,0 +1,37 @@
+{
+  "document_name": "Press Release Template",
+  "department": "Marketing",
+  "internal_type": "TEMPLATE",
+  "risk_level": "LOW",
+  "approval_required": true,
+  "versioning": { "review_cycle": "per-release" },
+  "input_groups": [
+    {
+      "group_name": "Announcement Details",
+      "fields": [
+        {
+          "key": "announcement_title",
+          "label": "Announcement Title",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "key_highlights",
+          "label": "Key Highlights",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "sections": [
+    { "name": "Headline", "mandatory": true },
+    { "name": "Lead Paragraph", "mandatory": true },
+    { "name": "Body Paragraphs", "mandatory": true },
+    { "name": "Quotes", "mandatory": false },
+    { "name": "Call to Action", "mandatory": true },
+    { "name": "Boilerplate", "mandatory": true },
+    { "name": "Contact Information", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

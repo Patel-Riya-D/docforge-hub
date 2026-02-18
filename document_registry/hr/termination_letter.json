@@ -1,0 +1,39 @@
+{
+  "document_name": "Termination Letter",
+  "department": "HR",
+  "internal_type": "TEMPLATE",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": { "review_cycle": "annual" },
+  "input_groups": [
+    {
+      "group_name": "Termination Details",
+      "fields": [
+        {
+          "key": "termination_reason_categories",
+          "label": "Termination Reason Categories",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "key": "notice_period_rules",
+          "label": "Notice Period Rules",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "sections": [
+    { "name": "Date of Termination", "mandatory": true },
+    { "name": "Reason for Termination", "mandatory": true },
+    { "name": "Summary of Events Leading to Termination", "mandatory": true },
+    { "name": "List of Verbal and Written Warnings", "mandatory": false },
+    { "name": "Equipment Return Instructions", "mandatory": true },
+    { "name": "Receipt of Company Property", "mandatory": true },
+    { "name": "Details of Final Pay and Benefits", "mandatory": true },
+    { "name": "Severance Package Details", "mandatory": false },
+    { "name": "Reminder of Agreements Still in Effect", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf", "docx"]
+}

@@ -1,0 +1,36 @@
+{
+  "document_name": "Test Plan Template",
+  "department": "Quality Assurance",
+  "internal_type": "TEMPLATE",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": { "review_cycle": "per-project" },
+    "input_groups": [
+    {
+      "group_name": "Test Scope",
+      "fields": [
+        {
+          "key": "test_objectives",
+          "label": "Test Objectives",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "sections": [
+    { "name": "Introduction", "mandatory": true },
+    { "name": "Purpose", "mandatory": true },
+    { "name": "Project Overview", "mandatory": true },
+    { "name": "Scope", "mandatory": true },
+    { "name": "Testing Strategy", "mandatory": true },
+    { "name": "Testing Objectives", "mandatory": true },
+    { "name": "Test Assumptions", "mandatory": false },
+    { "name": "Test Data Approach", "mandatory": true },
+    { "name": "Levels of Testing", "mandatory": true },
+    { "name": "Execution Strategy", "mandatory": true },
+    { "name": "Environment Requirements", "mandatory": true },
+    { "name": "Dependencies", "mandatory": false }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

@@ -1,0 +1,23 @@
+{
+  "internal_type": "CHECKLIST",
+  "default_risk_level": "LOW",
+  "approval_required": false,
+  "mandatory_sections": [
+    "Checklist Name",
+    "Checklist Items",
+    "Completion Status",
+    "Owner",
+    "Sign-off"
+  ],
+  "versioning_strategy": "flexible",
+  "common_input_groups": [
+    {
+      "group_name": "Checklist Information",
+      "fields": [
+        { "key": "checklist_owner", "label": "Checklist Owner", "type": "text", "required": true },
+        { "key": "applicable_process", "label": "Applicable Process", "type": "text", "required": true }
+      ]
+    }
+  ],
+  "supported_formats": ["notion", "excel", "docx"]
+}

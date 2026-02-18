@@ -1,0 +1,18 @@
+{
+  "document_name": "Common Technical Issues FAQ",
+  "department": "Customer Success",
+  "internal_type": "FAQ",
+  "risk_level": "LOW",
+  "approval_required": false,
+  "versioning": {
+    "review_cycle": "quarterly"
+  },
+  "sections": [
+    { "name": "Issue Categories", "mandatory": true },
+    { "name": "Symptoms", "mandatory": true },
+    { "name": "Causes", "mandatory": true },
+    { "name": "Step-by-Step Fix", "mandatory": true },
+    { "name": "When to Escalate", "mandatory": false }
+  ],
+  "allowed_formats": ["notion"]
+}

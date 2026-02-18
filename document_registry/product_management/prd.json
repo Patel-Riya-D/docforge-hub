@@ -1,0 +1,74 @@
+{
+  "document_name": "Product Requirements Document",
+  "department": "Product Management",
+  "internal_type": "REPORT",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": { "review_cycle": "per-project" },
+  "input_groups": [
+    {
+      "group_name": "Product Scope",
+      "fields": [
+        {
+          "key": "problem_statement",
+          "label": "Problem Statement",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "key": "target_user_persona",
+          "label": "Target User Persona",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "key": "success_metrics",
+          "label": "Success Metrics (KPIs)",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    },
+    {
+      "group_name": "Release Planning",
+      "fields": [
+        {
+          "key": "release_timeline",
+          "label": "Planned Release Timeline",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "stakeholders",
+          "label": "Key Stakeholders",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "key": "out_of_scope_items",
+          "label": "Out of Scope Items",
+          "type": "textarea",
+          "required": false
+        }
+      ]
+    }
+  ],
+
+  "sections": [
+    { "name": "Project Overview", "mandatory": true },
+    { "name": "Product Information", "mandatory": true },
+    { "name": "Objective", "mandatory": true },
+    { "name": "User Personas", "mandatory": true },
+    { "name": "Success Metrics", "mandatory": true },
+    { "name": "Key Features and Requirements", "mandatory": true },
+    { "name": "User Stories", "mandatory": true },
+    { "name": "UX and Designs", "mandatory": false },
+    { "name": "Scope of Work", "mandatory": true },
+    { "name": "Technical Requirements", "mandatory": true },
+    { "name": "Dependencies", "mandatory": true },
+    { "name": "Timeline", "mandatory": true },
+    { "name": "Risks and Open Questions", "mandatory": false },
+    { "name": "Supporting Documents", "mandatory": false }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

@@ -1,0 +1,73 @@
+{
+  "document_name": "Remote Work Policy",
+  "department": "HR",
+  "internal_type": "POLICY",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": { "review_cycle": "annual" },
+  "input_groups": [
+    {
+      "group_name": "Eligibility",
+      "fields": [
+        {
+          "key": "eligible_roles",
+          "label": "Eligible Roles",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "key": "minimum_tenure_months",
+          "label": "Minimum Tenure (Months)",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    {
+      "group_name": "Work Expectations",
+      "fields": [
+        {
+          "key": "core_working_hours",
+          "label": "Core Working Hours",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "response_time",
+          "label": "Expected Response Time",
+          "type": "text",
+          "required": true
+        }
+      ]
+    },
+    {
+      "group_name": "Security Requirements",
+      "fields": [
+        {
+          "key": "vpn_required",
+          "label": "Is VPN Required?",
+          "type": "boolean",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "sections": [
+    { "name": "Title", "mandatory": true },
+    { "name": "Purpose", "mandatory": true },
+    { "name": "Scope", "mandatory": true },
+    { "name": "Definitions", "mandatory": true },
+    { "name": "Eligibility (Positions and Employees)", "mandatory": true },
+    { "name": "Policy Statements / Work Expectations", "mandatory": true },
+    { "name": "Responsiveness & Communication Requirements", "mandatory": true },
+    { "name": "Tools, Equipment & Approved Suppliers", "mandatory": false },
+    { "name": "Technical Support Options", "mandatory": false },
+    { "name": "Security and Confidentiality Rules", "mandatory": true },
+    { "name": "Travel Requirements", "mandatory": false },
+    { "name": "Compensation, Salary & Pay Considerations", "mandatory": false },
+    { "name": "Legal & Compliance Considerations", "mandatory": true },
+    { "name": "Consequences of Non-Compliance", "mandatory": true },
+    { "name": "Review & Revision History", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf", "docx"]
+}

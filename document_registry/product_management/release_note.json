@@ -1,0 +1,19 @@
+{
+  "document_name": "Release Notes Template",
+  "department": "Product Management",
+  "internal_type": "TEMPLATE",
+  "risk_level": "LOW",
+  "approval_required": true,
+  "versioning": { "review_cycle": "per-release" },
+  "sections": [
+    { "name": "Version Number", "mandatory": true },
+    { "name": "Release Date", "mandatory": true },
+    { "name": "Overview", "mandatory": true },
+    { "name": "New Features", "mandatory": true },
+    { "name": "Improvements", "mandatory": false },
+    { "name": "Bug Fixes", "mandatory": true },
+    { "name": "Known Issues", "mandatory": false },
+    { "name": "Upgrade Instructions", "mandatory": false }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

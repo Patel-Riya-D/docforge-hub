@@ -1,0 +1,22 @@
+{
+  "document_name": "Information Security Policy",
+  "department": "Security & Compliance",
+  "internal_type": "POLICY",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": {
+    "review_cycle": "annual"
+  },
+  "sections": [
+    { "name": "Purpose", "mandatory": true },
+    { "name": "Scope", "mandatory": true },
+    { "name": "Policy Statement", "mandatory": true },
+    { "name": "Roles and Responsibilities", "mandatory": true },
+    { "name": "Security Controls Overview", "mandatory": true },
+    { "name": "Compliance Requirements", "mandatory": true },
+    { "name": "Training and Awareness", "mandatory": false },
+    { "name": "Exceptions", "mandatory": false },
+    { "name": "Review Cycle", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

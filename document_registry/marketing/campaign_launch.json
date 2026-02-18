@@ -1,0 +1,50 @@
+{
+  "document_name": "Campaign Launch SOP",
+  "department": "Marketing",
+  "internal_type": "SOP",
+  "risk_level": "MEDIUM",
+  "approval_required": true,
+  "versioning": { "review_cycle": "per-campaign" },
+  "input_groups": [
+    {
+      "group_name": "Campaign Details",
+      "fields": [
+        {
+          "key": "campaign_objective",
+          "label": "Campaign Objective",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "key": "target_audience",
+          "label": "Target Audience",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "key": "primary_channels",
+          "label": "Primary Marketing Channels",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "key": "campaign_budget_range",
+          "label": "Budget Range",
+          "type": "text",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "sections": [
+    { "name": "Objective", "mandatory": true },
+    { "name": "Scope", "mandatory": true },
+    { "name": "Roles and Responsibilities", "mandatory": true },
+    { "name": "Campaign Planning Steps", "mandatory": true },
+    { "name": "Asset Preparation", "mandatory": true },
+    { "name": "Launch Checklist", "mandatory": true },
+    { "name": "Monitoring", "mandatory": true },
+    { "name": "Post-Launch Review", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

@@ -1,0 +1,37 @@
+{
+  "document_name": "Vendor Agreement",
+  "department": "Legal",
+  "internal_type": "CONTRACT",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": { "review_cycle": "per-contract" },
+  "input_groups": [
+    {
+      "group_name": "Vendor Scope",
+      "fields": [
+        {
+          "key": "services_provided",
+          "label": "Services Provided by Vendor",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "key": "payment_terms",
+          "label": "Payment Terms",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "sections": [
+    { "name": "Parties", "mandatory": true },
+    { "name": "Services", "mandatory": true },
+    { "name": "Payment Terms", "mandatory": true },
+    { "name": "Confidentiality", "mandatory": true },
+    { "name": "Performance Standards", "mandatory": true },
+    { "name": "Termination", "mandatory": true },
+    { "name": "Dispute Resolution", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

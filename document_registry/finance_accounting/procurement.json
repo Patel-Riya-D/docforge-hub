@@ -1,0 +1,18 @@
+{
+  "document_name": "Procurement Policy",
+  "department": "Finance & Accounting",
+  "internal_type": "POLICY",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": { "review_cycle": "annual" },
+  "sections": [
+    { "name": "Policy Scope", "mandatory": true },
+    { "name": "Roles and Responsibilities", "mandatory": true },
+    { "name": "Procurement Process", "mandatory": true },
+    { "name": "Transparency and Fairness", "mandatory": true },
+    { "name": "Financial Regulations", "mandatory": true },
+    { "name": "Compliance and Legal Requirements", "mandatory": true },
+    { "name": "Monitoring, Reporting, and Evaluation", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

@@ -1,0 +1,23 @@
+{
+  "document_name": "Microservices Architecture",
+  "department": "Engineering",
+  "internal_type": "REPORT",
+  "risk_level": "MEDIUM",
+  "approval_required": true,
+  "versioning": { "review_cycle": "annual" },
+  "sections": [
+    { "name": "title", "mandatory": true },
+    { "name": "summary", "mandatory": true },
+    { "name": "methodology", "mandatory": true },
+    { "name": "analysis", "mandatory": true },
+    { "name": "findings", "mandatory": true },
+    { "name": "conclusion", "mandatory": true },
+
+    { "name": "context", "mandatory": false },
+    { "name": "problem statement", "mandatory": false },
+    { "name": "solution", "mandatory": false },
+    { "name": "trade-offs", "mandatory": false },
+    { "name": "known limitations", "mandatory": false }
+  ],
+  "allowed_formats": ["notion", "docx", "pdf"]
+}

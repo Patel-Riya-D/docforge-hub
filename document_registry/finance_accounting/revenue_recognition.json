@@ -1,0 +1,50 @@
+{
+  "document_name": "Revenue Recognition Policy",
+  "department": "Finance & Accounting",
+  "internal_type": "POLICY",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": { "review_cycle": "annual" },
+  "input_groups": [
+    {
+      "group_name": "Accounting Framework",
+      "fields": [
+        {
+          "key": "accounting_standard",
+          "label": "Accounting Standard (IFRS / GAAP)",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "revenue_recognition_model",
+          "label": "Revenue Recognition Model (e.g., Subscription, Milestone, Usage-based)",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "contract_modification_handling",
+          "label": "Contract Modification Handling Approach",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "key": "refund_policy_impact",
+          "label": "Refund or Cancellation Impact on Revenue",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "sections": [
+    { "name": "Purpose", "mandatory": true },
+    { "name": "Scope", "mandatory": true },
+    { "name": "Revenue Types", "mandatory": true },
+    { "name": "Policy Statements", "mandatory": true },
+    { "name": "Responsibilities", "mandatory": true },
+    { "name": "Compliance and Consequences", "mandatory": true },
+    { "name": "Policy Review", "mandatory": true },
+    { "name": "Company Information", "mandatory": false }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

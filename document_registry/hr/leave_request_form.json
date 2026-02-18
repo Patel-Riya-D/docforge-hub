@@ -1,0 +1,25 @@
+{
+  "document_name": "Leave Request Form",
+  "department": "HR",
+  "internal_type": "FORM",
+  "risk_level": "LOW",
+  "approval_required": true,
+  "versioning": { "review_cycle": "annual" },
+  "sections": [
+    { "name": "Employee Name", "mandatory": true },
+    { "name": "Employee ID", "mandatory": true },
+    { "name": "Department", "mandatory": true },
+    { "name": "Requested Leave Type", "mandatory": true },
+    { "name": "Leave Start Date", "mandatory": true },
+    { "name": "Leave End Date", "mandatory": true },
+    { "name": "Reason for Leave", "mandatory": false },
+    { "name": "Additional Notes", "mandatory": false },
+    { "name": "Coverage Plan", "mandatory": false },
+    { "name": "Contact During Leave", "mandatory": false },
+    { "name": "Attachments", "mandatory": false },
+    { "name": "Approver", "mandatory": true },
+    { "name": "Status", "mandatory": true },
+    { "name": "Employee Declaration / Acknowledgment", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf", "docx"]
+}

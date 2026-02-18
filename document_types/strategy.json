@@ -1,0 +1,17 @@
+{
+  "internal_type": "STRATEGY",
+  "default_risk_level": "MEDIUM",
+  "approval_required": true,
+  "mandatory_sections": [
+    "Executive Summary",
+    "Objectives",
+    "Current State Analysis",
+    "Proposed Strategy",
+    "Execution Plan",
+    "Risks and Mitigation",
+    "KPIs / Metrics",
+    "Review Cycle"
+  ],
+  "versioning_strategy": "strict",
+  "supported_formats": ["notion", "pdf", "docx"]
+}

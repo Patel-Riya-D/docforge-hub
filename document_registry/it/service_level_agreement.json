@@ -1,0 +1,61 @@
+{
+  "document_name": "Service Level Agreement",
+  "department": "IT Operations",
+  "internal_type": "POLICY",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": {
+    "review_cycle": "annual"
+  },
+    "input_groups": [
+    {
+      "group_name": "Service Scope",
+      "fields": [
+        {
+          "key": "service_description",
+          "label": "Service Description",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "key": "uptime_commitment",
+          "label": "Uptime Commitment (%)",
+          "type": "number",
+          "required": true
+        }
+      ]
+    },
+    {
+      "group_name": "Penalty & Escalation",
+      "fields": [
+        {
+          "key": "penalty_clauses",
+          "label": "Penalty Clauses",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "sections": [
+    { "name": "Title", "mandatory": true },
+    { "name": "Purpose and Objectives", "mandatory": true },
+    { "name": "Scope of Services", "mandatory": true },
+    { "name": "Stakeholders", "mandatory": true },
+    { "name": "Service Description", "mandatory": true },
+    { "name": "Service Availability", "mandatory": true },
+    { "name": "Performance Metrics", "mandatory": true },
+    { "name": "Support and Service Management", "mandatory": true },
+    { "name": "Roles and Responsibilities", "mandatory": true },
+    { "name": "Incident and Problem Management", "mandatory": true },
+    { "name": "Service Credits and Penalties", "mandatory": false },
+    { "name": "Security and Compliance", "mandatory": true },
+    { "name": "Change Management", "mandatory": false },
+    { "name": "Exclusions", "mandatory": false },
+    { "name": "Reporting and Review", "mandatory": true },
+    { "name": "Termination Conditions", "mandatory": true },
+    { "name": "Version History", "mandatory": true },
+    { "name": "Approval and Signatures", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

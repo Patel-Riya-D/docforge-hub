@@ -1,0 +1,21 @@
+{
+  "document_name": "OKRs and KPIs Document",
+  "department": "Product Management",
+  "internal_type": "REPORT",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": { "review_cycle": "quarterly" },
+  "sections": [
+    { "name": "Purpose and Overview", "mandatory": true },
+    { "name": "Business Objectives", "mandatory": true },
+    { "name": "Key Performance Indicators", "mandatory": true },
+    { "name": "Metric Definitions", "mandatory": true },
+    { "name": "Targets and Thresholds", "mandatory": true },
+    { "name": "Data Sources", "mandatory": true },
+    { "name": "Ownership and Accountability", "mandatory": true },
+    { "name": "Review and Reporting Process", "mandatory": true },
+    { "name": "Action Plan for Underperformance", "mandatory": false },
+    { "name": "Version History and Approval", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

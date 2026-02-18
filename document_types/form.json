@@ -1,0 +1,15 @@
+{
+  "internal_type": "FORM",
+  "default_risk_level": "LOW",
+  "approval_required": false,
+  "mandatory_sections": [
+    "header",
+    "instructions",
+    "fields",
+    "approval",
+    "submission"
+  ],
+  "versioning_strategy": "flexible",
+  "common_input_groups": [],
+  "supported_formats": ["docx", "excel", "notion"]
+}

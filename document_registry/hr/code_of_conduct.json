@@ -1,0 +1,44 @@
+{
+  "document_name": "Code of Conduct",
+  "department": "HR",
+  "internal_type": "POLICY",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": { "review_cycle": "annual" },
+  "input_groups": [
+    {
+      "group_name": "Workplace Behavior",
+      "fields": [
+        {
+          "key": "expected_behavior",
+          "label": "Expected Employee Behavior",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "key": "conflict_of_interest_rules",
+          "label": "Conflict of Interest Rules",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    }
+  ],
+
+  "sections": [
+    { "name": "Objective", "mandatory": true },
+    { "name": "Policy Purpose", "mandatory": true },
+    { "name": "Scope and Applicability", "mandatory": true },
+    { "name": "Professionalism", "mandatory": true },
+    { "name": "Respect and Inclusion", "mandatory": true },
+    { "name": "Acceptable Use of Company Property", "mandatory": true },
+    { "name": "Financial Reporting and Records", "mandatory": true },
+    { "name": "Compliance with Laws, Policies, and Procedures", "mandatory": true },
+    { "name": "Reporting Concerns and Code of Conduct Violations", "mandatory": true },
+    { "name": "Investigation Process", "mandatory": false },
+    { "name": "Disciplinary Action", "mandatory": true },
+    { "name": "Guidelines", "mandatory": false },
+    { "name": "Questions and Support", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf", "docx"]
+}

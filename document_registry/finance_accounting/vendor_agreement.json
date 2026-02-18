@@ -1,0 +1,17 @@
+{
+  "document_name": "Vendor Agreement Template",
+  "department": "Finance & Accounting",
+  "internal_type": "TEMPLATE",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": { "review_cycle": "per-contract" },
+  "sections": [
+    { "name": "Identification of Parties", "mandatory": true },
+    { "name": "Terms of Agreement", "mandatory": true },
+    { "name": "Scope of Engagement", "mandatory": true },
+    { "name": "Other Terms", "mandatory": true },
+    { "name": "Signature", "mandatory": true },
+    { "name": "Tables", "mandatory": false }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

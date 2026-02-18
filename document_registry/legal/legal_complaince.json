@@ -1,0 +1,30 @@
+{
+  "document_name": "Legal Compliance Checklist",
+  "department": "Legal",
+  "internal_type": "CHECKLIST",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": { "review_cycle": "annual" },
+   "input_groups": [
+    {
+      "group_name": "Compliance Scope",
+      "fields": [
+        {
+          "key": "applicable_laws",
+          "label": "Applicable Laws and Regulations",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    }
+  ],
+
+  "sections": [
+    { "name": "Applicable Laws", "mandatory": true },
+    { "name": "Required Policies", "mandatory": true },
+    { "name": "Licensing Requirements", "mandatory": true },
+    { "name": "Data Protection Compliance", "mandatory": true },
+    { "name": "Reporting Obligations", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

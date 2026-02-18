@@ -1,0 +1,25 @@
+{
+  "internal_type": "PLAYBOOK",
+  "default_risk_level": "MEDIUM",
+  "approval_required": false,
+  "mandatory_sections": [
+    "Introduction",
+    "Objective",
+    "Audience",
+    "Plays / Scenarios",
+    "Execution Steps",
+    "Tools Used",
+    "KPIs / Success Metrics",
+    "Review"
+  ],
+  "versioning_strategy": "flexible",
+    "common_input_groups": [
+    {
+      "group_name": "Playbook Information",
+      "fields": [
+        { "key": "objective", "label": "Primary Objective", "type": "text", "required": true }
+      ]
+    }
+  ],
+  "supported_formats": ["notion", "docx"]
+}

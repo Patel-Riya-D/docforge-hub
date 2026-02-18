@@ -1,0 +1,39 @@
+{
+  "document_name": "Operational Handling Guide",
+  "department": "IT Operations",
+  "internal_type": "RUNBOOK",
+  "risk_level": "HIGH",
+  "approval_required": true,
+  "versioning": {
+    "review_cycle": "annual"
+  },
+   "input_groups": [
+    {
+      "group_name": "Operational Escalation",
+      "fields": [
+        {
+          "key": "escalation_policy",
+          "label": "Operational Escalation Policy",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    }
+  ],
+
+  "sections": [
+    { "name": "Introduction", "mandatory": true },
+    { "name": "Document Control Information", "mandatory": true },
+    { "name": "Purpose and Scope", "mandatory": true },
+    { "name": "Roles and Responsibilities", "mandatory": true },
+    { "name": "System Overview", "mandatory": true },
+    { "name": "Routine Operation Procedures", "mandatory": true },
+    { "name": "Incident Management Procedures", "mandatory": true },
+    { "name": "Emergency and Disaster Recovery Steps", "mandatory": true },
+    { "name": "Escalation Matrix", "mandatory": true },
+    { "name": "Tools and Access Requirements", "mandatory": true },
+    { "name": "Checklists and Verification Steps", "mandatory": false },
+    { "name": "Appendices", "mandatory": false }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}

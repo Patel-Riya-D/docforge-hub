@@ -1,0 +1,24 @@
+{
+  "document_name": "Customer Onboarding SOP",
+  "department": "Customer Success",
+  "internal_type": "SOP",
+  "risk_level": "MEDIUM",
+  "approval_required": true,
+  "versioning": {
+    "review_cycle": "annual"
+  },
+  "sections": [
+    { "name": "Document Control", "mandatory": true },
+    { "name": "Purpose", "mandatory": true },
+    { "name": "Scope", "mandatory": true },
+    { "name": "Roles and Responsibilities", "mandatory": true },
+    { "name": "Step-by-Step Onboarding Process", "mandatory": true },
+    { "name": "Onboarding Timeline Table", "mandatory": true },
+    { "name": "Success Metrics", "mandatory": true },
+    { "name": "Escalation During Onboarding", "mandatory": false },
+    { "name": "Documentation Required", "mandatory": true },
+    { "name": "Review and Improvement", "mandatory": true }
+  ],
+  "allowed_formats": ["notion", "pdf"]
+}
+    
