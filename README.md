@@ -29,24 +29,34 @@ Frontend:
 
 ---
 
-## 📂 Project Structure
+## Architecture
+Streamlit UI
+      ↓
+FastAPI Backend
+      ↓
+PostgreSQL Database
+      ↓
+Azure OpenAI (LLM)
 
-backend/
-frontend/
-docs/
+## Flow
 
----
+- User selects Department & Document
 
-## 🔐 Environment Setup
+- Backend loads document template from DB
 
-Create a `.env` file (do not commit it):
+- Section-by-section prompt generation
 
-DATABASE_URL=
-AZURE_OPENAI_KEY=
-AZURE_OPENAI_ENDPOINT=
+- Azure OpenAI generates structured content
 
----
+- Draft saved in database
 
+- User can:
+
+   - Preview full document
+
+   - Regenerate specific sections
+
+Download as DOCX / PDF / XLS
 ## ▶ Run Backend
 
 uvicorn main:app --reload
