@@ -1,29 +1,22 @@
 import uuid
 from datetime import datetime, timezone
 import os
-from openai import AzureOpenAI
 from dotenv import load_dotenv
-
+from backend.models.company_profile import CompanyProfile
 from backend.prompts.loader import build_section_prompt, load_prompt
 from backend.generation.validator import validate_draft_llm
 from backend.prompts.type_behavior import get_type_behavior, should_generate_toc, get_forbidden_phrases
 from backend.prompts.risk_behavior import get_risk_behavior
 from backend.prompts.section_rules import get_section_rules, get_section_word_limit
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_openai import AzureChatOpenAI
+from backend.generation.llm_provider import get_llm
+from langchain_core.messages import SystemMessage, HumanMessage
+
+llm = get_llm()
 
 load_dotenv()
 
-client = AzureOpenAI(
-    api_key=os.getenv("AZURE_OPENAI_LLM_KEY"),
-    api_version=os.getenv("AZURE_LLM_API_VERSION"),
-    azure_endpoint=os.getenv("AZURE_LLM_ENDPOINT"),
-)
-
-
-# ════════════════════════════════════════════════════════════
-# TOC GATE
-# Decides whether a section should be generated at all.
-# Key use-case: TOC only generated for doc types that need it.
-# ════════════════════════════════════════════════════════════
 
 def _should_generate_section(doc_type: str, section_name: str) -> bool:
     """
@@ -43,10 +36,9 @@ def _should_generate_section(doc_type: str, section_name: str) -> bool:
     return True
 
 
-# 
+
 # SECTION VALIDATOR
 # Checks the LLM output for common quality issues.
-# 
 
 def _validate_section_output(
     content: str,
@@ -69,13 +61,39 @@ def _validate_section_output(
     word_count = len(content.split())
     min_words, max_words = get_section_word_limit(doc_type, section_name)
 
+    repetitive_phrases = [
+        "this section constitutes a binding policy requirement",
+        "all employees are subject to this policy from their start date",
+        "violations of this policy may result in disciplinary action",
+        "this policy is reviewed annually"
+    ]
+
+    for phrase in repetitive_phrases:
+        if phrase in content.lower():
+            issues.append(f"Repetitive boilerplate detected: '{phrase}'")
+    
+    instruction_phrases = [
+    "enter the",
+    "provide the",
+    "complete all fields",
+    "insert the",
+    "fill in",
+    "specify the",
+    "record the following"
+    ]
+
+    for phrase in instruction_phrases:
+        if phrase in content.lower() and doc_type not in ["FORM", "TEMPLATE"]:
+            issues.append(f"Instructional language not allowed in {doc_type}: '{phrase}'")
+
+
     #  Word count checks 
     if word_count < min_words:
         issues.append(
             f"Too short: {word_count} words (minimum required: {min_words})"
         )
 
-    if word_count > max_words * 1.2:
+    if word_count > max_words:
         issues.append(
             f"Too long: {word_count} words (maximum allowed: {max_words})"
         )
@@ -133,10 +151,10 @@ def _validate_section_output(
     }
 
 
-# 
+
+
 # SINGLE SECTION GENERATOR
 # Calls AzureOpenAI for one section and validates output.
-# 
 
 def _generate_single_section(
     section_name: str,
@@ -165,9 +183,7 @@ def _generate_single_section(
     """
     doc_type      = registry_doc["internal_type"]
     risk_level    = registry_doc["risk_level"]
-
     type_behavior_data  = get_type_behavior(doc_type)
-
     tone = type_behavior_data.get("tone", "professional")
     voice = type_behavior_data.get("voice", "third-person")
     format_style = type_behavior_data.get("format", "")
@@ -181,13 +197,15 @@ def _generate_single_section(
     region = ", ".join(company_profile.get("regions", [])) if company_profile else ""
     jurisdiction = company_profile.get("default_jurisdiction", "") if company_profile else ""
 
-
     # Build TOC section list string for the prompt
     all_sections_str = "\n".join(
         f"{i+1}. {s['name']}"
         for i, s in enumerate(all_sections)
     )
     min_words, max_words = get_section_word_limit(doc_type, section_name)
+    if max_words > 300:
+        max_words = 300
+
     forbidden_phrases = get_forbidden_phrases(doc_type)
 
     context = {
@@ -236,34 +254,58 @@ Additional Notes:
 {user_notes or "None provided."}
 """.strip()
 
-    response = client.chat.completions.create(
-        model=os.getenv("AZURE_LLM_DEPLOYMENT_41_MINI"),
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "You are an expert compliance and enterprise document generator. "
-                    "You follow ALL instructions exactly. "
-                    "You NEVER add preamble or postamble to your output. "
-                    "You start your response on the first character of content."
-                )
-            },
-            {
-                "role": "user",
-                "content": full_prompt
-            }
-        ],
-        temperature=0.3,
-    )
+    system_message = f"""
+    You are generating the FINAL VERSION of an enterprise {doc_type} document.
 
-    content = response.choices[0].message.content.strip()
+    You are NOT:
+    - Writing instructions
+    - Writing guidance
+    - Writing meta commentary
+    - Writing a template unless document_type == TEMPLATE
+    - Writing placeholders unless document_type == FORM or TEMPLATE
 
-    # ── Validate output ────────────────────────────────────
+    You ARE:
+    - Writing the actual content as it will appear in the published document.
+
+    STRICT LENGTH RULE:
+    - Between {min_words} and {max_words} words.
+    - Do NOT exceed limit.
+    - If exceeded, you FAIL.
+
+    STRICT OUTPUT RULES:
+    - Start directly with content.
+    - Do NOT repeat section title.
+    - Do NOT explain what to do.
+    - Do NOT include examples unless explicitly required.
+    - Do NOT add filler language.
+    """
+
+    messages = [
+        SystemMessage(content=system_message),
+        HumanMessage(content=full_prompt)
+    ]
+
+
+    response = llm.invoke(messages)
+
+    try:
+        content = response.content.strip()
+    except:
+        content = str(response).strip()
+
+    max_words_allowed = max_words
+    words = content.split()
+    if len(words) > max_words_allowed:
+        content = " ".join(words[:max_words_allowed])
+
+    # Validate output 
     section_validation = _validate_section_output(
         content=content,
         section_name=section_name,
         doc_type=doc_type
     )
+    print("LLM RAW RESULT:", response)
+    print("LLM CONTENT:", response.content)
 
     return {
         "name":               section_name,
@@ -273,19 +315,13 @@ Additional Notes:
     }
 
 
-# ════════════════════════════════════════════════════════════
 # SECTION REGENERATION (User-triggered from UI)
-# ════════════════════════════════════════════════════════════
 
 def regenerate_section_llm(draft: dict, section: dict, issues: list) -> str:
-    """
-    Regenerates a single section given a draft and a list of issues.
-    Used both internally (auto-retry loop) and by the API
-    (user-triggered regeneration from the UI).
-    """
+
     template = load_prompt("regeneration_prompt")
 
-    prompt = template.format(
+    formatted_prompt = template.format(
         document_type=draft["source_document"]["internal_type"],
         risk_level=draft["source_document"]["risk_level"],
         department=draft["source_document"]["department"],
@@ -294,33 +330,33 @@ def regenerate_section_llm(draft: dict, section: dict, issues: list) -> str:
         issues="\n".join(issues)
     )
 
-    response = client.chat.completions.create(
-        model=os.getenv("AZURE_LLM_DEPLOYMENT_41_MINI"),
-        messages=[
-            {
-                "role": "system",
-                "content": "You are an expert enterprise document improver."
-            },
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ],
-        temperature=0.2,
-    )
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "You are an expert enterprise document improver."),
+        ("human", formatted_prompt)
+    ])
 
-    return response.choices[0].message.content.strip()
+    chain = prompt | llm
+    result = chain.invoke({})
 
+    return result.content.strip()
 
-# ════════════════════════════════════════════════════════════
+def _compress_sections(sections, max_words):
+    per_section_budget = max_words // len(sections)
+
+    for s in sections:
+        words = s["content"].split()
+        if len(words) > per_section_budget:
+            s["content"] = " ".join(words[:per_section_budget])
+
+    return sections
+
 # MAIN GENERATE DRAFT
-# ════════════════════════════════════════════════════════════
 
 def generate_draft(
     registry_doc: dict,
     department: str,
     document_filename: str,
-    company_profile: dict = None,
+    company_profile: CompanyProfile = None,
     document_inputs: dict = None,
     user_notes: str = None
 ) -> dict:
@@ -341,7 +377,7 @@ def generate_draft(
     Returns: draft dict (same shape as before + section_validation per section)
     """
 
-    # ── Step 1: Draft skeleton ─────────────────────────────
+    #  Step 1: Draft  
     draft = {
         "draft_id": str(uuid.uuid4()),
         "source_document": {
@@ -375,7 +411,7 @@ def generate_draft(
         }
     }
 
-    # ── Step 2: Format context blocks ─────────────────────
+    #  Step 2: Format context blocks 
     company_block = ""
     if company_profile:
         company_block = (
@@ -392,17 +428,29 @@ def generate_draft(
         for key, value in document_inputs.items():
             inputs_block += f"{key}: {value}\n"
 
-    industry_context = load_prompt("industry_context")
+
     all_sections     = registry_doc["sections"]
 
-    # ── Step 3: Generate each section ─────────────────────
+    #  Step 3: Generate each section 
     SECTION_MAX_RETRIES = 1   # One auto-retry per section
+
+    industry_context = load_prompt("industry_context")
 
     for section in all_sections:
         section_name = section["name"]
         mandatory    = section["mandatory"]
 
-        # ── TOC gate ── skip if not needed ─────────────────
+        if section_name.lower() in [
+            "security",
+            "compliance",
+            "data protection",
+            "incident response"
+        ]: 
+            industry_block = industry_context
+        else:
+            industry_block = ""  
+
+
         if not _should_generate_section(
             registry_doc["internal_type"], section_name
         ):
@@ -411,7 +459,7 @@ def generate_draft(
 
         print(f"[GEN]  Generating section: '{section_name}'")
 
-        # ── First attempt ──────────────────────────────────
+        #  First attempt 
         section_result = _generate_single_section(
             section_name=section_name,
             mandatory=mandatory,
@@ -419,13 +467,13 @@ def generate_draft(
             company_profile=company_profile,
             company_block=company_block,
             inputs_block=inputs_block,
-            industry_context=industry_context,
+            industry_context=industry_block,
             user_notes=user_notes,
             all_sections=all_sections,
             retry  =False
         )
 
-        # ── Section-level auto-retry ───────────────────────
+        #  Section-level auto-retry 
         if not section_result["section_validation"]["valid"]:
             issues = section_result["section_validation"]["issues"]
             print(
@@ -440,7 +488,7 @@ def generate_draft(
                 company_block=company_block,
                 company_profile=company_profile,    
                 inputs_block=inputs_block,
-                industry_context=industry_context,
+                industry_context=industry_block,
                 user_notes=user_notes,
                 all_sections=all_sections,
                 retry=True,
@@ -462,7 +510,21 @@ def generate_draft(
             f"valid: {section_result['section_validation']['valid']}"
         )
 
-    # ── Step 4: Full-draft AI validation + regeneration loop ──
+        #  Global document word cap (max ~2000 words ≈ 4 pages) 
+
+        MAX_TOTAL_WORDS = 1800
+        total_words = sum(
+            s["section_validation"]["word_count"]
+            for s in draft["sections"]
+        )
+
+        print(f"[INFO] Total document words before trim: {total_words}")
+
+        if total_words > MAX_TOTAL_WORDS:
+            draft["sections"] = _compress_sections(draft["sections"], MAX_TOTAL_WORDS)
+
+
+    #  Step 4: Full-draft AI validation + regeneration loop 
     MAX_DRAFT_RETRIES = 2
     retry_count       = 0
 

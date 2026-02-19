@@ -1,5 +1,5 @@
 from sqlalchemy import func
-from backend.models import Document
+from backend.db_models import Document
 
 def load_document_from_db(
     db,

@@ -34,3 +34,10 @@ Return output strictly in JSON format:
   "risk_score": number from 1 to 10,
   "confidence_score": number from 1 to 10
 }
+
+FAIL if:
+- Section exceeds word limit.
+- Enforcement language appears more than once.
+- Compliance framework repeated across sections.
+- Company name repeated more than twice.
+- Generic SaaS filler detected.

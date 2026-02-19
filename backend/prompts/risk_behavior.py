@@ -54,7 +54,7 @@ RISK LEVEL: CRITICAL — MAXIMUM CONTROLS:
 
 1. MANDATORY LEGAL REVIEW NOTICE:
    Every CRITICAL section must begin with:
-   ⚠️ "IMPORTANT: This section contains legally binding requirements.
+    "IMPORTANT: This section contains legally binding requirements.
     Review by qualified legal counsel is mandatory before distribution."
 
 2. ZERO AMBIGUITY RULE:

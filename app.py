@@ -100,9 +100,7 @@ def render_dynamic_form(base_groups, doc_groups, document_name):
 
     return user_inputs, validation_errors
 
-# ════════════════════════════════════════════════════════════
 # SECTION VALIDATION BADGE HELPER
-# ════════════════════════════════════════════════════════════
 
 def section_quality_badge(section_validation: dict) -> str:
     if not section_validation:
@@ -345,6 +343,7 @@ if st.session_state.selected_draft_id:
 
 
         st.divider()
+        
         st.subheader("Full Document Preview")
 
         full_document_text = ""

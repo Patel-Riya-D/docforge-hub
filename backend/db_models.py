@@ -49,3 +49,18 @@ class Document(Base):
 
     sections = Column(JSONB)
     input_groups = Column(JSONB)
+
+
+class CompanyProfile(Base):
+    __tablename__ = "company_profiles"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    company_name = Column(String, nullable=False)
+    industry = Column(String, nullable=True)
+    employee_count = Column(String, nullable=True)
+    regions = Column(String, nullable=True)  # store as comma-separated
+    compliance_frameworks = Column(String, nullable=True)
+    default_jurisdiction = Column(String, nullable=True)
+
+    company_profile = Column(JSONB, nullable=True)

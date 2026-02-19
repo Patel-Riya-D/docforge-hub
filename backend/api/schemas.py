@@ -39,3 +39,11 @@ class DocumentGenerateResponse(BaseModel):
     status: str
     sections: List[Dict[str, Any]]
     approval_required: bool
+
+class CompanyProfileCreate(BaseModel):
+    company_name: str
+    industry: Optional[str] = None
+    employee_count: Optional[str] = None
+    regions: Optional[str] = None
+    compliance_frameworks: Optional[str] = None
+    default_jurisdiction: Optional[str] = None

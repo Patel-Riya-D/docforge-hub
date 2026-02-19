@@ -8,9 +8,7 @@ def get_section_rules(document_type: str, section_name: str) -> str:
 
     rules = []
 
-    # ════════════════════════════════════════════════
     # DOCUMENT TYPE BASE RULES
-    # ════════════════════════════════════════════════
 
     doc_type_rules = {
 
@@ -95,9 +93,7 @@ def get_section_rules(document_type: str, section_name: str) -> str:
     base_rules = doc_type_rules.get(document_type.upper(), [])
     rules.extend(base_rules)
 
-    # ════════════════════════════════════════════════
     # SECTION NAME SPECIFIC RULES
-    # ════════════════════════════════════════════════
 
     section_lower = section_name.lower()
 
@@ -310,13 +306,14 @@ def get_section_word_limit(document_type: str, section_name: str) -> tuple:
 
     # Long sections by doc type
     long_map = {
-        "REPORT": (100, 200),
-        "STRATEGY": (100, 200),
-        "PROPOSAL": (100, 200),
-        "HANDBOOK": (200,300)
+        "REPORT": (80, 150),
+        "STRATEGY": (80, 150),
+        "PROPOSAL": (80, 150),
+        "HANDBOOK": (150, 250)
     }
+
     if document_type.upper() in long_map:
         return long_map[document_type.upper()]
 
     # Default
-    return (100, 300)
+    return (80, 180)

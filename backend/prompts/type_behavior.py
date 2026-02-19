@@ -14,29 +14,46 @@ def get_type_behavior(document_type: str) -> dict:
             "tone": "formal, legal, authoritative",
             "voice": "third-person institutional",
             "format": "structured headings with numbered sections",
-            "avg_section_words": "200-300",
+            "avg_section_words": "120-180",
             "rules": """
 STRICT POLICY DOCUMENT RULES:
 
-MUST DO:
-- Write in formal, legal, authoritative tone
-- Every section uses H3 numbered headings (e.g., 3.1, 3.2)
-- Use declarative mandatory language: MUST, SHALL, IS REQUIRED, IS PROHIBITED
-- Include Definitions section with bolded terms
-- Include Scope section with explicit inclusions AND exclusions
-- Include Roles & Responsibilities as a table
-- Include Compliance & Enforcement section
-- Include Exceptions process
-- End every policy with Revision History table
-- Reference compliance frameworks (GDPR, SOC 2, EEOC, etc.) where relevant
+POLICY DOCUMENT — BEHAVIORAL CONTRACT
 
-MUST NOT:
-- Use conversational language ("you might want to...", "it's a good idea to...")
-- Use step-by-step numbered operational instructions (that is SOP format)
-- Use first-person ("I", "we think")
-- Write vague requirements ("as appropriate", "when needed")
-- Add narrative storytelling or cultural context
-- Use bullet points as the primary content format
+OUTPUT MODE: FINAL ENTERPRISE POLICY
+
+STRUCTURE CONTRACT:
+- Content must represent finalized publishable policy text.
+- No instructional sentences.
+- No template guidance.
+- No placeholders.
+- No example entries.
+- Do NOT repeat section title inside the content.
+- Sections must be concise and self-contained.
+
+LANGUAGE CONTRACT:
+- Use formal legal tone.
+- Use third-person institutional voice.
+- Obligations must use SHALL, MUST, IS REQUIRED, or IS PROHIBITED.
+- Do NOT use first-person ("I", "we").
+- Do NOT use conversational language.
+- Do NOT write step-by-step procedural instructions.
+- Avoid vague phrases such as "as appropriate", "when necessary", "as needed".
+
+REPETITION CONTROL:
+- Enforcement language may appear only once in the entire document.
+- Do NOT repeat binding statements in multiple sections.
+- Company name may appear maximum twice per section.
+
+LENGTH CONTRACT:
+- Each section must be between 120 and 180 words.
+- Exceeding the limit invalidates the section.
+
+FAIL IF:
+- Instructional or template-style language appears.
+- Placeholders are present.
+- Enforcement language appears in multiple sections.
+- Word count exceeds defined limits.
             """,
             "forbidden_phrases": [
                 "you might want to",
@@ -54,31 +71,37 @@ MUST NOT:
             "tone": "procedural, precise, operational",
             "voice": "second-person imperative (you/your role)",
             "format": "numbered steps with verification checkpoints",
-            "avg_section_words": "200-300",
+            "avg_section_words": "120-180",
             "rules": """
 STRICT SOP DOCUMENT RULES:
 
-MUST DO:
-- Write every action as a numbered step with a clear verb
-  Format: "Step N: [ACTION VERB] + [WHAT] + [HOW/WHERE]"
-  Example: "Step 3: Submit the completed form to HR via BambooHR by 5 PM Friday"
-- Each step must have ONE action only (no compound steps)
-- Add verification checkpoint after every 3-5 steps
-  Format: "✓ Verify: [what to check to confirm step completed correctly]"
-- Include Prerequisites section BEFORE the procedure
-- Include Roles & Responsibilities table (who does what)
-- Include Troubleshooting section at the end
-- Include Rollback/Escalation path if process fails
-- Use tables for decision matrices
-- Use checkboxes [ ] for checklists
+SOP DOCUMENT — OPERATIONAL PROCEDURE CONTRACT
 
-MUST NOT:
-- Use passive voice ("the form should be submitted" → "Submit the form")
-- Write paragraphs of narrative text inside procedure steps
-- Combine multiple actions in one step
-- Use legal enforcement language (that belongs in Policy)
-- Skip verification steps for critical actions
-- Write steps without specifying who is responsible
+OUTPUT MODE: EXECUTABLE PROCEDURE
+
+STRUCTURE CONTRACT:
+- Every action must be written as a numbered step.
+- Each step contains ONE action only.
+- No narrative paragraphs.
+- Include verification checkpoints.
+- Include Roles & Responsibilities table.
+
+LANGUAGE CONTRACT:
+- Use imperative voice.
+- Start steps with an action verb.
+- No legal enforcement language.
+- No policy disclaimers.
+
+PROHIBITED:
+- No placeholders.
+- No conversational tone.
+- No vague instructions.
+- No combined multi-action steps.
+
+FAIL IF:
+- Paragraph-style narrative appears.
+- Enforcement language appears.
+- Multiple actions exist in one step.
             """,
             "forbidden_phrases": [
                 "it is recommended",
@@ -98,24 +121,41 @@ MUST NOT:
             "rules": """
 STRICT REPORT DOCUMENT RULES:
 
-MUST DO:
-- Start with an Executive Summary (max 300 words)
-- Every claim must be supported by data, metrics, or evidence
-- Use tables to present comparative data
-- Use this structure for each finding:
-  Finding → Evidence → Analysis → Implication
-- Include specific metrics with baseline and target
-- Recommendations must be actionable with owner, timeline, and expected outcome
-- Use charts/graphs descriptions where visual data is relevant
-- Conclude with Next Steps and Decision Required
+REPORT DOCUMENT — ANALYTICAL CONTRACT
 
-MUST NOT:
-- Write policy or procedure language
-- Use enforcement language (SHALL, MUST, IS PROHIBITED)
-- Add opinions without data backing
-- Write step-by-step operational instructions
-- Add cultural or narrative content
-- Leave recommendations vague ("improve the process")
+OUTPUT MODE: FINAL ANALYTICAL REPORT
+
+STRUCTURE CONTRACT:
+- Begin with an Executive Summary (maximum 250 words).
+- Use structured analytical headings.
+- Each finding must follow this structure:
+  Finding → Evidence → Analysis → Implication.
+- Use tables for comparative or numeric data.
+- Include a Recommendations section with Owner and Timeline.
+- No placeholders. No examples. No template language.
+
+LANGUAGE CONTRACT:
+- Use third-person analytical tone.
+- All claims must reference metrics, data points, or documented evidence.
+- Use measurable indicators (percentages, dates, trends, deltas).
+- Avoid opinionated language.
+
+PROHIBITED:
+- No enforcement language (SHALL, MUST).
+- No procedural steps (SOP style).
+- No conversational tone.
+- No vague recommendations.
+- No filler phrases (e.g., "in today's world", "generally speaking").
+
+LENGTH CONTRACT:
+- Each section must be between 100-200 words.
+- Executive Summary must not exceed 250 words.
+
+FAIL IF:
+- Claims lack evidence.
+- Recommendations lack owner or timeline.
+- Enforcement language appears.
+- Section exceeds word limits.
             """,
             "forbidden_phrases": [
                 "it is believed that",
@@ -138,7 +178,7 @@ STRICT RUNBOOK DOCUMENT RULES:
 MUST DO:
 - Write for someone under pressure during an incident
 - Every section starts with a severity/urgency indicator
-  Format: "⚠️ SEVERITY: [P0/P1/P2/P3] | SLA: [X minutes to resolve]"
+  Format: " SEVERITY: [P0/P1/P2/P3] | SLA: [X minutes to resolve]"
 - Use numbered action steps with bash commands where applicable
   Format:
   1. ACTION: [What to do]
@@ -176,23 +216,33 @@ MUST NOT:
             "rules": """
 STRICT TEMPLATE DOCUMENT RULES:
 
-MUST DO:
-- Every variable field uses [UPPERCASE_PLACEHOLDER] format
-  Example: [COMPANY_NAME], [EFFECTIVE_DATE], [EMPLOYEE_NAME]
-- Mark required fields: [REQUIRED: FIELD_NAME]
-- Mark optional fields: [OPTIONAL: FIELD_NAME]
-- Include instructions in italics above each section:
-  _Instructions: Describe [X] in 2-3 sentences. Include [Y]._
-- Provide a filled-in example for each major section
-- Use tables for structured data fields
-- Include a "How to Use This Template" box at the top
+TEMPLATE DOCUMENT — STRUCTURED PLACEHOLDER CONTRACT
 
-MUST NOT:
-- Write completed content (leave placeholders)
-- Add long narrative paragraphs
-- Use enforcement language
-- Add company-specific details (keep it generic/reusable)
-- Generate TOC (templates are not long-form documents)
+OUTPUT MODE: REUSABLE BLANK TEMPLATE
+
+STRUCTURE CONTRACT:
+- Content must remain a blank reusable template.
+- Use [UPPERCASE_PLACEHOLDER] format only.
+- Mark required fields as [REQUIRED: FIELD_NAME].
+- Mark optional fields as [OPTIONAL: FIELD_NAME].
+- Do NOT include real data.
+- Do NOT include narrative examples.
+- Do NOT include explanatory paragraphs.
+
+LANGUAGE CONTRACT:
+- Use neutral instructional tone.
+- Keep field explanations concise (maximum 2 sentences per field).
+
+PROHIBITED:
+- No enforcement language.
+- No compliance citations.
+- No filled sample data.
+- No guidance paragraphs.
+
+FAIL IF:
+- Real data appears.
+- Policy-style enforcement language appears.
+- Example entries are generated.
             """,
             "forbidden_phrases": [
                 "you must",
@@ -210,34 +260,46 @@ MUST NOT:
             "rules": """
 STRICT HANDBOOK DOCUMENT RULES:
 
-MUST DO:
-- Use "we" and "our" to create belonging and inclusivity
-- Write at an 8th-10th grade reading level (accessible to all employees)
-- Explain the WHY behind every policy, not just the WHAT
-  Format: "We have this policy because... | What this means for you is..."
-- Use plain language equivalents for legal terms
-  Example: "leave of absence" → "time away from work"
-- Each section must include a "Quick Summary" box:
-  Format: "In short: [1-2 sentence plain language summary]"
-- Use employee-friendly examples:
-  Format: "For example, if you need to [scenario], here is what to do: [steps]"
-- End sections with "Questions? Contact: [HR contact]"
-- Use inclusive gender-neutral language throughout
-- Link/reference detailed policies for complex topics
-  Format: "For full details, see our [Policy Name] Policy."
+HANDBOOK DOCUMENT — EMPLOYEE GUIDE CONTRACT
 
-MUST NOT:
-- Repeat detailed enforcement language from Policy documents
-  (say "violations may result in disciplinary action" ONCE total, not per section)
-- Use heavy regulatory citations in body text
-  (put compliance references in footnotes only)
-- Use intimidating legal language that creates fear
-- Repeat SOC 2, GDPR, or other compliance terms more than once per section
-- Center-align body text
-- Use ALL CAPS for emphasis (use bold instead)
-- Duplicate content across sections
-- Use H2 heading more than once per section
-- Add section heading INSIDE the section content again
+OUTPUT MODE: FINAL EMPLOYEE HANDBOOK CONTENT
+
+STRUCTURE CONTRACT:
+- Use clear H2 and H3 structure.
+- Include one "Quick Summary" paragraph per section (max 2 sentences).
+- Explain both WHAT the policy is and WHY it exists.
+- Avoid duplicating content across sections.
+- Do NOT repeat detailed enforcement language.
+- Do NOT include placeholders or template instructions.
+
+LANGUAGE CONTRACT:
+- Use first-person plural voice ("we", "our company").
+- Write at 8th-10th grade readability level.
+- Use clear and accessible language.
+- Replace legal jargon with plain equivalents.
+- Avoid intimidating tone.
+
+REPETITION CONTROL:
+- Compliance frameworks (SOC 2, GDPR, etc.) may be referenced only once per section.
+- Disciplinary language may appear only once in entire handbook.
+- Company name may appear maximum twice per section.
+
+LENGTH CONTRACT:
+- Each section must be between 250-400 words.
+- Avoid long narrative paragraphs (max 5 sentences per paragraph).
+
+PROHIBITED:
+- No policy-style legal disclaimers.
+- No heavy regulatory citations.
+- No template-style placeholders.
+- No duplicated explanations.
+- No ALL CAPS emphasis.
+
+FAIL IF:
+- Enforcement language repeated.
+- Section exceeds word limit.
+- Legal tone dominates.
+- Content duplicates previous section.
             """,
             "forbidden_phrases": [
                 "failure to comply will result in immediate termination",
@@ -259,23 +321,26 @@ MUST NOT:
             "rules": """
 STRICT FORM DOCUMENT RULES:
 
-MUST DO:
-- Use field groups with clear labels
-- Mark every field as: (Required) or (Optional)
-- Specify input type for each field:
-  Types: [Text] [Dropdown] [Checkbox] [Date] [Signature] [Textarea]
-- Include a form header with:
-  Form ID, Version, Purpose, Submission Instructions
-- Use tables for multi-column field layouts
-- Include signature and date block at the end
-- Include a Privacy Notice for forms collecting personal data
+FORM DOCUMENT — STRUCTURED DATA CAPTURE CONTRACT
 
-MUST NOT:
-- Write long explanatory paragraphs
-- Add narrative content
-- Generate TOC
-- Use enforcement language
-- Add more than 2 sentences of instruction per field
+OUTPUT MODE: FINAL FORM STRUCTURE
+
+STRUCTURE CONTRACT:
+- Use clearly labeled field groups.
+- Every field must specify input type.
+- Mark fields as (Required) or (Optional).
+- Keep explanations short and precise.
+
+PROHIBITED:
+- No long explanatory paragraphs.
+- No narrative storytelling.
+- No policy-style enforcement.
+- No template placeholders beyond defined fields.
+
+FAIL IF:
+- Paragraphs exceed 3 sentences.
+- Instructional tone dominates.
+- Enforcement language appears.
             """,
             "forbidden_phrases": [
                 "it is required that you explain",
@@ -293,20 +358,38 @@ MUST NOT:
             "rules": """
 STRICT STRATEGY DOCUMENT RULES:
 
-MUST DO:
-- Start with a Situation Analysis (where we are)
-- Define clear OKRs or SMART objectives
-- Include competitive/market context
-- Every initiative must have: Owner, Timeline, Budget, Success Metric
-- Use tables for roadmaps and initiative tracking
-- Include a Risk & Mitigation section
-- End with Governance (how progress will be reviewed)
+STRATEGY DOCUMENT — EXECUTIVE PLANNING CONTRACT
 
-MUST NOT:
-- Write operational step-by-step instructions (SOP territory)
-- Use legal enforcement language
-- Add detailed policy content
-- Write more than 3 sentences without a supporting data point
+OUTPUT MODE: FINAL STRATEGIC PLAN
+
+STRUCTURE CONTRACT:
+- Follow this order strictly:
+  Situation Analysis → Strategic Objectives → Key Initiatives → Metrics → Risks → Governance.
+- Each initiative must include:
+  Owner | Timeline | Budget | Success Metric.
+- Use tables for roadmap and initiative tracking.
+- No placeholders. No instructional language.
+
+LANGUAGE CONTRACT:
+- Use first-person plural executive voice ("we will", "our objective").
+- Use measurable objectives (OKRs or SMART goals).
+- Every objective must include a quantifiable metric.
+- Avoid generic vision statements.
+
+PROHIBITED:
+- No operational step-by-step instructions.
+- No legal enforcement language.
+- No vague goals ("improve performance").
+- No filler strategy phrases ("best in class", "innovative solutions").
+
+LENGTH CONTRACT:
+- Sections must be between 100-200 words.
+- Objectives must be concise and measurable.
+
+FAIL IF:
+- Objectives lack measurable metric.
+- Initiative lacks owner or timeline.
+- Generic visionary language dominates.
             """,
             "forbidden_phrases": [
                 "we should try to",
@@ -325,20 +408,39 @@ MUST NOT:
             "rules": """
 STRICT PROPOSAL DOCUMENT RULES:
 
-MUST DO:
-- Lead with the business problem, not the solution
-- Quantify all benefits with specific metrics
-- Include a clear ROI or value statement
-- Use a Pricing/Investment table with line items
-- Include a Timeline with milestones
-- End with a specific Call to Action and decision deadline
-- Include an Alternatives Considered section
+PROPOSAL DOCUMENT — BUSINESS CASE CONTRACT
 
-MUST NOT:
-- Use internal jargon without explanation
-- Make promises that cannot be guaranteed
-- Skip the risk section
-- Leave pricing vague
+OUTPUT MODE: FINAL CLIENT-READY PROPOSAL
+
+STRUCTURE CONTRACT:
+- Follow this sequence:
+  Problem Statement → Proposed Solution → Business Value → Investment → Timeline → Risks → Call to Action.
+- Include quantified benefits.
+- Include ROI or financial impact where possible.
+- Include pricing table if applicable.
+- No placeholders. No example instructions.
+
+LANGUAGE CONTRACT:
+- Use persuasive but professional tone.
+- Focus on business outcomes, not features.
+- Quantify benefits using percentages, cost savings, revenue impact.
+- Avoid internal jargon.
+
+PROHIBITED:
+- No vague claims ("world-class", "best in class").
+- No guarantees without measurable backing.
+- No enforcement language.
+- No filler marketing buzzwords.
+
+LENGTH CONTRACT:
+- Sections must be between 100-200 words.
+- Keep arguments concise and evidence-based.
+
+FAIL IF:
+- Benefits are not quantified.
+- Pricing is vague.
+- Call to action is missing.
+- Overly promotional tone appears.
             """,
             "forbidden_phrases": [
                 "best-in-class",

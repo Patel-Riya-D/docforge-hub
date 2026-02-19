@@ -1,5 +1,12 @@
 from docx import Document as DocxDocument
 from io import BytesIO
+import pandas as pd
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib import colors
+from reportlab.lib.units import inch
+
+
 
 def generate_docx(draft):
     doc = DocxDocument()
@@ -15,12 +22,6 @@ def generate_docx(draft):
     buffer.seek(0)
 
     return buffer
-
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib import colors
-from reportlab.lib.units import inch
-from io import BytesIO
 
 def generate_pdf(draft):
     buffer = BytesIO()
@@ -43,8 +44,6 @@ def generate_pdf(draft):
 
     return buffer
 
-import pandas as pd
-from io import BytesIO
 
 def generate_xls(draft):
     data = []

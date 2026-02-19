@@ -1,20 +1,18 @@
 from fastapi import APIRouter, HTTPException
-from backend.api.schemas import(
-    DocumentPreviewRequest,
-    DocumentPreviewResponse
-)
+from backend.api.schemas import DocumentPreviewRequest
+from backend.models.company_profile import CompanyProfile
+from backend.api.schemas import CompanyProfileCreate
 from backend.registry.db_loader import load_document_from_db
 from backend.generation.generator import generate_draft
 from backend.api.schemas import DocumentGenerateRequest
 from sqlalchemy.orm import Session
 from fastapi import Depends
 from backend.dependencies import get_db
-from backend.models import Draft, DraftSection
-from backend.models import Document
+from backend.db_models import Draft, DraftSection
+from backend.db_models import Document
 from datetime import datetime, timezone
 from fastapi.responses import StreamingResponse
 from backend.export.exporter import generate_docx, generate_pdf, generate_xls
-
 from backend.export.docx_formatter import build_docx
 import io
 from sqlalchemy import func
@@ -231,12 +229,21 @@ def export_draft(draft_id: int, file_type: str, db: Session = Depends(get_db)):
         .all()
     )
 
+    # Fetch original document metadata
+    doc_meta = db.query(Document).filter(
+        Document.document_name == draft_obj.document_name,
+        Document.department == draft_obj.department
+    ).first()
+
+    internal_type = doc_meta.internal_type if doc_meta else ""
+    risk_level = doc_meta.risk_level if doc_meta else "MEDIUM"
+
     draft_dict = {
         "source_document": {
             "document_name": draft_obj.document_name,
             "department": draft_obj.department,
-            "internal_type": "",      # safe default
-            "risk_level": "MEDIUM"    # safe default
+            "internal_type": internal_type,
+            "risk_level": risk_level
         },
         "version": f"v{draft_obj.version}",
         "status": draft_obj.status,
@@ -282,3 +289,11 @@ def export_draft(draft_id: int, file_type: str, db: Session = Depends(get_db)):
 
     else:
         raise HTTPException(status_code=400, detail="Invalid export type")
+
+@router.post("/company-profile")
+def create_company_profile(profile: CompanyProfileCreate, db: Session = Depends(get_db)):
+    db_profile = CompanyProfile(**profile.model_dump())
+    db.add(db_profile)
+    db.commit()
+    db.refresh(db_profile)
+    return db_profile

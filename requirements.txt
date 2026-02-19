@@ -11,3 +11,6 @@ azure-ai-openai
 python-docx
 reportlab
 openpyxl
+langchain
+langchain-openai
+tiktoken

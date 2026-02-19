@@ -2,7 +2,7 @@ import os
 import json
 from sqlalchemy.orm import Session
 from backend.database import SessionLocal
-from backend.models import Document
+from backend.db_models import Document
 
 REGISTRY_PATH = "/home/riyap/DocForage/document_registry"
 
