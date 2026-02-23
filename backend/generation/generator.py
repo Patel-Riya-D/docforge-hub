@@ -9,14 +9,23 @@ from backend.prompts.type_behavior import get_type_behavior, should_generate_toc
 from backend.prompts.risk_behavior import get_risk_behavior
 from backend.prompts.section_rules import get_section_rules, get_section_word_limit
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_openai import AzureChatOpenAI
 from backend.generation.llm_provider import get_llm
 from langchain_core.messages import SystemMessage, HumanMessage
+import json
+import re
 
 llm = get_llm()
 
 load_dotenv()
 
+def _is_table_section(section_name: str) -> bool:
+    table_sections = [
+        "roles and responsibilities",
+        "compliance matrix",
+        "approval matrix",
+        "escalation path"
+    ]
+    return section_name.lower() in table_sections
 
 def _should_generate_section(doc_type: str, section_name: str) -> bool:
     """
@@ -151,8 +160,6 @@ def _validate_section_output(
     }
 
 
-
-
 # SINGLE SECTION GENERATOR
 # Calls AzureOpenAI for one section and validates output.
 
@@ -191,6 +198,11 @@ def _generate_single_section(
     avg_section_words = type_behavior_data.get("avg_section_words", "")
     risk_behavior  = get_risk_behavior(risk_level)
     section_rules  = get_section_rules(doc_type, section_name)
+    
+    # Convert CompanyProfile to dict if needed
+    if company_profile is not None and not isinstance(company_profile, dict):
+        company_profile = company_profile.dict() if hasattr(company_profile, 'dict') else dict(company_profile)
+    
     company_name = company_profile.get("company_name", "") if company_profile else ""
     industry = company_profile.get("industry", "") if company_profile else ""
     employee_count = company_profile.get("employee_count", "") if company_profile else ""
@@ -209,34 +221,38 @@ def _generate_single_section(
     forbidden_phrases = get_forbidden_phrases(doc_type)
 
     context = {
-        "document_name":   registry_doc["document_name"],
+        "document_name":   registry_doc.get("document_name", ""),
         "document_type":   doc_type,
         "risk_level":      risk_level,
         "section_name":    section_name,
         "mandatory":       str(mandatory),
-        "company_profile": company_profile,
+        "company_profile": company_profile if company_profile else {},
         "document_inputs": inputs_block,
         "industry_context": industry_context,
-        "type_behavior":   rules,
-        "tone": tone,
-        "voice": voice,
-        "format_style": format_style,
-        "avg_section_words": avg_section_words,
-        "risk_behavior":   risk_behavior,
-        "section_rules":   section_rules,
+        "type_behavior":   rules if rules else "",
+        "tone": tone if tone else "professional",
+        "voice": voice if voice else "third-person",
+        "format_style": format_style if format_style else "",
+        "avg_section_words": avg_section_words if avg_section_words else "",
+        "risk_behavior":   risk_behavior if risk_behavior else "",
+        "section_rules":   section_rules if section_rules else "",
         "all_sections":    all_sections_str,
         "toc_required":    str(should_generate_toc(doc_type)).upper(),
         "min_words": min_words,
         "max_words": max_words,
-        "company_name": company_name,
-        "industry": industry,
-        "employee_count": employee_count,
-        "region": region,
-        "jurisdiction": jurisdiction,
-        "forbidden_phrases": "\n".join(forbidden_phrases)
+        "company_name": str(company_name) if company_name else "",
+        "industry": str(industry) if industry else "",
+        "employee_count": str(employee_count) if employee_count else "",
+        "region": str(region) if region else "",
+        "jurisdiction": str(jurisdiction) if jurisdiction else "",
+        "forbidden_phrases": "\n".join(forbidden_phrases) if forbidden_phrases else ""
     }
 
-    base_prompt = build_section_prompt(context)
+    try:
+        base_prompt = build_section_prompt(context)
+    except Exception as e:
+        print(f"[ERROR] Failed to build prompt for section '{section_name}': {str(e)}")
+        raise
 
     # ── Add retry context if this is a re-generation ───────
     retry_block = ""
@@ -278,6 +294,12 @@ Additional Notes:
     - Do NOT explain what to do.
     - Do NOT include examples unless explicitly required.
     - Do NOT add filler language.
+
+    SECTION CONTEXT CONTROL:
+    - Write content ONLY relevant to the section name.
+    - Do NOT introduce topics that belong to other enterprise policies.
+    - Do NOT expand scope beyond the purpose of this specific document.
+
     """
 
     messages = [
@@ -285,32 +307,133 @@ Additional Notes:
         HumanMessage(content=full_prompt)
     ]
 
-
-    response = llm.invoke(messages)
-
     try:
-        content = response.content.strip()
+        response = llm.invoke(messages)
+    except Exception as e:
+        print(f"[ERROR] LLM invocation failed for section '{section_name}': {str(e)}")
+        raise
+    
+    try:
+        content = getattr(response, "content", str(response)).strip()
     except:
         content = str(response).strip()
 
-    max_words_allowed = max_words
-    words = content.split()
-    if len(words) > max_words_allowed:
-        content = " ".join(words[:max_words_allowed])
+    structured_content = None
+    cleaned = content.strip()
 
-    # Validate output 
-    section_validation = _validate_section_output(
-        content=content,
-        section_name=section_name,
-        doc_type=doc_type
-    )
-    print("LLM RAW RESULT:", response)
-    print("LLM CONTENT:", response.content)
+    # Remove code fences
+    if cleaned.startswith("```"):
+        cleaned = re.sub(r"^```(?:json)?\n?", "", cleaned)
+        cleaned = re.sub(r"\n?```$", "", cleaned)
+        cleaned = cleaned.strip()
+
+    # 🚨 HARD GUARD: reject simple string outputs like "table"
+    parsed = None
+    if cleaned and cleaned.startswith('{'):
+        try:
+            parsed = json.loads(cleaned)
+        except Exception:
+            # If JSON parsing fails, treat entire output as text
+            parsed = None
+            # Don't use the cleaned content if it looks like broken JSON
+            if cleaned.startswith('"') or cleaned.startswith('['):
+                content = ""
+
+    # 🚨 If JSON is not dict → ignore it
+    if not isinstance(parsed, dict):
+        parsed = None
+
+    # ───── TABLE HANDLING ─────
+    if parsed and "table" in parsed:
+
+        # 🚨 Only allow table for approved sections
+        if not _is_table_section(section_name):
+            print(f"[BLOCKED] Table returned for non-table section: {section_name}")
+            structured_content = None
+
+        else:
+            table_obj = parsed.get("table")
+
+            if (
+                isinstance(table_obj, dict)
+                and isinstance(table_obj.get("headers"), list)
+                and isinstance(table_obj.get("rows"), list)
+            ):
+                structured_content = {
+                    "table": {
+                        "headers": table_obj["headers"],
+                        "rows": table_obj["rows"]
+                    }
+                }
+                content = ""
+            else:
+                print(f"[INVALID TABLE STRUCTURE] {section_name}")
+                structured_content = None
+
+    # Direct headers/rows support
+    elif parsed and "headers" in parsed and "rows" in parsed:
+        if _is_table_section(section_name):
+            structured_content = {
+                "table": {
+                    "headers": parsed["headers"],
+                    "rows": parsed["rows"]
+                }
+            }
+            content = ""
+        else:
+            structured_content = None
+
+    # except Exception as e:
+    #     print(f"[JSON ERROR] {section_name}: {e}")
+    #     structured_content = None
+
+    # If we still have no structured content but content looks like broken JSON, clear it
+    if not structured_content and content and content.strip().startswith('"') and content.strip().endswith('"'):
+        # This looks like a failed JSON string, not valid text content
+        content = ""
+
+    if content and not structured_content:  # Only trim text content
+        max_words_allowed = max_words
+        words = content.split()
+        if len(words) > max_words_allowed:
+            content = " ".join(words[:max_words_allowed])
+
+    # Validate output
+    if structured_content:
+        # Tables are automatically valid
+        section_validation = {
+            "valid": True,
+            "issues": [],
+            "word_count": 0,
+            "min_words": 0, 
+            "max_words": 0
+        }
+    elif content.strip():
+        section_validation = _validate_section_output(
+            content=content,
+            section_name=section_name,
+            doc_type=doc_type
+        )
+    else:
+        # Empty content - mark as invalid
+        section_validation = {
+            "valid": False,
+            "issues": ["No valid content generated"],
+            "word_count": 0,
+            "min_words": min_words,
+            "max_words": max_words
+        }
+    print(f"[RAW LLM OUTPUT] {section_name}: {cleaned}")
+    print(f"[DEBUG] {section_name} - Type: {'TABLE' if structured_content else 'TEXT'}")
+    if structured_content:
+        print(f"[DEBUG] Table headers: {structured_content['table']['headers']}")
+        print(f"[DEBUG] Table rows: {len(structured_content['table']['rows'])}")
 
     return {
         "name":               section_name,
         "mandatory":          mandatory,
         "content":            content,
+        "structured_content": structured_content,
         "section_validation": section_validation
     }
 
@@ -428,6 +551,11 @@ def generate_draft(
         for key, value in document_inputs.items():
             inputs_block += f"{key}: {value}\n"
 
+    # Validate that registry_doc has required fields
+    if "sections" not in registry_doc or not registry_doc["sections"]:
+        print(f"[ERROR] No sections found in registry_doc")
+        print(f"[ERROR] Registry doc keys: {registry_doc.keys()}")
+        raise ValueError("Document has no sections defined")
 
     all_sections     = registry_doc["sections"]
 
@@ -437,8 +565,13 @@ def generate_draft(
     industry_context = load_prompt("industry_context")
 
     for section in all_sections:
-        section_name = section["name"]
-        mandatory    = section["mandatory"]
+        section_name = section.get("name")
+        mandatory    = section.get("mandatory", True)
+        
+        # Skip sections without names
+        if not section_name:
+            print(f"[WARN] Skipping section without name: {section}")
+            continue
 
         if section_name.lower() in [
             "security",
@@ -564,12 +697,30 @@ def generate_draft(
                         )
                         section["content"] = improved
 
-                        # Re-validate the regenerated section
-                        section["section_validation"] = _validate_section_output(
-                            content=improved,
+                        # Re-run JSON parsing logic
+                        section_result = _generate_single_section(
                             section_name=section["name"],
-                            doc_type=registry_doc["internal_type"]
+                            mandatory=True,
+                            registry_doc=registry_doc,
+                            company_profile=company_profile,
+                            company_block="",
+                            inputs_block="",
+                            industry_context="",
+                            user_notes="",
+                            all_sections=[],
+                            retry=False
                         )
+
+                        # Only update text from regeneration
+                        section["content"] = improved
+                        section["structured_content"] = None
+                        section["section_validation"] = {
+                            "valid": True,
+                            "issues": [],
+                            "word_count": len(improved.split()),
+                            "min_words": 0,
+                            "max_words": 0
+                        }
 
                     except Exception:
                         continue

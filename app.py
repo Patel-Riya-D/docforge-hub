@@ -196,6 +196,7 @@ if document_filename:
         st.stop()
 
     doc = response.json()
+    # st.write("RAW DOC FROM BACKEND:", doc)
     merged_groups = merge_input_groups(doc)
 
     base_groups = []
@@ -275,8 +276,13 @@ if response.status_code == 200:
 
         for draft in drafts:
             name = draft["document_name"]
+
             if name not in unique_docs:
                 unique_docs[name] = draft
+            else:
+                # Keep the latest version
+                if draft["version"] > unique_docs[name]["version"]:
+                    unique_docs[name] = draft
 
         filtered_drafts = list(unique_docs.values())
 
@@ -349,11 +355,21 @@ if st.session_state.selected_draft_id:
         full_document_text = ""
 
         for section in draft_detail["sections"]:
-            full_document_text += f"\n\n## {section['section_name']}\n\n"
-            full_document_text += section["content"]
-            full_document_text += "\n\n---\n"
+            st.markdown(f"## {section['section_name']}")
 
-        st.markdown(full_document_text)
+            if section.get("structured_content"):
+                table_data = section["structured_content"]["table"]
+                headers = table_data["headers"]
+                rows = table_data["rows"]
+
+                import pandas as pd
+                df = pd.DataFrame(rows, columns=headers)
+                st.table(df)
+
+            else:
+                st.markdown(section["content"])
+
+            st.divider()
 
     else:
         st.error("Failed to load draft")

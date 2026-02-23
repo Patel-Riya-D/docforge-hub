@@ -34,7 +34,7 @@ STRUCTURE CONTRACT:
 LANGUAGE CONTRACT:
 - Use formal legal tone.
 - Use third-person institutional voice.
-- Obligations must use SHALL, MUST, IS REQUIRED, or IS PROHIBITED.
+- Obligations must use Shall, Must, Is Required, or Is Prohibited.
 - Do NOT use first-person ("I", "we").
 - Do NOT use conversational language.
 - Do NOT write step-by-step procedural instructions.

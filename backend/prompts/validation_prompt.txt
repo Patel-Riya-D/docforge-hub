@@ -7,8 +7,6 @@ document_type: {document_type}
 risk_level: {risk_level}
 Department: {department}
 
-Section Name: "{section_name}"
-
 sections:
 {section_content}
 
@@ -25,7 +23,7 @@ Check for:
 
 Return output strictly in JSON format:
 
-{
+{{
   "status": "PASS" or "FAIL",
   "issues": [
     "Issue 1",
@@ -33,7 +31,7 @@ Return output strictly in JSON format:
   ],
   "risk_score": number from 1 to 10,
   "confidence_score": number from 1 to 10
-}
+}}
 
 FAIL if:
 - Section exceeds word limit.

@@ -57,17 +57,12 @@
     { "name": "Purpose", "mandatory": true },
     { "name": "Scope", "mandatory": true },
     { "name": "Definitions", "mandatory": true },
-    { "name": "Eligibility (Positions and Employees)", "mandatory": true },
-    { "name": "Policy Statements / Work Expectations", "mandatory": true },
-    { "name": "Responsiveness & Communication Requirements", "mandatory": true },
-    { "name": "Tools, Equipment & Approved Suppliers", "mandatory": false },
-    { "name": "Technical Support Options", "mandatory": false },
-    { "name": "Security and Confidentiality Rules", "mandatory": true },
-    { "name": "Travel Requirements", "mandatory": false },
-    { "name": "Compensation, Salary & Pay Considerations", "mandatory": false },
-    { "name": "Legal & Compliance Considerations", "mandatory": true },
-    { "name": "Consequences of Non-Compliance", "mandatory": true },
+    { "name": "Eligibility", "mandatory": true },
+    { "name": "Work Hours & Availability", "mandatory": true },
+    { "name": "Equipment & Data Security", "mandatory": true },
+    { "name": "Performance & Monitoring", "mandatory": true },
+    { "name": "Compliance & Enforcement", "mandatory": true },
     { "name": "Review & Revision History", "mandatory": true }
-  ],
+],
   "allowed_formats": ["notion", "pdf", "docx"]
 }
