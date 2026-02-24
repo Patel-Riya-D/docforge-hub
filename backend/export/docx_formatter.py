@@ -22,11 +22,28 @@ def build_docx(draft: dict) -> bytes:
     department = meta.get("department", "")
     version = draft.get("version", "v1.0")
 
+    # --- Title Page ---
+    doc.add_paragraph("\n\n\n")
+
     title = doc.add_heading(doc_name, level=0)
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
-    doc.add_paragraph(f"Department: {department}")
-    doc.add_paragraph(f"Version: {version}")
+    doc.add_paragraph("\n")
+
+    meta_para = doc.add_paragraph()
+    meta_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+    meta_para.add_run(f"Department: {department}\n")
+    meta_para.add_run(f"Version: {version}\n")
+    meta_para.add_run(f"Generated On: {datetime.now().strftime('%Y-%m-%d')}\n")
+
+    doc.add_paragraph("\n\n")
+
+    company_name = draft.get("source_document", {}).get("company_name", "")
+    if company_name:
+        company_para = doc.add_paragraph()
+        company_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        company_para.add_run(company_name).bold = True
 
     doc.add_page_break()
 

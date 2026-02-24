@@ -55,20 +55,20 @@
   ],
 
   "sections": [
-    { "name": "Project Overview", "mandatory": true },
-    { "name": "Product Information", "mandatory": true },
-    { "name": "Objective", "mandatory": true },
-    { "name": "User Personas", "mandatory": true },
-    { "name": "Success Metrics", "mandatory": true },
-    { "name": "Key Features and Requirements", "mandatory": true },
-    { "name": "User Stories", "mandatory": true },
-    { "name": "UX and Designs", "mandatory": false },
-    { "name": "Scope of Work", "mandatory": true },
-    { "name": "Technical Requirements", "mandatory": true },
-    { "name": "Dependencies", "mandatory": true },
-    { "name": "Timeline", "mandatory": true },
-    { "name": "Risks and Open Questions", "mandatory": false },
-    { "name": "Supporting Documents", "mandatory": false }
+    { "name": "Project Overview", "mandatory": true,"structure": "paragraph" },
+    { "name": "Product Information", "mandatory": true,"structure": "paragraph" },
+    { "name": "Objective", "mandatory": true,"structure": "paragraph" },
+    { "name": "User Personas", "mandatory": true,"structure": "paragraph" },
+    { "name": "Success Metrics", "mandatory": true ,"structure": "table"},
+    { "name": "Key Features and Requirements", "mandatory": true,"structure": "table" },
+    { "name": "User Stories", "mandatory": true,"structure": "paragraph" },
+    { "name": "UX and Designs", "mandatory": false,"structure": "paragraph" },
+    { "name": "Scope of Work", "mandatory": true,"structure": "paragraph" },
+    { "name": "Technical Requirements", "mandatory": true,"structure": "paragraph" },
+    { "name": "Dependencies", "mandatory": true,"structure": "table" },
+    { "name": "Timeline", "mandatory": true,"structure": "table" },
+    { "name": "Risks and Open Questions", "mandatory": false,"structure": "paragraph" },
+    { "name": "Supporting Documents", "mandatory": false,"structure": "paragraph" }
   ],
   "allowed_formats": ["notion", "pdf"]
 }

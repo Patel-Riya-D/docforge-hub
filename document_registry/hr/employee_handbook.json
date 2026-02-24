@@ -31,7 +31,7 @@
   ],
 
   "input_groups": [
-    {
+    { 
       "group_name": "Company Overview",
       "fields": [
         {

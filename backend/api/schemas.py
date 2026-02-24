@@ -47,3 +47,9 @@ class CompanyProfileCreate(BaseModel):
     regions: Optional[str] = None
     compliance_frameworks: Optional[str] = None
     default_jurisdiction: Optional[str] = None
+    founded_year: Optional[str] = None
+    headquarters_location: Optional[str] = None
+    ceo_name: Optional[str] = None
+    cto_name: Optional[str] = None
+    founders: Optional[str] = None
+    company_background: Optional[str] = None

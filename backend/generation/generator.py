@@ -12,6 +12,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import AzureChatOpenAI
 from backend.generation.llm_provider import get_llm
 from langchain_core.messages import SystemMessage, HumanMessage
+import json
 
 llm = get_llm()
 
@@ -160,7 +161,7 @@ def _generate_single_section(
     registry_doc: dict,
     company_block: str,
     company_profile: dict,
-    inputs_block: str,
+    document_inputs: dict,
     industry_context: str,
     user_notes: str,
     all_sections: list,
@@ -179,6 +180,9 @@ def _generate_single_section(
             "section_validation": dict   ← NEW: per-section quality result
         }
     """
+
+    document_inputs_json = json.dumps(document_inputs or {}, indent=2)
+
     doc_type      = registry_doc["internal_type"]
     risk_level    = registry_doc["risk_level"]
     type_behavior_data  = get_type_behavior(doc_type)
@@ -194,6 +198,9 @@ def _generate_single_section(
     employee_count = company_profile.get("employee_count", "") if company_profile else ""
     region = ", ".join(company_profile.get("regions", [])) if company_profile else ""
     jurisdiction = company_profile.get("default_jurisdiction", "") if company_profile else ""
+    ceo_name = company_profile.get("ceo_name", "")
+    cto_name = company_profile.get("cto_name", "")
+    company_background = company_profile.get("company_background", "")
 
     # Build TOC section list string for the prompt
     all_sections_str = "\n".join(
@@ -217,7 +224,7 @@ def _generate_single_section(
         "section_name":    section_name,
         "mandatory":       str(mandatory),
         "company_profile": company_profile,
-        "document_inputs": inputs_block,
+        "document_inputs_json": document_inputs_json,
         "industry_context": industry_context,
         "type_behavior":   rules,
         "tone": tone,
@@ -237,6 +244,9 @@ def _generate_single_section(
         "default_jurisdiction": jurisdiction,
         "forbidden_phrases": "\n".join(forbidden_phrases),
         "compliance_frameworks": compliance_frameworks,
+        "ceo_name": ceo_name,
+        "cto_name": cto_name,
+        "company_background": company_background
     }
 
     base_prompt = build_section_prompt(context)
@@ -301,8 +311,7 @@ Additional Notes:
         content = response.content.strip()
     except:
         content = str(response).strip()
-    
-    import json
+
 
     blocks = None
     content_text = ""
@@ -495,11 +504,6 @@ def generate_draft(
             f"Jurisdiction: {company_profile.get('default_jurisdiction')}\n"
         )
 
-    inputs_block = ""
-    if document_inputs:
-        for key, value in document_inputs.items():
-            inputs_block += f"{key}: {value}\n"
-
 
     all_sections     = registry_doc["sections"]
 
@@ -538,7 +542,7 @@ def generate_draft(
             registry_doc=registry_doc,
             company_profile=company_profile,
             company_block=company_block,
-            inputs_block=inputs_block,
+            document_inputs=document_inputs, 
             industry_context=industry_block,
             user_notes=user_notes,
             all_sections=all_sections,
@@ -559,7 +563,7 @@ def generate_draft(
                 registry_doc=registry_doc,
                 company_block=company_block,
                 company_profile=company_profile,    
-                inputs_block=inputs_block,
+                document_inputs=document_inputs, 
                 industry_context=industry_block,
                 user_notes=user_notes,
                 all_sections=all_sections,

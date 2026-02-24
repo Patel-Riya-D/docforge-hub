@@ -175,6 +175,12 @@ with st.expander("Company Profile", expanded=True):
     region = st.text_input("Operating Region")
     compliance = st.text_input("Compliance Frameworks")
     jurisdiction = st.text_input("Jurisdiction")
+    founded_year = st.text_input("Founded Year")
+    headquarters_location = st.text_input("Headquarters Location")
+    ceo_name = st.text_input("CEO Name")
+    cto_name = st.text_input("CTO Name")
+    founders = st.text_area("Founders")
+    company_background = st.text_area("Company Background")
 
 st.divider()
 
@@ -244,7 +250,13 @@ if document_filename:
                     "employee_count": employee_count,
                     "regions": [region],
                     "compliance_frameworks": [compliance],
-                    "default_jurisdiction": jurisdiction
+                    "default_jurisdiction": jurisdiction,
+                    "founded_year": founded_year,
+                    "headquarters_location": headquarters_location,
+                    "ceo_name": ceo_name,
+                    "cto_name": cto_name,
+                    "founders": founders,
+                    "company_background": company_background
                 },
                 "document_inputs": user_inputs
             }

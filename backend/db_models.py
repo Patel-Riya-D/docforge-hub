@@ -65,3 +65,9 @@ class CompanyProfile(Base):
     default_jurisdiction = Column(String, nullable=True)
 
     company_profile = Column(JSONB, nullable=True)
+    founded_year = Column(String, nullable=True)
+    headquarters_location = Column(String, nullable=True)
+    ceo_name = Column(String, nullable=True)
+    cto_name = Column(String, nullable=True)
+    founders = Column(Text, nullable=True)
+    company_background = Column(Text, nullable=True)

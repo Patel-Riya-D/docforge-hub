@@ -62,7 +62,9 @@
     { "name": "Equipment & Data Security", "mandatory": true },
     { "name": "Performance & Monitoring", "mandatory": true },
     { "name": "Compliance & Enforcement", "mandatory": true },
-    { "name": "Review & Revision History", "mandatory": true }
+    { "name": "Review & Revision History", "mandatory": true },
+    { "name": "Remote Work Agreement", "mandatory": true },
+    { "name": "Acknowledgement", "mandatory": true }
 ],
   "allowed_formats": ["notion", "pdf", "docx"]
 }

@@ -23,6 +23,31 @@ USER PROVIDED INPUTS
 {user_inputs}
 
 ========================================================
+SECTION-SPECIFIC STRUCTURE RULES
+========================================================
+
+The section "{section_name}" must follow these structural rules:
+
+- If section_name is "Success Metrics", you MUST generate a table with columns:
+  ["Metric", "Target", "Measurement Method"]
+
+- If section_name is "Timeline", you MUST generate a table with columns:
+  ["Milestone", "Start Date", "End Date", "Owner"]
+
+- If section_name is "Risks and Open Questions", you MUST generate a table with columns:
+  ["Risk / Question", "Impact", "Mitigation"]
+
+- If section_name is "Dependencies", you MUST generate a table with columns:
+  ["Dependency", "Owner", "Impact"]
+
+- If section_name is "Key Features and Requirements", you MUST generate a table with columns:
+  ["Feature", "Description", "Priority"]
+
+For these sections, at least one block MUST be a table block.
+
+All other sections may use paragraph blocks unless tabular representation improves clarity.
+
+========================================================
 STRICT OUTPUT FORMAT (MANDATORY – NO EXCEPTIONS)
 ========================================================
 
@@ -47,6 +72,19 @@ Each block MUST be one of:
     ["Value1", "Value2"]
   ]
 }}
+
+DOCUMENT_INPUTS_JSON:
+{document_inputs_json}
+
+INPUT ENFORCEMENT RULES:
+
+- Use values from DOCUMENT_INPUTS_JSON ONLY if relevant to this section.
+- Do NOT repeat operational details in sections where they are not logically required.
+- Avoid restating core working hours, response time, or VPN requirements unless this section directly governs those controls.
+- You MUST NOT invent default corporate values.
+- You MUST NOT modify time ranges, numbers, thresholds, or operational details.
+- If a value exists in DOCUMENT_INPUTS_JSON relevant to this section, it must appear exactly in the output.
+- Do NOT replace user-provided values with industry-standard examples.
 
 CRITICAL RULES:
 - DO NOT generate markdown tables
