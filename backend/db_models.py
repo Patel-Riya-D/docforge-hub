@@ -4,6 +4,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.sql import func
 from backend.database import Base
 from sqlalchemy.orm import relationship
+from sqlalchemy import JSON
 
 class Draft(Base):
     __tablename__ = "drafts"
@@ -26,7 +27,7 @@ class DraftSection(Base):
     draft_id = Column(Integer, ForeignKey("drafts.id", ondelete="CASCADE"))
     section_name = Column(String(255))
     section_order = Column(Integer)
-    content = Column(Text)
+    content = Column(JSON)
     created_at = Column(DateTime, server_default=func.now())
     regeneration_count = Column(Integer, default=0)
 

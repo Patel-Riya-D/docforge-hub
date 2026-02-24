@@ -11,11 +11,29 @@ from reportlab.lib.units import inch
 def generate_docx(draft):
     doc = DocxDocument()
 
-    doc.add_heading(draft.document_name, level=1)
+    doc.add_heading(draft["source_document"]["document_name"], level=1)
 
-    for section in draft.sections:
-        doc.add_heading(section.section_name, level=2)
-        doc.add_paragraph(section.content)
+    for section in draft["sections"]:
+        doc.add_heading(section["name"], level=2)
+
+        for block in section["blocks"]:
+
+            if block["type"] == "paragraph":
+                doc.add_paragraph(block["content"])
+
+            elif block["type"] == "table":
+                headers = block.get("headers", [])
+                rows = block.get("rows", [])
+
+                table = doc.add_table(rows=1, cols=len(headers))
+
+                for i, header in enumerate(headers):
+                    table.rows[0].cells[i].text = str(header)
+
+                for row in rows:
+                    row_cells = table.add_row().cells
+                    for i, cell in enumerate(row):
+                        row_cells[i].text = str(cell)
 
     buffer = BytesIO()
     doc.save(buffer)
@@ -33,11 +51,24 @@ def generate_pdf(draft):
     elements.append(Paragraph(draft.document_name, styles["Heading1"]))
     elements.append(Spacer(1, 0.5 * inch))
 
-    for section in draft.sections:
-        elements.append(Paragraph(section.section_name, styles["Heading2"]))
+    for section in draft["sections"]:
+        elements.append(Paragraph(section["name"], styles["Heading2"]))
         elements.append(Spacer(1, 0.2 * inch))
-        elements.append(Paragraph(section.content, styles["Normal"]))
-        elements.append(Spacer(1, 0.5 * inch))
+
+        for block in section["blocks"]:
+
+            if block["type"] == "paragraph":
+                elements.append(Paragraph(block["content"], styles["Normal"]))
+                elements.append(Spacer(1, 0.2 * inch))
+
+            elif block["type"] == "table":
+                from reportlab.platypus import Table
+
+                data = [block["headers"]] + block["rows"]
+                table = Table(data)
+
+                elements.append(table)
+                elements.append(Spacer(1, 0.3 * inch))
 
     doc.build(elements)
     buffer.seek(0)
@@ -48,12 +79,17 @@ def generate_pdf(draft):
 def generate_xls(draft):
     data = []
 
-    for section in draft.sections:
-        data.append({
-            "Section": section.section_name,
-            "Content": section.content
-        })
+    for section in draft["sections"]:
+        combined = " ".join(
+            block["content"]
+            for block in section["blocks"]
+            if block["type"] == "paragraph"
+        )
 
+        data.append({
+            "Section": section["name"],
+            "Content": combined
+        })
     df = pd.DataFrame(data)
 
     buffer = BytesIO()

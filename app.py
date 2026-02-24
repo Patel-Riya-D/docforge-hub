@@ -354,20 +354,45 @@ if st.session_state.selected_draft_id:
 
         full_document_text = ""
 
+        import json
+        import pandas as pd
+
         for section in draft_detail["sections"]:
             st.markdown(f"## {section['section_name']}")
 
-            if section.get("structured_content"):
-                table_data = section["structured_content"]["table"]
-                headers = table_data["headers"]
-                rows = table_data["rows"]
+            raw_content = section["content"]
 
-                import pandas as pd
-                df = pd.DataFrame(rows, columns=headers)
-                st.table(df)
+            # STEP 1: Load once
+            try:
+                blocks = json.loads(raw_content)
+            except:
+                blocks = []
 
-            else:
-                st.markdown(section["content"])
+            # STEP 2: If still string → load again
+            if isinstance(blocks, str):
+                try:
+                    blocks = json.loads(blocks)
+                except:
+                    blocks = []
+
+            # STEP 3: If still not list → skip
+            if not isinstance(blocks, list):
+                st.markdown("Invalid section format")
+                continue
+
+            for block in blocks:
+
+                if isinstance(block, dict):
+
+                    if block.get("type") == "paragraph":
+                        st.markdown(block.get("content", ""))
+
+                    elif block.get("type") == "table":
+                        df = pd.DataFrame(
+                            block.get("rows", []),
+                            columns=block.get("headers", [])
+                        )
+                        st.table(df)
 
             st.divider()
 

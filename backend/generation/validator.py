@@ -17,12 +17,19 @@ def validate_draft_llm(draft: dict):
     sections_text = ""
 
     for section in draft["sections"]:
+
+        combined_content = " ".join(
+            block["content"]
+            for block in section["blocks"]
+            if block["type"] == "paragraph"
+        )
+
         sections_text += f"""
-Section: {section['name']}
-Content:
-{section['content']}
----------------------------------
-"""
+    Section: {section['name']}
+    Content:
+    {combined_content}
+    ---------------------------------
+    """
 
     prompt_template = load_prompt("validation_prompt")
 
@@ -59,7 +66,14 @@ def hard_validation_checks(draft):
 
     # Enforcement phrase repetition
     enforcement_phrase = "Violations of this policy may result in disciplinary action"
-    full_text = " ".join([s["content"] for s in draft["sections"]])
+    full_text = " ".join(
+    " ".join(
+        block["content"]
+        for block in s["blocks"]
+        if block["type"] == "paragraph"
+    )
+    for s in draft["sections"]
+    )
 
     if full_text.count(enforcement_phrase) > 1:
         issues.append("Enforcement language repeated more than once.")
@@ -68,7 +82,13 @@ def hard_validation_checks(draft):
     company_name = draft["source_document"]["document_name"]
 
     for section in draft["sections"]:
-        if section["content"].count(company_name) > 2:
+        combined_content = " ".join(
+            block["content"]
+            for block in section["blocks"]
+            if block["type"] == "paragraph"
+        )
+
+        if combined_content.count(company_name) > 2:
             issues.append(f"Company name repeated excessively in section {section['name']}.")
 
 
@@ -77,11 +97,5 @@ def hard_validation_checks(draft):
     for fw in frameworks:
         if full_text.count(fw) > 2:
             issues.append(f"Compliance framework '{fw}' repeated excessively.")
-
-    # Company name repetition
-
-    for section in draft["sections"]:
-        if section["content"].count(company_name) > 2:
-            issues.append(f"Company name repeated excessively in section {section['name']}.")
 
     return issues

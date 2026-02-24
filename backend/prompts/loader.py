@@ -28,4 +28,5 @@ def build_section_prompt(context: dict) -> str:
     """
     template = load_prompt("section")
 
-    return template.format(**context)
+    from collections import defaultdict
+    return template.format_map(defaultdict(str, context))

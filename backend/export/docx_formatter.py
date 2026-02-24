@@ -28,23 +28,61 @@ def build_docx(draft: dict) -> bytes:
     doc.add_paragraph(f"Department: {department}")
     doc.add_paragraph(f"Version: {version}")
 
+    doc.add_page_break()
+
     # ── Sections ───────────────────────────────
     for section in draft.get("sections", []):
+
         section_name = section.get("name", "")
-        content = section.get("content", "")
+        blocks = section.get("blocks", [])
 
-        if not content.strip():
-            continue
+        heading = doc.add_heading(section_name, level=1)
+        heading.runs[0].bold = True
 
-        # Section Heading
-        doc.add_heading(section_name, level=1)
+        doc.add_paragraph("")  # spacing
 
-        # Section Body
-        for line in content.split("\n"):
-            if line.strip():
-                doc.add_paragraph(line.strip())
+        # Remove duplicated heading from first paragraph if present
+        if blocks and blocks[0].get("type") == "paragraph":
+            first_text = blocks[0].get("content", "").strip()
 
-        doc.add_page_break()
+            if first_text.lower().startswith(section_name.lower()):
+                blocks[0]["content"] = first_text[len(section_name):].strip()
+
+        for block in blocks:
+
+            if not isinstance(block, dict):
+                continue
+
+            # 🔹 Special formatting for Definitions section
+            if block.get("type") == "paragraph":
+
+                if section_name.lower() == "definitions":
+                    items = block.get("content", "").split(". ")
+                    for item in items:
+                        cleaned = item.strip()
+                        if cleaned:
+                            doc.add_paragraph(cleaned, style="List Bullet")
+                else:
+                    doc.add_paragraph(block.get("content", ""))
+
+            elif block.get("type") == "table":
+                headers = block.get("headers", [])
+                rows = block.get("rows", [])
+
+                if not headers:
+                    continue
+
+                table = doc.add_table(rows=len(rows) + 1, cols=len(headers))
+                table.style = "Table Grid"   # 👈 also add this for clean borders
+
+                # Header row
+                for col_idx, header in enumerate(headers):
+                    table.rows[0].cells[col_idx].text = str(header)
+
+                # Data rows
+                for row_idx, row in enumerate(rows):
+                    for col_idx, cell in enumerate(row):
+                        table.rows[row_idx + 1].cells[col_idx].text = str(cell)
 
     # ── Save ───────────────────────────────────
     buffer = io.BytesIO()

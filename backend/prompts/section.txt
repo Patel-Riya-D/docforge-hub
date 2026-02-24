@@ -1,40 +1,59 @@
-You are generating ONE SECTION of an enterprise-grade {document_type}.
+You are generating the "{section_name}" section of a "{document_type}".
 
-STRICT REQUIREMENTS:
+==============================
+COMPANY CONTEXT
+==============================
+Company Name: {company_name}
+Industry: {industry}
+Employee Count: {employee_count}
+Regions: {regions}
+Compliance Frameworks: {compliance_frameworks}
+Jurisdiction: {default_jurisdiction}
 
-1. This is ONLY the "{section_name}" section.
-2. DO NOT repeat content from other sections.
-3. DO NOT restate policy intent already covered.
-4. DO NOT include disclaimers unless explicitly required.
-5. DO NOT add generic filler text.
-6. Maximum length: {max_words} words.
-7. Minimum length: {min_words} words.
-8. Write in {tone} tone.
-9. Use {voice} voice.
-10. Avoid redundancy and unnecessary elaboration.
-11. Be precise, practical, and implementation-focused.
-12. No introduction phrases like:
-   - "This section outlines..."
-   - "The purpose of this section..."
-   - "As per policy..."
+==============================
+DOCUMENT CONTEXT
+==============================
+Department: {department}
+Risk Level: {risk_level}
+Approval Required: {approval_required}
 
-Company Context:
-- Company: {company_name}
-- Industry: {industry}
-- Region: {region}
-- Compliance: {risk_level}
+==============================
+USER PROVIDED INPUTS
+==============================
+{user_inputs}
 
-Section-Specific Rules:
-{section_rules}
+========================================================
+STRICT OUTPUT FORMAT (MANDATORY – NO EXCEPTIONS)
+========================================================
 
-Forbidden Phrases:
-{forbidden_phrases}
+You MUST return output ONLY as valid JSON.
 
-Output format rules:
-- Use clear structured paragraphs.
-- Use bullet lists only if operational steps are required.
-- Do not exceed word limit.
-- Do not repeat previous section headings.
-- Do not use markdown tables unless explicitly required.
+Return a JSON ARRAY of content blocks.
 
-Now generate ONLY the section body content.
+Each block MUST be one of:
+
+1. Paragraph block:
+{{
+  "type": "paragraph",
+  "content": "Text content here"
+}}
+
+2. Table block:
+{{
+  "type": "table",
+  "title": "Optional title",
+  "headers": ["Column1", "Column2"],
+  "rows": [
+    ["Value1", "Value2"]
+  ]
+}}
+
+CRITICAL RULES:
+- DO NOT generate markdown tables
+- DO NOT use "|" characters
+- DO NOT return plain text
+- DO NOT add explanation text
+- DO NOT wrap JSON in ```json
+- Output must be valid JSON only
+
+The entire response must be a JSON array.

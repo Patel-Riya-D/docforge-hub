@@ -16,6 +16,7 @@ from backend.export.exporter import generate_docx, generate_pdf, generate_xls
 from backend.export.docx_formatter import build_docx
 import io
 from sqlalchemy import func
+import json
 
 
 router = APIRouter(prefix="/documents", tags=["Documents"])
@@ -73,13 +74,18 @@ def generate_document(
         db.commit()
         db.refresh(draft)
 
+        import json
+
         for idx, section in enumerate(draft_result["sections"], start=1):
+
+            # Store full structured blocks as JSON string
             db_section = DraftSection(
                 draft_id=draft.id,
                 section_name=section["name"],
                 section_order=idx,
-                content=section["content"]
+                content=json.dumps(section["blocks"])   # ✅ STORE BLOCKS
             )
+
             db.add(db_section)
 
         db.commit()
@@ -238,28 +244,55 @@ def export_draft(draft_id: int, file_type: str, db: Session = Depends(get_db)):
     internal_type = doc_meta.internal_type if doc_meta else ""
     risk_level = doc_meta.risk_level if doc_meta else "MEDIUM"
 
-    draft_dict = {
-        "source_document": {
-            "document_name": draft_obj.document_name,
-            "department": draft_obj.department,
-            "internal_type": internal_type,
-            "risk_level": risk_level
-        },
-        "version": f"v{draft_obj.version}",
-        "status": draft_obj.status,
-        "generation_metadata": {
-            "generated_at": draft_obj.created_at.isoformat() if draft_obj.created_at else ""
-        },
-        "sections": [
-            {
-                "name": s.section_name,
-                "content": s.content,
-                "mandatory": True
-            }
-            for s in sections
-        ]
-    }
+    sections_data = []
 
+    for s in sections:
+        try:
+            blocks = json.loads(s.content)
+
+            # Handle double-encoded JSON
+            if isinstance(blocks, str):
+                blocks = json.loads(blocks)
+
+        except:
+            blocks = []
+
+        sections_data.append({
+            "name": s.section_name,
+            "blocks": blocks,
+            "mandatory": True
+        })
+
+        sections_data = []
+
+        for s in sections:
+            try:
+                blocks = json.loads(s.content)
+                if isinstance(blocks, str):
+                    blocks = json.loads(blocks)
+            except:
+                blocks = []
+
+            sections_data.append({
+                "name": s.section_name,
+                "blocks": blocks,
+                "mandatory": True
+            })
+
+        draft_dict = {
+            "source_document": {
+                "document_name": draft_obj.document_name,
+                "department": draft_obj.department,
+                "internal_type": internal_type,
+                "risk_level": risk_level
+            },
+            "version": f"v{draft_obj.version}",
+            "status": draft_obj.status,
+            "generation_metadata": {
+                "generated_at": draft_obj.created_at.isoformat() if draft_obj.created_at else ""
+            },
+            "sections": sections_data
+        }
     filename = draft_obj.document_name.replace(" ", "_")
 
     if file_type == "docx":

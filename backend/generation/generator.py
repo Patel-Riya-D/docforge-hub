@@ -206,6 +206,10 @@ def _generate_single_section(
 
     forbidden_phrases = get_forbidden_phrases(doc_type)
 
+    compliance_frameworks = ", ".join(
+        company_profile.get("compliance_frameworks", [])
+    ) if company_profile else ""
+
     context = {
         "document_name":   registry_doc["document_name"],
         "document_type":   doc_type,
@@ -229,9 +233,10 @@ def _generate_single_section(
         "company_name": company_name,
         "industry": industry,
         "employee_count": employee_count,
-        "region": region,
-        "jurisdiction": jurisdiction,
-        "forbidden_phrases": "\n".join(forbidden_phrases)
+        "regions": region,
+        "default_jurisdiction": jurisdiction,
+        "forbidden_phrases": "\n".join(forbidden_phrases),
+        "compliance_frameworks": compliance_frameworks,
     }
 
     base_prompt = build_section_prompt(context)
@@ -299,20 +304,48 @@ Additional Notes:
     
     import json
 
-    structured_content = None
+    blocks = None
+    content_text = ""
 
     try:
         parsed = json.loads(content)
-        if "table" in parsed:
-            structured_content = parsed
-            content = ""  # Clear text content if structured table
-    except:
-        structured_content = None
+
+        if isinstance(parsed, list):
+            blocks = parsed
+        else:
+            raise ValueError("LLM output is not a JSON array")
+
+    except Exception:
+        # If LLM fails JSON format, treat entire output as single paragraph block
+        blocks = [
+            {
+                "type": "paragraph",
+                "content": content.strip()
+            }
+        ]
+    combined_text = ""
+
+    for block in blocks:
+        if block["type"] == "paragraph":
+            combined_text += block["content"] + " "
+
+    content = combined_text.strip()
 
     max_words_allowed = max_words
     words = content.split()
+
     if len(words) > max_words_allowed:
-        content = " ".join(words[:max_words_allowed])
+        trimmed = " ".join(words[:max_words_allowed])
+
+        # Replace paragraph blocks only
+        blocks = [
+            {
+                "type": "paragraph",
+                "content": trimmed
+            }
+        ]
+
+        content = trimmed
 
     # Validate output 
     section_validation = _validate_section_output(
@@ -324,11 +357,10 @@ Additional Notes:
     print("LLM CONTENT:", response.content)
 
     return {
-        "name":               section_name,
-        "mandatory":          mandatory,
-        "content":            content,
-        "structured_content": structured_content,
-        "section_validation": section_validation
+    "name":               section_name,
+    "mandatory":          mandatory,
+    "blocks":             blocks,   # ← NEW
+    "section_validation": section_validation
     }
 
 
@@ -343,7 +375,11 @@ def regenerate_section_llm(draft: dict, section: dict, issues: list) -> str:
         risk_level=draft["source_document"]["risk_level"],
         department=draft["source_document"]["department"],
         section_name=section["name"],
-        original_content=section["content"],
+        original_content=" ".join(
+            block["content"]
+            for block in section["blocks"]
+            if block["type"] == "paragraph"
+        ),
         issues="\n".join(issues)
     )
 
@@ -361,9 +397,28 @@ def _compress_sections(sections, max_words):
     per_section_budget = max_words // len(sections)
 
     for s in sections:
-        words = s["content"].split()
+        # Combine paragraph blocks
+        combined = " ".join(
+            block["content"]
+            for block in s["blocks"]
+            if block["type"] == "paragraph"
+        )
+
+        words = combined.split()
+
         if len(words) > per_section_budget:
-            s["content"] = " ".join(words[:per_section_budget])
+            trimmed = " ".join(words[:per_section_budget])
+
+            # Replace paragraph blocks only
+            s["blocks"] = [
+                {
+                    "type": "paragraph",
+                    "content": trimmed
+                }
+            ]
+
+            # Recalculate validation word count
+            s["section_validation"]["word_count"] = len(trimmed.split())
 
     return sections
 
@@ -579,7 +634,12 @@ def generate_draft(
                             section=section,
                             issues=issues
                         )
-                        section["content"] = improved
+                        section["blocks"] = [
+                            {
+                                "type": "paragraph",
+                                "content": improved
+                            }
+                        ]
 
                         # Re-validate the regenerated section
                         section["section_validation"] = _validate_section_output(
@@ -601,4 +661,5 @@ def generate_draft(
     print(f"[FINAL] Draft status: {draft['status']} | "
           f"Sections: {len(draft['sections'])}")
 
+    print("TOTAL SECTIONS GENERATED:", len(draft["sections"]))
     return draft
