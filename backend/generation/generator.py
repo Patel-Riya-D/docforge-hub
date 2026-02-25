@@ -62,6 +62,17 @@ def _validate_section_output(
     word_count = len(content.split())
     min_words, max_words = get_section_word_limit(doc_type, section_name)
 
+    # Structured sections should NOT follow word limits
+    if section_name.lower() in [
+        "review & revision history",
+        "acknowledgement"
+    ]:
+        min_words = 0
+        max_words = 0
+    else:
+        if max_words > 300:
+            max_words = 300
+
     repetitive_phrases = [
         "this section constitutes a binding policy requirement",
         "all employees are subject to this policy from their start date",
@@ -251,6 +262,64 @@ def _generate_single_section(
 
     base_prompt = build_section_prompt(context)
 
+    if section_name.lower() in [
+        "acknowledgement",
+        "review & revision history"
+    ]:
+        min_words = 0
+        max_words = 200
+
+    if section_name.lower() in [
+        "review & revision history",
+        "revision history",
+        "version history"
+    ]:
+        base_prompt += """
+
+    OUTPUT STRUCTURE REQUIREMENT:
+
+    Return ONLY ONE JSON table block.
+
+    Do NOT repeat headers.
+    Do NOT create multiple table blocks.
+    Do NOT duplicate rows.
+
+    Format:
+
+    {
+    "type": "table",
+    "headers": ["Revision Date", "Version", "Description of Changes", "Approved By"],
+    "rows": [
+        ["YYYY-MM-DD", "1.0", "Initial creation", "Approver Name"]
+    ]
+    }
+    """
+
+    # STRUCTURE ENFORCEMENT
+    if section_name.lower() == "acknowledgement":
+        base_prompt += """
+
+    OUTPUT STRUCTURE REQUIREMENT:
+
+    This section MUST be returned as a JSON table block.
+
+    Return ONLY one block in this format:
+
+    {
+    "type": "table",
+    "headers": ["Field", "Value"],
+    "rows": [
+        ["Employee Name", ""],
+        ["Employee ID", ""],
+        ["Designation", ""],
+        ["Signature", ""],
+        ["Date", ""]
+    ]
+    }
+
+    Do NOT return paragraph blocks.
+    """
+
     # ── Add retry context if this is a re-generation ───────
     retry_block = ""
     if retry and previous_issues:
@@ -267,36 +336,40 @@ Additional Notes:
 {user_notes or "None provided."}
 """.strip()
 
-    system_message = f"""
+    if section_name.lower() in [
+        "review & revision history",
+        "acknowledgement"
+    ]:
+        system_message = f"""
+    You are generating structured JSON output.
+
+    Return ONLY the JSON table block requested.
+
+    Do NOT:
+    - Add narrative text
+    - Add explanations
+    - Add repeated rows
+    - Add multiple table blocks
+    - Repeat headers inside rows
+
+    Return exactly ONE clean table.
+    """
+    else:
+        system_message = f"""
     You are generating the FINAL VERSION of an enterprise {doc_type} document.
-
-    You are NOT:
-    - Writing instructions
-    - Writing guidance
-    - Writing meta commentary
-    - Writing a template unless document_type == TEMPLATE
-    - Writing placeholders unless document_type == FORM or TEMPLATE
-
-    You ARE:
-    - Writing the actual content as it will appear in the published document.
 
     STRICT LENGTH RULE:
     - Between {min_words} and {max_words} words.
     - Do NOT exceed limit.
-    - If exceeded, you FAIL.
 
     STRICT OUTPUT RULES:
     - Start directly with content.
     - Do NOT repeat section title.
     - Do NOT explain what to do.
-    - Do NOT include examples unless explicitly required.
     - Do NOT add filler language.
 
     SECTION CONTEXT CONTROL:
     - Write content ONLY relevant to the section name.
-    - Do NOT introduce topics that belong to other enterprise policies.
-    - Do NOT expand scope beyond the purpose of this specific document.
-
     """
 
     messages = [
@@ -306,6 +379,42 @@ Additional Notes:
 
 
     response = llm.invoke(messages)
+
+    if section_name.lower() in [
+        "review & revision history",
+        "revision history",
+        "version history"
+    ]:
+        return {
+            "name": section_name,
+            "mandatory": mandatory,
+            "blocks": [
+                {
+                    "type": "table",
+                    "headers": [
+                        "Revision Date",
+                        "Version",
+                        "Description of Changes",
+                        "Approved By"
+                    ],
+                    "rows": [
+                        [
+                            datetime.now().strftime("%Y-%m-%d"),
+                            "1.0",
+                            "Initial creation",
+                            "Head of Human Resources (HR Director)"
+                        ]
+                    ]
+                }
+            ],
+            "section_validation": {
+                "valid": True,
+                "issues": [],
+                "word_count": 0,
+                "min_words": 0,
+                "max_words": 0
+            }
+        }
 
     try:
         content = response.content.strip()
@@ -319,10 +428,51 @@ Additional Notes:
     try:
         parsed = json.loads(content)
 
+        # If single object → wrap into list
+        if isinstance(parsed, dict):
+            parsed = [parsed]
+
         if isinstance(parsed, list):
-            blocks = parsed
+            unique_blocks = []
+            seen_tables = set()
+
+            for block in parsed:
+
+                if block.get("type") == "table":
+
+                    headers = block.get("headers", [])
+                    header_tuple = tuple(h.strip().lower() for h in headers)
+
+                    raw_rows = block.get("rows", [])
+                    cleaned_rows = []
+                    seen_rows = set()
+
+                    for r in raw_rows:
+
+                        # Normalize row for comparison
+                        row_tuple_normalized = tuple(str(cell).strip().lower() for cell in r)
+
+                        # 🚫 Remove header row repeated inside rows
+                        if row_tuple_normalized == header_tuple:
+                            continue
+
+                        # 🚫 Remove duplicates
+                        if row_tuple_normalized in seen_rows:
+                            continue
+
+                        seen_rows.add(row_tuple_normalized)
+                        cleaned_rows.append(r)
+
+                    block["rows"] = cleaned_rows
+                    unique_blocks.append(block)
+
+                else:
+                    unique_blocks.append(block)
+
+            blocks = unique_blocks
+            print("PARSED BLOCKS COUNT:", len(parsed))
         else:
-            raise ValueError("LLM output is not a JSON array")
+            raise ValueError("Invalid JSON structure")
 
     except Exception:
         # If LLM fails JSON format, treat entire output as single paragraph block
@@ -340,36 +490,47 @@ Additional Notes:
 
     content = combined_text.strip()
 
-    max_words_allowed = max_words
-    words = content.split()
+    if max_words > 0:
+        max_words_allowed = max_words
+        words = content.split()
 
-    if len(words) > max_words_allowed:
-        trimmed = " ".join(words[:max_words_allowed])
+        if len(words) > max_words_allowed:
+            trimmed = " ".join(words[:max_words_allowed])
+            blocks = [
+                {
+                    "type": "paragraph",
+                    "content": trimmed
+                }
+            ]
+            content = trimmed
 
-        # Replace paragraph blocks only
-        blocks = [
-            {
-                "type": "paragraph",
-                "content": trimmed
-            }
-        ]
+    if section_name.lower() in [
+        "review & revision history",
+        "acknowledgement"
+    ]:
+        section_validation = {
+            "valid": True,
+            "issues": [],
+            "word_count": 0,
+            "min_words": 0,
+            "max_words": 0
+        }
+    else:
+        section_validation = _validate_section_output(
+            content=content,
+            section_name=section_name,
+            doc_type=doc_type
+        )
 
-        content = trimmed
-
-    # Validate output 
-    section_validation = _validate_section_output(
-        content=content,
-        section_name=section_name,
-        doc_type=doc_type
-    )
     print("LLM RAW RESULT:", response)
     print("LLM CONTENT:", response.content)
+    print("PARSED BLOCKS COUNT:", len(parsed))
 
     return {
-    "name":               section_name,
-    "mandatory":          mandatory,
-    "blocks":             blocks,   # ← NEW
-    "section_validation": section_validation
+        "name": section_name,
+        "mandatory": mandatory,
+        "blocks": blocks,
+        "section_validation": section_validation
     }
 
 

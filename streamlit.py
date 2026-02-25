@@ -15,7 +15,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Elegant light theme (same as before)
+# Elegant light theme with adjusted spacing
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -76,11 +76,15 @@ st.markdown("""
         background: linear-gradient(90deg, #2563eb, #3b82f6) !important;
         border-radius: 10px;
     }
+    /* Reduce space after progress bar and step container */
+    .stProgress {
+        margin-bottom: 5px !important;
+    }
     .step-container {
         display: flex;
         justify-content: center;
         gap: 30px;
-        margin: 20px 0 30px;
+        margin: 10px 0 20px 0;  /* reduced top/bottom margin */
         padding: 15px;
         background: #f8fafc;
         border-radius: 60px;
@@ -113,6 +117,7 @@ st.markdown("""
         border: 1px solid #eef2f6;
         border-radius: 20px;
         padding: 25px;
+        margin-top: 0;          /* remove top margin */
         margin-bottom: 25px;
         transition: all 0.2s ease;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
@@ -245,6 +250,19 @@ st.markdown("""
     .footer::before {
         content: ''; position: absolute; top: 0; left: 25%; width: 50%; height: 1px;
         background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
+    }
+    /* Force remove any extra space after progress bar and step container */
+    .stProgress {
+        margin-bottom: 0 !important;
+        padding-bottom: 0 !important;
+    }
+    .stProgress + div {
+        margin-top: 0 !important;
+    }
+    .step-container {
+        margin-top: 5px !important;
+        margin-bottom: 10px !important;
+        padding: 10px !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -391,7 +409,6 @@ def render_document_step(step_idx, group, doc_name):
 with st.sidebar:
     st.markdown("""
         <div style='text-align: center; padding: 20px 0;'>
-            <div style='font-size: 2.5rem;'>⚡</div>
             <h1 style='color: #0f172a; font-size: 1.5rem;'>DocForge Hub</h1>
             <p style='color: #64748b; font-size: 0.8rem;'>AI-Powered Document Generation</p>
         </div>
@@ -424,8 +441,8 @@ with st.sidebar:
 st.markdown("""
     <div class='welcome-header'>
         <div style='text-align: center; padding: 20px 0;'>
-            <h1>⚡ Document Forge</h1>
-            <p style='color: #64748b;'>Intelligent document generation platform powered by AI</p>
+            <h1> DocMind AI</h1>
+            <p style='color: #64748b;'>Intelligent document generation platform</p>
         </div>
     </div>
 """, unsafe_allow_html=True)
@@ -482,7 +499,6 @@ with tab_gen:
                     # Company profile step
                     render_company_step()
                     validation_errors = []  # no doc validation yet
-                    # Check required fields later on generate
                 else:
                     # Document step (index current_step - 1 in merged groups)
                     doc_idx = current_step - 1
@@ -678,7 +694,7 @@ if st.session_state.selected_draft_id:
 # ---------------- FOOTER ----------------
 st.markdown("""
     <div class="footer">
-        <p>⚡ DocForge Hub - AI-Powered Intelligent Document Generation Platform</p>
+        <p> DocForge Hub - AI-Powered Intelligent Document Generation Platform</p>
         <p style='font-size: 0.7rem; margin-top: 5px;'>© 2024 All rights reserved</p>
     </div>
 """, unsafe_allow_html=True)

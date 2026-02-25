@@ -45,6 +45,7 @@ def build_docx(draft: dict) -> bytes:
         company_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
         company_para.add_run(company_name).bold = True
 
+
     doc.add_page_break()
 
     # ── Sections ───────────────────────────────
@@ -83,14 +84,34 @@ def build_docx(draft: dict) -> bytes:
                     doc.add_paragraph(block.get("content", ""))
 
             elif block.get("type") == "table":
+
                 headers = block.get("headers", [])
                 rows = block.get("rows", [])
 
+                # Signature-type sections
+                if section_name.lower() in [
+                    "acknowledgement",
+                    "acknowledgement and acceptance",
+                    "remote work agreement"
+                ]:
+                    for row in rows:
+                        label = row[0]
+
+                        p = doc.add_paragraph()
+                        run = p.add_run(f"{label}: ")
+                        run.bold = True
+
+                        p.add_run(" ____________________________")
+
+                    doc.add_paragraph("")
+                    continue
+
+                # Normal data table
                 if not headers:
                     continue
 
                 table = doc.add_table(rows=len(rows) + 1, cols=len(headers))
-                table.style = "Table Grid"   # 👈 also add this for clean borders
+                table.style = "Table Grid"
 
                 # Header row
                 for col_idx, header in enumerate(headers):
@@ -100,6 +121,7 @@ def build_docx(draft: dict) -> bytes:
                 for row_idx, row in enumerate(rows):
                     for col_idx, cell in enumerate(row):
                         table.rows[row_idx + 1].cells[col_idx].text = str(cell)
+
 
     # ── Save ───────────────────────────────────
     buffer = io.BytesIO()

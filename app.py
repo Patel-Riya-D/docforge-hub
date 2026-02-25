@@ -400,11 +400,20 @@ if st.session_state.selected_draft_id:
                         st.markdown(block.get("content", ""))
 
                     elif block.get("type") == "table":
-                        df = pd.DataFrame(
-                            block.get("rows", []),
-                            columns=block.get("headers", [])
-                        )
-                        st.table(df)
+                        if section['section_name'].lower() in [
+                            "acknowledgement",
+                            "acknowledgement and acceptance",
+                            "remote work agreement"
+                        ]:
+                            for row in block.get("rows", []):
+                                label = row[0]
+                                st.markdown(f"**{label}:** ____________________________")
+                        else:
+                            df = pd.DataFrame(
+                                block.get("rows", []),
+                                columns=block.get("headers", [])
+                            )
+                            st.table(df)
 
             st.divider()
 
