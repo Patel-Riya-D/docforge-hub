@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from backend.api.routes import documents
 from backend.approval import routes as approval_routes
-
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI(
     title="DocForge Hub API",
@@ -17,3 +17,5 @@ app.include_router(approval_routes.router)
 def health_check():
     return {"status": "ok"}
 
+
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")

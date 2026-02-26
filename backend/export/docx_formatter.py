@@ -1,4 +1,5 @@
 import io
+import os
 import re
 from datetime import datetime
 from docx import Document
@@ -121,6 +122,14 @@ def build_docx(draft: dict) -> bytes:
                 for row_idx, row in enumerate(rows):
                     for col_idx, cell in enumerate(row):
                         table.rows[row_idx + 1].cells[col_idx].text = str(cell)
+                
+            elif block.get("type") == "diagram":
+
+                image_path = block.get("render_path")
+
+                if image_path and os.path.exists(image_path):
+                    doc.add_picture(image_path, width=Inches(5))
+                    doc.add_paragraph("")
 
 
     # ── Save ───────────────────────────────────

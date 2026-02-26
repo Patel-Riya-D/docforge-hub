@@ -1,0 +1,14 @@
+digraph {
+	"Define test objectives"
+	"Conduct unit testing"
+	"Conduct integration testing"
+	"Conduct system testing"
+	"Conduct user acceptance testing (UAT)"
+	"Perform automated testing"
+	"Perform manual testing"
+	"Perform security testing"
+	"Perform performance testing"
+	"Track and resolve defects"
+	"Document and review test results"
+	"Certify system readiness for production deployment"
+}

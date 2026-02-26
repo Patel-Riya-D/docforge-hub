@@ -13,6 +13,7 @@ from langchain_openai import AzureChatOpenAI
 from backend.generation.llm_provider import get_llm
 from langchain_core.messages import SystemMessage, HumanMessage
 import json
+from graphviz import Digraph
 
 llm = get_llm()
 
@@ -35,7 +36,6 @@ def _should_generate_section(doc_type: str, section_name: str) -> bool:
         return should_generate_toc(doc_type)
 
     return True
-
 
 
 # SECTION VALIDATOR
@@ -165,6 +165,92 @@ def _validate_section_output(
         "max_words": max_words
     }
 
+def _quick_diagram_trigger(section_name: str, content: str) -> bool:
+    keywords = [
+        "process",
+        "workflow",
+        "lifecycle",
+        "flow",
+        "steps",
+        "stages",
+        "levels",
+        "approval",
+        "cycle"
+    ]
+
+    text = (section_name + " " + content).lower()
+
+    return any(k in text for k in keywords)
+
+def _extract_diagram_definition(section_text: str):
+    prompt = f"""
+Analyze the section below.
+
+If it describes phases, stages, lifecycle steps, approval flow,
+or structured progression — extract them in logical order.
+
+Return JSON in this format:
+
+{{
+  "nodes": ["Stage 1", "Stage 2", "Stage 3"],
+  "edges": [["Stage 1", "Stage 2"], ["Stage 2", "Stage 3"]]
+}}
+
+If multiple named phases exist (e.g., Unit Testing, Integration Testing, etc),
+treat them as ordered stages.
+
+If nothing structured exists, return:
+
+{{
+  "nodes": [],
+  "edges": []
+}}
+
+Return ONLY JSON.
+
+Section:
+{section_text}
+"""
+
+    response = llm.invoke([
+        SystemMessage(content="You extract structured process stages."),
+        HumanMessage(content=prompt)
+    ])
+
+    try:
+        return json.loads(response.content)
+    except:
+        return {"nodes": [], "edges": []}
+
+def _render_flowchart(definition: dict) -> str:
+
+    try:
+        dot = Digraph(format="png")
+
+        nodes = definition.get("nodes", [])
+        edges = definition.get("edges", [])
+
+        if isinstance(nodes, list):
+            for node in nodes:
+                dot.node(str(node))
+
+        if isinstance(edges, list):
+            for edge in edges:
+                if isinstance(edge, list) and len(edge) == 2:
+                    dot.edge(str(edge[0]), str(edge[1]))
+
+        file_id = str(uuid.uuid4())
+        folder = "uploads/diagrams"
+        os.makedirs(folder, exist_ok=True)
+
+        path = f"{folder}/{file_id}"
+        dot.render(path, cleanup=True)
+
+        return f"{folder}/{file_id}.png"
+
+    except Exception as e:
+        print("DIAGRAM RENDER ERROR:", e)
+        return None
 
 # SINGLE SECTION GENERATOR
 # Calls AzureOpenAI for one section and validates output.
@@ -488,10 +574,35 @@ Additional Notes:
     combined_text = ""
 
     for block in blocks:
-        if block["type"] == "paragraph":
-            combined_text += block["content"] + " "
+        if isinstance(block, dict) and block.get("type") == "paragraph":
+            combined_text += block.get("content", "") + " "
 
     content = combined_text.strip()
+
+    # ---------------- DIAGRAM DETECTION ----------------
+
+    if not isinstance(blocks, list):
+      blocks = []
+
+    if _quick_diagram_trigger(section_name, content):
+
+        diagram_data = _extract_diagram_definition(content)
+
+        if diagram_data.get("nodes"):
+
+            image_path = _render_flowchart(diagram_data)
+
+            # print("DIAGRAM TRIGGER CHECK:", section_name)
+            # print("TRIGGER RESULT:", _quick_diagram_trigger(section_name, content))
+            # print("DIAGRAM DATA:", diagram_data)
+
+            blocks.append({
+                "type": "diagram",
+                "diagram_type": "flowchart",
+                "definition": diagram_data,  
+                "render_path": image_path,
+                "source": "generated"
+            })
 
     if max_words > 0:
         max_words_allowed = max_words
@@ -499,12 +610,20 @@ Additional Notes:
 
         if len(words) > max_words_allowed:
             trimmed = " ".join(words[:max_words_allowed])
-            blocks = [
-                {
-                    "type": "paragraph",
-                    "content": trimmed
-                }
-            ]
+
+            # Only update paragraph blocks, keep diagrams
+            new_blocks = []
+
+            for block in blocks:
+                if block.get("type") == "paragraph":
+                    new_blocks.append({
+                        "type": "paragraph",
+                        "content": trimmed
+                    })
+                else:
+                    new_blocks.append(block)
+
+            blocks = new_blocks
             content = trimmed
 
     if section_name.lower() in [
@@ -527,7 +646,11 @@ Additional Notes:
 
     print("LLM RAW RESULT:", response)
     print("LLM CONTENT:", response.content)
-    print("PARSED BLOCKS COUNT:", len(parsed))
+
+    if 'parsed' in locals():
+        print("PARSED BLOCKS COUNT:", len(parsed))
+    else:
+        print("PARSED BLOCKS COUNT: JSON parsing failed")
 
     return {
         "name": section_name,
@@ -549,9 +672,9 @@ def regenerate_section_llm(draft: dict, section: dict, issues: list) -> str:
         department=draft["source_document"]["department"],
         section_name=section["name"],
         original_content=" ".join(
-            block["content"]
-            for block in section["blocks"]
-            if block["type"] == "paragraph"
+            block.get("content", "")
+            for block in section.get("blocks", [])
+            if isinstance(block, dict) and block.get("type") == "paragraph"
         ),
         issues="\n".join(issues)
     )
@@ -830,47 +953,6 @@ def generate_draft(
                     section["blocks"] = improved
 
         retry_count += 1
-
-        # structured_sections = [
-        #     "review & revision history",
-        #     "acknowledgement"
-        # ]
-
-        # for section in draft["sections"]:
-        #     if section["mandatory"]:
-
-        #         if section["name"].lower() in structured_sections:
-        #             continue 
-        #         improved = regenerate_section_llm(
-        #             draft=draft,
-        #             section=section,
-        #             issues=issues
-        #         )
-        #         section["blocks"] = improved
-
-        #         # Re-validate the regenerated section
-        #         # Combine paragraph blocks into text for validation
-        #         combined_text = ""
-
-        #         for block in section["blocks"]:
-        #             if block.get("type") == "paragraph":
-        #                 combined_text += block.get("content", "") + " "
-
-        #         combined_text = combined_text.strip()
-
-        #         section["section_validation"] = _validate_section_output(
-        #             content=combined_text,
-        #             section_name=section["name"],
-        #             doc_type=registry_doc["internal_type"]
-        #         )
-
-        # except Exception:
-        #     continue
-
-        #     retry_count += 1
-        # else:
-        #     draft["status"] = "NEEDS_REVIEW"
-        #     break
 
     print("DOC TYPE:", registry_doc["internal_type"])
 

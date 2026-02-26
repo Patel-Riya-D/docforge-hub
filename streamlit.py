@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 import requests
 from backend.utils.schema_merger import merge_input_groups
@@ -54,8 +55,11 @@ st.markdown("""
         padding: 4px;
         border-radius: 40px;
         border: 1px solid #e2e8f0;
+        width: 100%;
     }
     .stTabs [data-baseweb="tab"] {
+        flex: 1;
+        text-align: center;
         border-radius: 30px;
         padding: 8px 20px;
         font-weight: 500;
@@ -161,6 +165,14 @@ st.markdown("""
         color: #0f172a; margin-top: 30px; margin-bottom: 15px;
         border-bottom: 2px solid #eef2f6; padding-bottom: 8px;
     }
+    /* Tighten expanders inside document preview */
+    .document-paper .stExpander {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
+    .document-paper .stExpander > div:first-child {
+        margin-top: 0 !important;
+    }
     .stTextInput input, .stTextArea textarea, .stNumberInput input,
     .stDateInput input, input[type="text"], input[type="number"], textarea {
         background: #ffffff !important;
@@ -264,18 +276,10 @@ st.markdown("""
         margin-bottom: 10px !important;
         padding: 10px !important;
     }
-    /* Tighten expanders inside document preview */
-    .document-paper .stExpander {
-        margin-top: 0 !important;
-        padding-top: 0 !important;
-    }
-    .document-paper .stExpander > div:first-child {
-        margin-top: 0 !important;
-    }
     </style>
 """, unsafe_allow_html=True)
 
-# ---------------- SESSION STATE (merged) ----------------
+# ---------------- SESSION STATE (keep original + add step state) ----------------
 if "selected_draft_id" not in st.session_state:
     st.session_state.selected_draft_id = None
 if "last_generated_id" not in st.session_state:
@@ -450,8 +454,8 @@ with st.sidebar:
 st.markdown("""
     <div class='welcome-header'>
         <div style='text-align: center; padding: 20px 0;'>
-            <h1>⚡ DocMind AI</h1>
-            <p style='color: #64748b;'>Intelligent document generation platform</p>
+            <h1>⚡ DocForge Hub</h1>
+            <p style='color: #64748b;'>Intelligent document generation platform powered by AI</p>
         </div>
     </div>
 """, unsafe_allow_html=True)
@@ -696,6 +700,15 @@ if st.session_state.selected_draft_id:
                         elif block.get("type") == "table":
                             df = pd.DataFrame(block.get("rows", []), columns=block.get("headers", []))
                             st.table(df)
+                        elif block.get("type") == "diagram":
+                            image_path = block.get("render_path")
+                            if image_path and os.path.exists(image_path):
+                                col_left, col_center, col_right = st.columns([1, 2, 1])
+                                with col_center:
+                                    with open(image_path, "rb") as f:
+                                        st.image(f.read(), use_container_width=True)
+                            else:
+                                st.warning(f"Diagram not found: {image_path}")
                 
                 st.markdown("##### Preview")
                 if paragraph_text.strip():
@@ -782,52 +795,50 @@ if st.session_state.selected_draft_id:
                 with col3:
                     if st.button("Download XLS"):
                         st.markdown(f'<a href="{API_BASE_URL}/documents/export/{st.session_state.selected_draft_id}/xls" target="_blank">Click here to download XLS</a>', unsafe_allow_html=True)
-            # else:
-            #     st.info("Full document preview will be available after all sections are approved.")
             
             # ----- Full Document Preview (enhanced with expanders + .document-paper) -----
-            # ----- Full Document Preview (enhanced with expanders) -----
             if all_approved:
                 st.divider()
                 st.subheader("Full Document Preview")
-                
-                # Optional: "Expand All / Collapse All" button
                 expand_all = st.checkbox("Expand all sections", value=False)
-                
-                preview_container = st.container()
-
-                with preview_container:
-                    st.markdown("### 📄 Document Preview")
-
-                    for idx, section in enumerate(draft_detail["sections"]):
-                        section_name = section["section_name"]
-
-                        with st.expander(f"📄 {section_name}", expanded=expand_all):
-                            blocks = section.get("content", [])
-
-                            if isinstance(blocks, str):
-                                try:
-                                    blocks = json.loads(blocks)
-                                except:
-                                    blocks = []
-
-                            if not isinstance(blocks, list):
-                                st.markdown("Invalid section format")
-                                continue
-
-                            for block in blocks:
-                                if isinstance(block, dict):
-                                    if block.get("type") == "paragraph":
-                                        st.markdown(block.get("content", ""))
-
-                                    elif block.get("type") == "table":
-                                        df = pd.DataFrame(
-                                            block.get("rows", []),
-                                            columns=block.get("headers", [])
-                                        )
+                st.markdown('<div class="document-paper">', unsafe_allow_html=True)
+                for section in draft_detail["sections"]:
+                    section_name = section["section_name"]
+                    with st.expander(f"📄 {section_name}", expanded=expand_all):
+                        blocks = section.get("content", [])
+                        if isinstance(blocks, str):
+                            try:
+                                blocks = json.loads(blocks)
+                            except:
+                                blocks = []
+                        if not isinstance(blocks, list):
+                            st.markdown("Invalid section format")
+                            continue
+                        for block in blocks:
+                            if isinstance(block, dict):
+                                if block.get("type") == "paragraph":
+                                    st.markdown(block.get("content", ""))
+                                elif block.get("type") == "table":
+                                    if section_name.lower() in ["acknowledgement", "acknowledgement and acceptance"]:
+                                        for row in block.get("rows", []):
+                                            label = row[0]
+                                            st.markdown(f"**{label}:** ____________________________")
+                                    else:
+                                        df = pd.DataFrame(block.get("rows", []), columns=block.get("headers", []))
                                         st.table(df)
+                                elif block.get("type") == "diagram":
+                                    image_path = block.get("render_path")
+                                    if image_path and os.path.exists(image_path):
+                                        col_left, col_center, col_right = st.columns([1, 2, 1])
+                                        with col_center:
+                                            with open(image_path, "rb") as f:
+                                                st.image(f.read(), use_container_width=True)
+                                    else:
+                                        st.warning(f"Diagram not found: {image_path}")
+                st.markdown('</div>', unsafe_allow_html=True)
             else:
-                st.info("✅ All sections must be approved before viewing the full document.")
+                st.divider()
+                st.info("Full document preview will be available after all sections are approved.")
     except Exception as e:
         st.error(f"❌ Failed to load draft: {e}")
 

@@ -1,7 +1,9 @@
+import os
 import streamlit as st
 import requests
 from backend.utils.schema_merger import merge_input_groups
 import pandas as pd
+
 
 API_BASE_URL = "http://127.0.0.1:8000"
 
@@ -399,6 +401,16 @@ if st.session_state.selected_draft_id:
                             columns=block.get("headers", [])
                         )
                         st.table(df)
+                    
+                    elif block.get("type") == "diagram":
+                        image_path = block.get("render_path")
+                        if image_path and os.path.exists(image_path):
+                            col_left, col_center, col_right = st.columns([1, 2, 1])
+                            with col_center:
+                                with open(image_path, "rb") as f:
+                                    st.image(f.read(), use_container_width=True)
+                        else:
+                            st.warning(f"Diagram not found: {image_path}")
 
             # ---------------- PREVIEW CARD ----------------
 
@@ -608,8 +620,16 @@ if st.session_state.selected_draft_id:
                                 columns=block.get("headers", [])
                             )
                             st.table(df)
-
-                st.divider()
+                    
+                    elif block.get("type") == "diagram":
+                        image_path = block.get("render_path")
+                        if image_path and os.path.exists(image_path):
+                            col_left, col_center, col_right = st.columns([1, 2, 1])
+                            with col_center:
+                                with open(image_path, "rb") as f:
+                                    st.image(f.read(), use_container_width=True)
+                        else:
+                            st.warning(f"Diagram not found: {image_path}")
 
         else:
             st.divider()
