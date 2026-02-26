@@ -28,6 +28,8 @@ class DraftSection(Base):
     section_name = Column(String(255))
     section_order = Column(Integer)
     content = Column(JSON)
+    status = Column(String(50), default="draft")   # draft | edited | approved
+    approved_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
     regeneration_count = Column(Integer, default=0)
 

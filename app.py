@@ -1,6 +1,7 @@
 import streamlit as st
 import requests
 from backend.utils.schema_merger import merge_input_groups
+import pandas as pd
 
 API_BASE_URL = "http://127.0.0.1:8000"
 
@@ -334,80 +335,273 @@ if st.session_state.selected_draft_id:
         draft_detail = response.json()
 
         st.divider()
-        st.subheader("Draft Content")
+        st.subheader("Section Review & Approval")
 
-        col1, col2, col3 = st.columns(3)
+        total_sections = len(draft_detail["sections"])
+        approved_sections = sum(
+            1 for s in draft_detail["sections"]
+            if s.get("status") == "approved"
+        )
 
-        with col1:
-            if st.button("Download PDF"):
-                st.markdown(
-                    f'<a href="{API_BASE_URL}/documents/export/{st.session_state.selected_draft_id}/pdf" target="_blank">Click here to download PDF</a>',
-                    unsafe_allow_html=True
-                )
+        progress_ratio = approved_sections / total_sections if total_sections else 0
 
-        with col2:
-            if st.button("Download DOCX"):
-                st.markdown(
-                    f'<a href="{API_BASE_URL}/documents/export/{st.session_state.selected_draft_id}/docx" target="_blank">Click here to download DOCX</a>',
-                    unsafe_allow_html=True
-                )
+        st.subheader("Review Progress")
+        st.markdown(
+            f"**{approved_sections} of {total_sections} Sections Confirmed**"
+        )
 
-        with col3:
-            if st.button("Download XLS"):
-                st.markdown(
-                    f'<a href="{API_BASE_URL}/documents/export/{st.session_state.selected_draft_id}/xls" target="_blank">Click here to download XLS</a>',
-                    unsafe_allow_html=True
-                )
-
-
+        st.progress(progress_ratio)
         st.divider()
-        
-        st.subheader("Full Document Preview")
 
-        full_document_text = ""
-
-        import json
-        import pandas as pd
+        all_approved = True
 
         for section in draft_detail["sections"]:
-            st.markdown(f"## {section['section_name']}")
 
-            raw_content = section["content"]
+            # if section.get("status") != "approved":
+            #     continue
 
-            # STEP 1: Load once
-            try:
-                blocks = json.loads(raw_content)
-            except:
-                blocks = []
+            section_name = section["section_name"]
+            section_status = section.get("status", "draft")
+            blocks = section["content"]
 
-            # STEP 2: If still string → load again
+            # 🔥 Handle old double-encoded data
             if isinstance(blocks, str):
                 try:
+                    import json
                     blocks = json.loads(blocks)
                 except:
                     blocks = []
 
-            # STEP 3: If still not list → skip
             if not isinstance(blocks, list):
-                st.markdown("Invalid section format")
-                continue
+                blocks = []
+
+            st.markdown(f"## {section_name}")
+
+            # 🔥 Status Badge
+            if section_status == "approved":
+                st.success("✅ Approved")
+            else:
+                st.warning("📝 Draft")
+                all_approved = False
+
+            # Render Content
+            paragraph_text = ""
 
             for block in blocks:
-
                 if isinstance(block, dict):
+
+                    if block.get("type") == "paragraph":
+                        paragraph_text += block.get("content", "") + "\n\n"
+
+                    elif block.get("type") == "table":
+                        df = pd.DataFrame(
+                            block.get("rows", []),
+                            columns=block.get("headers", [])
+                        )
+                        st.table(df)
+
+            # ---------------- PREVIEW CARD ----------------
+
+            st.markdown("##### Preview")
+
+            if paragraph_text.strip():
+                st.markdown(paragraph_text)
+
+            # ---------------- ACTION ROW ----------------
+
+            action_col1, action_col2, action_col3 = st.columns([1,1,2])
+
+            # Edit toggle state
+            edit_key = f"edit_mode_{draft_detail['id']}_{section_name}"
+    
+            if edit_key not in st.session_state:
+                st.session_state[edit_key] = False
+
+            is_editing = st.session_state[edit_key]
+
+
+            with action_col1:
+                if section_status != "approved":
+                    if st.button("✏ Edit", key=f"toggle_edit_{draft_detail['id']}_{section_name}"):
+                        st.session_state[edit_key] = True
+                        st.rerun()
+
+
+            with action_col2:
+                if section_status != "approved":
+                    if st.button("✓ Confirm", key=f"approve_{section_name}"):
+
+                        requests.post(
+                            f"{API_BASE_URL}/documents/approve-section",
+                            params={
+                                "draft_id": st.session_state.selected_draft_id,
+                                "section_name": section_name
+                            }
+                        )
+
+                        st.success("Section Locked")
+                        st.rerun()
+
+            # 🔄 Regenerate Section
+            structured_sections = [
+                "review & revision history",
+                "acknowledgement",
+                "acknowledgement and acceptance"
+            ]
+
+            if section_status != "approved" and section_name.lower() not in structured_sections:
+
+                with action_col3:
+                    feedback = st.text_input(
+                        "Improvement Note",
+                        key=f"feedback_{section_name}"
+                    )
+
+                    if st.button("🔄 Regenerate", key=f"regen_{section_name}"):
+
+                        regen_response = requests.post(
+                            f"{API_BASE_URL}/documents/regenerate-section",
+                            params={
+                                "draft_id": st.session_state.selected_draft_id,
+                                "section_name": section_name,
+                                "improvement_note": feedback
+                            }
+                        )
+
+                        if regen_response.status_code == 200:
+                            st.success("Section Regenerated")
+                            st.rerun()
+                        else:
+                            st.error(regen_response.text)
+            # ---------------- EDIT MODE AREA ----------------
+
+            if is_editing and section_status != "approved":
+
+                edited_text = st.text_area(
+                    "Edit Section Content",
+                    value=paragraph_text.strip(),
+                    height=200,
+                    key=f"edit_content_{draft_detail['id']}_{section_name}"
+                )
+
+                save_col1, save_col2 = st.columns([1,3])
+
+                with save_col1:
+                    if st.button("Save Changes", key=f"save_edit_{draft_detail['id']}_{section_name}"):
+
+                        save_response = requests.post(
+                            f"{API_BASE_URL}/documents/save-section-edit",
+                            json={
+                                "draft_id": st.session_state.selected_draft_id,
+                                "section_name": section_name,
+                                "updated_text": edited_text
+                            }
+                        )
+
+                        if save_response.status_code == 200:
+                            st.success("Changes Saved")
+
+                            st.session_state[edit_key] = False
+
+                            # 🔥 Clear textarea widget state
+                            text_key = f"edit_content_{draft_detail['id']}_{section_name}"
+                            if text_key in st.session_state:
+                                del st.session_state[text_key]
+
+                            st.rerun()
+
+                        else:
+                            st.error(save_response.text)
+
+            # elif section_status != "approved" and section_name.lower() in structured_sections:
+            #     st.info("Regeneration disabled for structured section.")
+            # st.success("🎉 All sections approved. Document ready for export.")   
+            st.divider()
+
+        # 🔐 EXPORT SECTION
+        st.subheader("Final Document Export")
+
+        col1, col2, col3 = st.columns(3)
+
+        if all_approved:
+
+            with col1:
+                if st.button("Download PDF"):
+                    st.markdown(
+                        f'<a href="{API_BASE_URL}/documents/export/{st.session_state.selected_draft_id}/pdf" target="_blank">Click here to download PDF</a>',
+                        unsafe_allow_html=True
+                    )
+
+            with col2:
+                if st.button("Download DOCX"):
+                    st.markdown(
+                        f'<a href="{API_BASE_URL}/documents/export/{st.session_state.selected_draft_id}/docx" target="_blank">Click here to download DOCX</a>',
+                        unsafe_allow_html=True
+                    )
+
+            with col3:
+                if st.button("Download XLS"):
+                    st.markdown(
+                        f'<a href="{API_BASE_URL}/documents/export/{st.session_state.selected_draft_id}/xls" target="_blank">Click here to download XLS</a>',
+                        unsafe_allow_html=True
+                    )
+
+        # ---------------- FULL DOCUMENT PREVIEW ----------------
+
+        if all_approved:
+
+            st.divider()
+            st.subheader("Full Document Preview")
+
+            import json
+            import pandas as pd
+
+            for section in draft_detail["sections"]:
+
+                section_name = section["section_name"]
+                section_status = section.get("status", "draft")
+
+                st.markdown(f"### {section_name}")
+
+                if section_status == "approved":
+                    st.success("🔒 Locked")
+                else:
+                    st.warning("📝 Draft")
+
+                blocks = section.get("content", [])
+
+                if isinstance(blocks, str):
+                    try:
+                        blocks = json.loads(blocks)
+                    except:
+                        blocks = []
+
+                if not isinstance(blocks, list):
+                    st.markdown("Invalid section format")
+                    st.divider()
+                    continue
+
+                for block in blocks:
+
+                    if not isinstance(block, dict):
+                        continue
 
                     if block.get("type") == "paragraph":
                         st.markdown(block.get("content", ""))
 
                     elif block.get("type") == "table":
-                        if section['section_name'].lower() in [
+
+                        if section_name.lower() in [
                             "acknowledgement",
-                            "acknowledgement and acceptance",
-                            "remote work agreement"
+                            "acknowledgement and acceptance"
                         ]:
+                            st.markdown("")
                             for row in block.get("rows", []):
                                 label = row[0]
-                                st.markdown(f"**{label}:** ____________________________")
+                                st.markdown(
+                                    f"**{label}:** ____________________________"
+                                )
+                            st.markdown("")
                         else:
                             df = pd.DataFrame(
                                 block.get("rows", []),
@@ -415,7 +609,12 @@ if st.session_state.selected_draft_id:
                             )
                             st.table(df)
 
+                st.divider()
+
+        else:
             st.divider()
+            st.info("Full document preview will be available after all sections are approved.")
+
 
     else:
         st.error("Failed to load draft")

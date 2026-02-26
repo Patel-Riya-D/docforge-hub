@@ -10,18 +10,17 @@ Section Name:
 Original Section Content:
 {original_content}
 
-Validation Issues Identified:
+User Requested Change:
 {issues}
 
 Instructions:
-- Fix the issues completely.
-- Strengthen clarity.
-- Remove redundancy.
-- Remove generic filler.
-- Improve specificity.
-- Maintain concise format.
-- Do NOT expand length unnecessarily.
-- Respect original word limit.
-
+- Apply the user requested change exactly.
+- If user provides updated time, replace the old time.
+- Modify only what is requested.
+- Do NOT ignore numeric corrections.
+- Do NOT restate unchanged content.
+- Keep professional tone.
+- Keep length similar.
+- Return ONLY the final corrected section.
 
 Return ONLY the improved section content.

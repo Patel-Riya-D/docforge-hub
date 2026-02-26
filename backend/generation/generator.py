@@ -59,6 +59,9 @@ def _validate_section_output(
         }
     """
     issues = []
+    if not isinstance(content, str):
+        content = str(content)
+
     word_count = len(content.split())
     min_words, max_words = get_section_word_limit(doc_type, section_name)
 
@@ -538,7 +541,7 @@ Additional Notes:
 
 def regenerate_section_llm(draft: dict, section: dict, issues: list) -> str:
 
-    template = load_prompt("regeneration_prompt")
+    template = load_prompt("regenerate_prompt")
 
     formatted_prompt = template.format(
         document_type=draft["source_document"]["internal_type"],
@@ -561,7 +564,25 @@ def regenerate_section_llm(draft: dict, section: dict, issues: list) -> str:
     chain = prompt | llm
     result = chain.invoke({})
 
-    return result.content.strip()
+    try:
+        parsed = json.loads(result.content)
+
+        if isinstance(parsed, dict):
+            parsed = [parsed]
+
+        if isinstance(parsed, list):
+            return parsed
+
+    except:
+        pass
+
+    # fallback to paragraph
+    return [
+        {
+            "type": "paragraph",
+            "content": result.content.strip()
+        }
+    ]
 
 def _compress_sections(sections, max_words):
     per_section_budget = max_words // len(sections)
@@ -779,47 +800,77 @@ def generate_draft(
 
         print(f"[VALIDATE] Status: {validation_result['status']} | Retry: {retry_count}")
 
-        draft["validation"]                            = validation_result
-        draft["generation_metadata"]["retry_count"]    = retry_count
+        draft["validation"] = validation_result
+        draft["generation_metadata"]["retry_count"] = retry_count
 
         if validation_result["status"] == "PASS":
             draft["status"] = "READY_FOR_APPROVAL"
             break
-        else:
+
+        elif validation_result["status"] == "FAIL":
             draft["status"] = "NEEDS_REVIEW"
+
+        else:
+            # If ERROR, stop retry loop completely
+            draft["status"] = "NEEDS_REVIEW"
+            print("Stopping retries due to validation ERROR")
+            break
 
         if retry_count < MAX_DRAFT_RETRIES:
             issues = validation_result.get("issues", [])
 
             for section in draft["sections"]:
                 if section["mandatory"]:
-                    try:
-                        improved = regenerate_section_llm(
-                            draft=draft,
-                            section=section,
-                            issues=issues
-                        )
-                        section["blocks"] = [
-                            {
-                                "type": "paragraph",
-                                "content": improved
-                            }
-                        ]
+                    improved = regenerate_section_llm(
+                        draft=draft,
+                        section=section,
+                        issues=issues
+                    )
 
-                        # Re-validate the regenerated section
-                        section["section_validation"] = _validate_section_output(
-                            content=improved,
-                            section_name=section["name"],
-                            doc_type=registry_doc["internal_type"]
-                        )
+                    section["blocks"] = improved
 
-                    except Exception:
-                        continue
+        retry_count += 1
 
-            retry_count += 1
-        else:
-            draft["status"] = "NEEDS_REVIEW"
-            break
+        # structured_sections = [
+        #     "review & revision history",
+        #     "acknowledgement"
+        # ]
+
+        # for section in draft["sections"]:
+        #     if section["mandatory"]:
+
+        #         if section["name"].lower() in structured_sections:
+        #             continue 
+        #         improved = regenerate_section_llm(
+        #             draft=draft,
+        #             section=section,
+        #             issues=issues
+        #         )
+        #         section["blocks"] = improved
+
+        #         # Re-validate the regenerated section
+        #         # Combine paragraph blocks into text for validation
+        #         combined_text = ""
+
+        #         for block in section["blocks"]:
+        #             if block.get("type") == "paragraph":
+        #                 combined_text += block.get("content", "") + " "
+
+        #         combined_text = combined_text.strip()
+
+        #         section["section_validation"] = _validate_section_output(
+        #             content=combined_text,
+        #             section_name=section["name"],
+        #             doc_type=registry_doc["internal_type"]
+        #         )
+
+        # except Exception:
+        #     continue
+
+        #     retry_count += 1
+        # else:
+        #     draft["status"] = "NEEDS_REVIEW"
+        #     break
 
     print("DOC TYPE:", registry_doc["internal_type"])
 

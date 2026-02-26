@@ -15,7 +15,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Elegant light theme with adjusted spacing
+# Elegant light theme (from streamlit.py)
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -84,7 +84,7 @@ st.markdown("""
         display: flex;
         justify-content: center;
         gap: 30px;
-        margin: 10px 0 20px 0;  /* reduced top/bottom margin */
+        margin: 10px 0 20px 0;
         padding: 15px;
         background: #f8fafc;
         border-radius: 60px;
@@ -117,7 +117,7 @@ st.markdown("""
         border: 1px solid #eef2f6;
         border-radius: 20px;
         padding: 25px;
-        margin-top: 0;          /* remove top margin */
+        margin-top: 0;
         margin-bottom: 25px;
         transition: all 0.2s ease;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
@@ -264,10 +264,18 @@ st.markdown("""
         margin-bottom: 10px !important;
         padding: 10px !important;
     }
+    /* Tighten expanders inside document preview */
+    .document-paper .stExpander {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
+    .document-paper .stExpander > div:first-child {
+        margin-top: 0 !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
-# ---------------- SESSION STATE ----------------
+# ---------------- SESSION STATE (merged) ----------------
 if "selected_draft_id" not in st.session_state:
     st.session_state.selected_draft_id = None
 if "last_generated_id" not in st.session_state:
@@ -294,7 +302,7 @@ if "company_profile" not in st.session_state:
         "company_background": ""
     }
 
-# ---------------- HELPER FUNCTIONS ----------------
+# ---------------- HELPER FUNCTIONS (from streamlit.py) ----------------
 def format_date(date_string):
     try:
         date_obj = datetime.fromisoformat(date_string.replace('Z', '+00:00'))
@@ -405,10 +413,11 @@ def render_document_step(step_idx, group, doc_name):
                 validation_errors.append(f"{field['label']} is required.")
     return user_inputs, validation_errors
 
-# ---------------- SIDEBAR ----------------
+# ---------------- SIDEBAR (streamlined) ----------------
 with st.sidebar:
     st.markdown("""
         <div style='text-align: center; padding: 20px 0;'>
+            <div style='font-size: 2.5rem;'>⚡</div>
             <h1 style='color: #0f172a; font-size: 1.5rem;'>DocForge Hub</h1>
             <p style='color: #64748b; font-size: 0.8rem;'>AI-Powered Document Generation</p>
         </div>
@@ -441,7 +450,7 @@ with st.sidebar:
 st.markdown("""
     <div class='welcome-header'>
         <div style='text-align: center; padding: 20px 0;'>
-            <h1> DocMind AI</h1>
+            <h1>⚡ DocMind AI</h1>
             <p style='color: #64748b;'>Intelligent document generation platform</p>
         </div>
     </div>
@@ -449,6 +458,7 @@ st.markdown("""
 
 tab_gen, tab_lib = st.tabs(["✨ Generate Draft", "📚 Draft Library"])
 
+# ==================== GENERATE DRAFT TAB ====================
 with tab_gen:
     if document_filename:
         try:
@@ -580,6 +590,7 @@ with tab_gen:
     else:
         st.info("👈 Select a document template from sidebar")
 
+# ==================== DRAFT LIBRARY TAB ====================
 with tab_lib:
     st.markdown("### 📚 Document Library")
     
@@ -636,7 +647,7 @@ with tab_lib:
     except Exception as e:
         st.error(f"❌ Failed to load drafts: {e}")
 
-# ---------------- DOCUMENT PREVIEW ----------------
+# ==================== DOCUMENT REVIEW & PREVIEW ====================
 if st.session_state.selected_draft_id:
     st.markdown("<hr style='margin: 30px 0; border-color: #eef2f6;'>", unsafe_allow_html=True)
     
@@ -645,56 +656,185 @@ if st.session_state.selected_draft_id:
         if resp.status_code == 200:
             draft_detail = resp.json()
             
-            col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
-            with col1:
-                st.markdown(f"<span style='color: #0f172a; font-weight: 600;'>{draft_detail['document_name']}  v{draft_detail.get('version', '1.0')}</span>", unsafe_allow_html=True)
-            with col2:
-                st.markdown(f'<a href="{API_BASE_URL}/documents/export/{st.session_state.selected_draft_id}/pdf" target="_blank"><button style="width:100%; background: linear-gradient(135deg, #2563eb, #3b82f6); color: white; border: none; border-radius: 30px; padding: 10px; font-weight: 600;">📥 PDF</button></a>', unsafe_allow_html=True)
-            with col3:
-                st.markdown(f'<a href="{API_BASE_URL}/documents/export/{st.session_state.selected_draft_id}/docx" target="_blank"><button style="width:100%; background: linear-gradient(135deg, #2563eb, #3b82f6); color: white; border: none; border-radius: 30px; padding: 10px; font-weight: 600;">📥 DOCX</button></a>', unsafe_allow_html=True)
-            with col4:
-                st.markdown(f'<a href="{API_BASE_URL}/documents/export/{st.session_state.selected_draft_id}/xls" target="_blank"><button style="width:100%; background: linear-gradient(135deg, #2563eb, #3b82f6); color: white; border: none; border-radius: 30px; padding: 10px; font-weight: 600;">📥 XLS</button></a>', unsafe_allow_html=True)
+            # ----- Section Review & Approval (original logic) -----
+            st.subheader("Section Review & Approval")
+            total_sections = len(draft_detail["sections"])
+            approved_sections = sum(1 for s in draft_detail["sections"] if s.get("status") == "approved")
+            progress_ratio = approved_sections / total_sections if total_sections else 0
+            st.markdown(f"**{approved_sections} of {total_sections} Sections Confirmed**")
+            st.progress(progress_ratio)
+            st.divider()
             
-            st.markdown('<div class="document-paper">', unsafe_allow_html=True)
-            st.markdown(f"<h1>{draft_detail['document_name']}</h1>", unsafe_allow_html=True)
-            company = st.session_state.company_profile
-            st.markdown(f"<p style='text-align:center; color: #64748b;'>Company: {company.get('company_name', 'N/A')}</p>", unsafe_allow_html=True)
-            st.markdown("<hr style='border-color: #eef2f6;'>", unsafe_allow_html=True)
-            
+            all_approved = True
             for section in draft_detail["sections"]:
-                st.markdown(f"<h2>{section['section_name']}</h2>", unsafe_allow_html=True)
+                section_name = section["section_name"]
+                section_status = section.get("status", "draft")
+                blocks = section["content"]
                 
-                raw_content = section["content"]
-                try:
-                    blocks = json.loads(raw_content)
-                    if isinstance(blocks, str):
+                # Handle old double-encoded data
+                if isinstance(blocks, str):
+                    try:
                         blocks = json.loads(blocks)
-                except:
+                    except:
+                        blocks = []
+                if not isinstance(blocks, list):
                     blocks = []
                 
-                if not isinstance(blocks, list):
-                    st.markdown(raw_content)
+                st.markdown(f"## {section_name}")
+                if section_status == "approved":
+                    st.success("✅ Approved")
                 else:
-                    for block in blocks:
-                        if isinstance(block, dict):
-                            if block.get("type") == "paragraph":
-                                st.markdown(block.get("content", ""))
-                            elif block.get("type") == "table":
-                                df = pd.DataFrame(
-                                    block.get("rows", []),
-                                    columns=block.get("headers", [])
-                                )
-                                st.table(df)
-                st.markdown("<br>", unsafe_allow_html=True)
+                    st.warning("📝 Draft")
+                    all_approved = False
+                
+                # Render content
+                paragraph_text = ""
+                for block in blocks:
+                    if isinstance(block, dict):
+                        if block.get("type") == "paragraph":
+                            paragraph_text += block.get("content", "") + "\n\n"
+                        elif block.get("type") == "table":
+                            df = pd.DataFrame(block.get("rows", []), columns=block.get("headers", []))
+                            st.table(df)
+                
+                st.markdown("##### Preview")
+                if paragraph_text.strip():
+                    st.markdown(paragraph_text)
+                
+                # Action row (Edit, Confirm, Regenerate)
+                action_col1, action_col2, action_col3 = st.columns([1,1,2])
+                edit_key = f"edit_mode_{draft_detail['id']}_{section_name}"
+                if edit_key not in st.session_state:
+                    st.session_state[edit_key] = False
+                is_editing = st.session_state[edit_key]
+                
+                with action_col1:
+                    if section_status != "approved":
+                        if st.button("✏ Edit", key=f"toggle_edit_{draft_detail['id']}_{section_name}"):
+                            st.session_state[edit_key] = True
+                            st.rerun()
+                with action_col2:
+                    if section_status != "approved":
+                        if st.button("✓ Confirm", key=f"approve_{section_name}"):
+                            requests.post(
+                                f"{API_BASE_URL}/documents/approve-section",
+                                params={"draft_id": st.session_state.selected_draft_id, "section_name": section_name}
+                            )
+                            st.success("Section Locked")
+                            st.rerun()
+                
+                # Regenerate section
+                structured_sections = ["review & revision history", "acknowledgement", "acknowledgement and acceptance"]
+                if section_status != "approved" and section_name.lower() not in structured_sections:
+                    with action_col3:
+                        feedback = st.text_input("Improvement Note", key=f"feedback_{section_name}")
+                        if st.button("🔄 Regenerate", key=f"regen_{section_name}"):
+                            regen_response = requests.post(
+                                f"{API_BASE_URL}/documents/regenerate-section",
+                                params={"draft_id": st.session_state.selected_draft_id, "section_name": section_name, "improvement_note": feedback}
+                            )
+                            if regen_response.status_code == 200:
+                                st.success("Section Regenerated")
+                                st.rerun()
+                            else:
+                                st.error(regen_response.text)
+                
+                # Edit mode area
+                if is_editing and section_status != "approved":
+                    edited_text = st.text_area(
+                        "Edit Section Content",
+                        value=paragraph_text.strip(),
+                        height=200,
+                        key=f"edit_content_{draft_detail['id']}_{section_name}"
+                    )
+                    save_col1, save_col2 = st.columns([1,3])
+                    with save_col1:
+                        if st.button("Save Changes", key=f"save_edit_{draft_detail['id']}_{section_name}"):
+                            save_response = requests.post(
+                                f"{API_BASE_URL}/documents/save-section-edit",
+                                json={
+                                    "draft_id": st.session_state.selected_draft_id,
+                                    "section_name": section_name,
+                                    "updated_text": edited_text
+                                }
+                            )
+                            if save_response.status_code == 200:
+                                st.success("Changes Saved")
+                                st.session_state[edit_key] = False
+                                text_key = f"edit_content_{draft_detail['id']}_{section_name}"
+                                if text_key in st.session_state:
+                                    del st.session_state[text_key]
+                                st.rerun()
+                            else:
+                                st.error(save_response.text)
+                st.divider()
             
-            st.markdown('</div>', unsafe_allow_html=True)
+            # ----- Export buttons (original) -----
+            st.subheader("Final Document Export")
+            col1, col2, col3 = st.columns(3)
+            if all_approved:
+                with col1:
+                    if st.button("Download PDF"):
+                        st.markdown(f'<a href="{API_BASE_URL}/documents/export/{st.session_state.selected_draft_id}/pdf" target="_blank">Click here to download PDF</a>', unsafe_allow_html=True)
+                with col2:
+                    if st.button("Download DOCX"):
+                        st.markdown(f'<a href="{API_BASE_URL}/documents/export/{st.session_state.selected_draft_id}/docx" target="_blank">Click here to download DOCX</a>', unsafe_allow_html=True)
+                with col3:
+                    if st.button("Download XLS"):
+                        st.markdown(f'<a href="{API_BASE_URL}/documents/export/{st.session_state.selected_draft_id}/xls" target="_blank">Click here to download XLS</a>', unsafe_allow_html=True)
+            # else:
+            #     st.info("Full document preview will be available after all sections are approved.")
+            
+            # ----- Full Document Preview (enhanced with expanders + .document-paper) -----
+            # ----- Full Document Preview (enhanced with expanders) -----
+            if all_approved:
+                st.divider()
+                st.subheader("Full Document Preview")
+                
+                # Optional: "Expand All / Collapse All" button
+                expand_all = st.checkbox("Expand all sections", value=False)
+                
+                preview_container = st.container()
+
+                with preview_container:
+                    st.markdown("### 📄 Document Preview")
+
+                    for idx, section in enumerate(draft_detail["sections"]):
+                        section_name = section["section_name"]
+
+                        with st.expander(f"📄 {section_name}", expanded=expand_all):
+                            blocks = section.get("content", [])
+
+                            if isinstance(blocks, str):
+                                try:
+                                    blocks = json.loads(blocks)
+                                except:
+                                    blocks = []
+
+                            if not isinstance(blocks, list):
+                                st.markdown("Invalid section format")
+                                continue
+
+                            for block in blocks:
+                                if isinstance(block, dict):
+                                    if block.get("type") == "paragraph":
+                                        st.markdown(block.get("content", ""))
+
+                                    elif block.get("type") == "table":
+                                        df = pd.DataFrame(
+                                            block.get("rows", []),
+                                            columns=block.get("headers", [])
+                                        )
+                                        st.table(df)
+            else:
+                st.info("✅ All sections must be approved before viewing the full document.")
     except Exception as e:
-        st.error(f"❌ Failed to load document preview: {e}")
+        st.error(f"❌ Failed to load draft: {e}")
 
 # ---------------- FOOTER ----------------
 st.markdown("""
     <div class="footer">
-        <p> DocForge Hub - AI-Powered Intelligent Document Generation Platform</p>
+        <p>⚡ DocForge Hub - AI-Powered Intelligent Document Generation Platform</p>
         <p style='font-size: 0.7rem; margin-top: 5px;'>© 2024 All rights reserved</p>
     </div>
 """, unsafe_allow_html=True)

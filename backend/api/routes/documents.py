@@ -17,6 +17,7 @@ from backend.export.docx_formatter import build_docx
 import io
 from sqlalchemy import func
 import json
+from pydantic import BaseModel
 
 
 router = APIRouter(prefix="/documents", tags=["Documents"])
@@ -83,7 +84,7 @@ def generate_document(
                 draft_id=draft.id,
                 section_name=section["name"],
                 section_order=idx,
-                content=json.dumps(section["blocks"])   # ✅ STORE BLOCKS
+                content=section["blocks"]  # ✅ STORE BLOCKS  #content=json.dumps(section["blocks"])
             )
 
             db.add(db_section)
@@ -163,62 +164,13 @@ def get_draft_detail(draft_id: int, db: Session = Depends(get_db)):
         "sections": [
             {
                 "section_name": s.section_name,
-                "content": s.content
+                "content": s.content,
+                "status": s.status,
+                "regeneration_count": s.regeneration_count
             }
             for s in sections
         ]
     }
-
-@router.post("/regenerate-section")
-def regenerate_section(
-    draft_id: int,
-    section_name: str,
-    improvement_note: str,
-    db: Session = Depends(get_db)
-):
-    draft = db.query(Draft).filter(Draft.id == draft_id).first()
-
-    if not draft:
-        raise HTTPException(status_code=404, detail="Draft not found")
-
-    section = db.query(DraftSection).filter(
-        DraftSection.draft_id == draft_id,
-        DraftSection.section_name == section_name
-    ).first()
-
-    if not section:
-        raise HTTPException(status_code=404, detail="Section not found")
-
-    try:
-        from backend.generation.generator import regenerate_section_llm
-
-        improved_content = regenerate_section_llm(
-            draft={
-                "source_document": {
-                    "internal_type": draft.document_name,
-                    "risk_level": "MEDIUM",
-                    "department": draft.department
-                }
-            },
-            section={
-                "name": section.section_name,
-                "content": section.content
-            },
-            issues=[improvement_note]
-        )
-
-        section.content = improved_content
-        section.regeneration_count += 1
-
-        draft.status = "NEEDS_REVIEW"
-
-        db.commit()
-
-        return {"message": "Section regenerated successfully"}
-
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/export/{draft_id}/{file_type}")
 def export_draft(draft_id: int, file_type: str, db: Session = Depends(get_db)):
@@ -227,6 +179,17 @@ def export_draft(draft_id: int, file_type: str, db: Session = Depends(get_db)):
 
     if not draft_obj:
         raise HTTPException(status_code=404, detail="Draft not found")
+    
+    not_approved = db.query(DraftSection).filter(
+        DraftSection.draft_id == draft_id,
+        DraftSection.status != "approved"
+    ).count()
+
+    if not_approved > 0:
+        raise HTTPException(
+            status_code=400,
+            detail="All sections must be approved before export"
+        )
 
     sections = (
         db.query(DraftSection)
@@ -247,14 +210,16 @@ def export_draft(draft_id: int, file_type: str, db: Session = Depends(get_db)):
     sections_data = []
 
     for s in sections:
-        try:
-            blocks = json.loads(s.content)
 
-            # Handle double-encoded JSON
-            if isinstance(blocks, str):
+        blocks = s.content
+
+        if isinstance(blocks, str):
+            try:
                 blocks = json.loads(blocks)
+            except:
+                blocks = []
 
-        except:
+        if not isinstance(blocks, list):
             blocks = []
 
         sections_data.append({
@@ -262,22 +227,6 @@ def export_draft(draft_id: int, file_type: str, db: Session = Depends(get_db)):
             "blocks": blocks,
             "mandatory": True
         })
-
-        sections_data = []
-
-        for s in sections:
-            try:
-                blocks = json.loads(s.content)
-                if isinstance(blocks, str):
-                    blocks = json.loads(blocks)
-            except:
-                blocks = []
-
-            sections_data.append({
-                "name": s.section_name,
-                "blocks": blocks,
-                "mandatory": True
-            })
 
         draft_dict = {
             "source_document": {
@@ -330,3 +279,174 @@ def create_company_profile(profile: CompanyProfileCreate, db: Session = Depends(
     db.commit()
     db.refresh(db_profile)
     return db_profile
+
+@router.post("/approve-section")
+def approve_section(
+    draft_id: int,
+    section_name: str,
+    db: Session = Depends(get_db)
+):
+    section = db.query(DraftSection).filter(
+        DraftSection.draft_id == draft_id,
+        DraftSection.section_name == section_name
+    ).first()
+
+    if not section:
+        raise HTTPException(status_code=404, detail="Section not found")
+
+    if section.status == "approved":
+        return {"message": "Section already approved"}
+
+    section.status = "approved"
+    section.approved_at = datetime.now(timezone.utc)
+
+    db.commit()
+
+    return {
+        "message": "Section approved successfully",
+        "section_name": section.section_name,
+        "status": section.status
+    }
+
+@router.post("/regenerate-section")
+def regenerate_section(
+    draft_id: int,
+    section_name: str,
+    improvement_note: str,
+    db: Session = Depends(get_db)
+):
+    draft = db.query(Draft).filter(Draft.id == draft_id).first()
+
+    if not draft:
+        raise HTTPException(status_code=404, detail="Draft not found")
+
+    section = db.query(DraftSection).filter(
+        DraftSection.draft_id == draft_id,
+        DraftSection.section_name == section_name
+    ).first()
+
+    if not section:
+        raise HTTPException(status_code=404, detail="Section not found")
+
+    try:
+        from backend.generation.generator import regenerate_section_llm
+        import json
+
+        # Normalize existing content
+        blocks = section.content
+
+        if isinstance(blocks, str):
+            try:
+                blocks = json.loads(blocks)
+            except:
+                blocks = []
+
+        if not isinstance(blocks, list):
+            blocks = []
+
+        # Call LLM regeneration
+        new_blocks = regenerate_section_llm(
+            draft={
+                "source_document": {
+                    "internal_type": draft.document_name,
+                    "risk_level": "MEDIUM",
+                    "department": draft.department
+                }
+            },
+            section={
+                "name": section.section_name,
+                "blocks": blocks
+            },
+            issues=[f"User correction: {improvement_note}"]
+        )
+
+        # Ensure result is always list
+        if isinstance(new_blocks, dict):
+            new_blocks = [new_blocks]
+
+        if not isinstance(new_blocks, list):
+            new_blocks = [
+                {
+                    "type": "paragraph",
+                    "content": str(new_blocks)
+                }
+            ]
+
+        section.content = new_blocks
+        section.status = "draft"
+        section.regeneration_count += 1
+        draft.status = "NEEDS_REVIEW"
+
+        db.commit()
+
+        return {"message": "Section regenerated successfully"}
+
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class SaveSectionEditRequest(BaseModel):
+    draft_id: int
+    section_name: str
+    updated_text: str
+
+
+@router.post("/save-section-edit")
+def save_section_edit(
+    payload: SaveSectionEditRequest,
+    db: Session = Depends(get_db)
+):
+    draft = db.query(Draft).filter(Draft.id == payload.draft_id).first()
+
+    if not draft:
+        raise HTTPException(status_code=404, detail="Draft not found")
+
+    section = db.query(DraftSection).filter(
+        DraftSection.draft_id == payload.draft_id,
+        DraftSection.section_name == payload.section_name
+    ).first()
+
+    if not section:
+        raise HTTPException(status_code=404, detail="Section not found")
+
+    try:
+        blocks = section.content or []
+
+        if not isinstance(blocks, list):
+            blocks = []
+
+        new_blocks = []
+        paragraph_found = False
+
+        for block in blocks:
+            if isinstance(block, dict) and block.get("type") == "paragraph":
+                paragraph_found = True
+                new_blocks.append({
+                    "type": "paragraph",
+                    "content": payload.updated_text.strip()
+                })
+            else:
+                new_blocks.append(block)
+
+        # 🔥 If no paragraph existed, create one
+        if not paragraph_found:
+            new_blocks.append({
+                "type": "paragraph",
+                "content": payload.updated_text.strip()
+            })
+
+        section.content = new_blocks
+        section.status = "draft"
+        draft.status = "NEEDS_REVIEW"
+
+        db.commit()
+        db.refresh(section)
+
+        print("NEW BLOCKS:", new_blocks)
+
+        return {"message": "Section updated successfully"}
+
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
