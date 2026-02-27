@@ -18,4 +18,4 @@ def health_check():
     return {"status": "ok"}
 
 
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+app.mount("/diagrams", StaticFiles(directory="uploads/diagrams"), name="diagrams")

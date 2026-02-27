@@ -19,6 +19,15 @@ llm = get_llm()
 
 load_dotenv()
 
+NEVER_DIAGRAM_SECTIONS = {
+        "acknowledgement", "acknowledgement and acceptance",
+        "review & revision history", "revision history", "version history",
+    }
+
+
+# Prevent duplicate diagrams inside one draft generation
+generated_diagram_signatures = set()
+
 
 def _should_generate_section(doc_type: str, section_name: str) -> bool:
     """
@@ -165,92 +174,176 @@ def _validate_section_output(
         "max_words": max_words
     }
 
-def _quick_diagram_trigger(section_name: str, content: str) -> bool:
-    keywords = [
-        "process",
-        "workflow",
-        "lifecycle",
-        "flow",
-        "steps",
-        "stages",
-        "levels",
-        "approval",
-        "cycle"
-    ]
+# def _quick_diagram_trigger(section_name: str, content: str) -> bool:
 
-    text = (section_name + " " + content).lower()
+#     # Only allow diagrams in controlled sections
+#     diagram_allowed_sections = [
+#         "levels of testing",
+#         "process flow",
+#         "workflow",
+#         "lifecycle",
+#         "execution flow",
+#         "approval process",
+#         "architecture overview"
+#     ]
+#     name = section_name.lower().strip()
 
-    return any(k in text for k in keywords)
+#     return section_name.lower() in diagram_allowed_sections
 
-def _extract_diagram_definition(section_text: str):
-    prompt = f"""
-Analyze the section below.
 
-If it describes phases, stages, lifecycle steps, approval flow,
-or structured progression — extract them in logical order.
-
-Return JSON in this format:
-
-{{
-  "nodes": ["Stage 1", "Stage 2", "Stage 3"],
-  "edges": [["Stage 1", "Stage 2"], ["Stage 2", "Stage 3"]]
-}}
-
-If multiple named phases exist (e.g., Unit Testing, Integration Testing, etc),
-treat them as ordered stages.
-
-If nothing structured exists, return:
-
-{{
-  "nodes": [],
-  "edges": []
-}}
-
-Return ONLY JSON.
-
-Section:
-{section_text}
-"""
-
-    response = llm.invoke([
-        SystemMessage(content="You extract structured process stages."),
-        HumanMessage(content=prompt)
-    ])
-
-    try:
-        return json.loads(response.content)
-    except:
-        return {"nodes": [], "edges": []}
-
-def _render_flowchart(definition: dict) -> str:
-
+def _render_flowchart(definition: dict, diagram_type: str = "flowchart") -> str:
     try:
         dot = Digraph(format="png")
+        
+        # FIXED: higher DPI, tighter size
+        dot.attr(dpi="150")      # was 96 — higher = sharper
+        dot.attr(margin="0.2")
 
         nodes = definition.get("nodes", [])
         edges = definition.get("edges", [])
 
-        if isinstance(nodes, list):
-            for node in nodes:
-                dot.node(str(node))
+        if diagram_type == "lifecycle":
+            dot.attr(rankdir="LR")
+            dot.attr(size="6,1.5!")   # wide, short — fits horizontal layout
+            dot.attr(nodesep="0.3")
+            colors = ["#2E86AB", "#A23B72", "#F18F01", "#C73E1D", "#3B1F2B", "#44BBA4", "#E94F37"]
+            for i, node in enumerate(nodes):
+                color = colors[i % len(colors)]
+                dot.node(str(node), shape="box", style="filled,rounded",
+                        fillcolor=color, fontcolor="white",
+                        width="1.5", height="0.45", fontsize="9")
+            for edge in edges:
+                if isinstance(edge, list) and len(edge) == 2:
+                    dot.edge(str(edge[0]), str(edge[1]))
 
-        if isinstance(edges, list):
+        elif diagram_type == "hub":
+            dot.attr(size="4,4!")
+            center = definition.get("center", nodes[0] if nodes else "Center")
+            dot.node(str(center), shape="circle", style="filled",
+                    fillcolor="#2C3E50", fontcolor="white",
+                    width="1.4", height="1.4", fontsize="10")
+            spoke_colors = ["#E74C3C", "#3498DB", "#2ECC71", "#F39C12", "#9B59B6", "#1ABC9C"]
+            for i, node in enumerate(nodes):
+                color = spoke_colors[i % len(spoke_colors)]
+                dot.node(str(node), shape="box", style="filled,rounded",
+                        fillcolor=color, fontcolor="white",
+                        width="1.2", height="0.4", fontsize="9")
+                dot.edge(str(center), str(node), dir="both")
+
+        elif diagram_type == "checklist":
+            dot.attr(rankdir="TB", size="3,5!")
+            for node in nodes:
+                dot.node(str(node), label=f"☐  {node}", shape="box",
+                        style="filled", fillcolor="#F8F9FA",
+                        fontsize="10", width="2.8", height="0.4")
+            for i in range(len(nodes) - 1):
+                dot.edge(str(nodes[i]), str(nodes[i+1]), style="invis")
+
+        else:
+            # Default flowchart — vertical
+            dot.attr(rankdir="TB", size="3,5!")
+            dot.attr(nodesep="0.3", ranksep="0.4")
+            for node in nodes:
+                dot.node(str(node), shape="box", style="filled,rounded",
+                        fillcolor="#4A90D9", fontcolor="white",
+                        width="2.0", height="0.4", fontsize="9")
             for edge in edges:
                 if isinstance(edge, list) and len(edge) == 2:
                     dot.edge(str(edge[0]), str(edge[1]))
 
         file_id = str(uuid.uuid4())
-        folder = "uploads/diagrams"
+        folder = os.path.abspath("uploads/diagrams")
         os.makedirs(folder, exist_ok=True)
-
         path = f"{folder}/{file_id}"
         dot.render(path, cleanup=True)
-
         return f"{folder}/{file_id}.png"
 
     except Exception as e:
         print("DIAGRAM RENDER ERROR:", e)
         return None
+
+
+def _plan_document_diagrams(registry_doc: dict, all_sections: list) -> dict:
+    """
+    Analyzes the full document globally and decides which sections
+    should have diagrams and what type.
+
+    Returns a dict: { "section_name_lowercase": "diagram_type" }
+    e.g. {
+        "levels of testing": "lifecycle",
+        "execution strategy": "flowchart",
+        "incident response team": "hub"
+    }
+    """
+
+    section_list = "\n".join(
+        f"{i+1}. {s['name']}"
+        for i, s in enumerate(all_sections)
+    )
+
+    doc_name = registry_doc["document_name"]
+    doc_type = registry_doc["internal_type"]
+
+    prompt = f"""
+You are a senior technical writer reviewing an enterprise document structure.
+
+Document Name: {doc_name}
+Document Type: {doc_type}
+
+Sections:
+{section_list}
+
+YOUR TASK:
+Based on the document type and section names, decide which sections 
+would genuinely benefit from a visual diagram in a real enterprise document.
+
+Think about what real {doc_type} documents look like — which sections 
+typically contain diagrams, flowcharts, lifecycle visuals, or hub diagrams.
+
+Diagram types available:
+- "flowchart" → sequential steps/process (e.g. approval flow, deployment steps)
+- "lifecycle" → phases/levels in order (e.g. testing pyramid, incident lifecycle, project phases)
+- "hub" → central entity with connections (e.g. team structure, system architecture, personas)
+
+Rules:
+- Only assign diagrams where they add genuine visual value
+- Maximum 3 diagrams per document
+- NEVER assign diagrams to: acknowledgement, revision history, 
+  summary, appendix, glossary, references, introduction, purpose, 
+  scope, objectives, assumptions, dependencies, supporting documents
+- Section names that imply a process, hierarchy, team, architecture, 
+  timeline, or levels almost always benefit from diagrams
+
+Return STRICT JSON ONLY — a dict mapping lowercase section name to diagram type.
+Only include sections that SHOULD have diagrams.
+
+Example:
+{{
+  "levels of testing": "lifecycle",
+  "execution strategy": "flowchart",
+  "incident response team": "hub"
+}}
+
+If no sections need diagrams:
+{{}}
+"""
+
+    response = llm.invoke([
+        SystemMessage(content="You are an expert technical writer. Return only valid JSON. No markdown."),
+        HumanMessage(content=prompt)
+    ])
+
+    try:
+        raw = response.content.strip()
+        if raw.startswith("```"):
+            lines = raw.split("\n")
+            raw = "\n".join(lines[1:-1] if lines[-1].strip() == "```" else lines[1:])
+        result = json.loads(raw.strip())
+        print(f"[DIAGRAM PLAN] {result}")
+        return {k.lower(): v for k, v in result.items()}
+    except Exception as e:
+        print(f"[DIAGRAM PLAN FAILED] {e}")
+        return {}
 
 # SINGLE SECTION GENERATOR
 # Calls AzureOpenAI for one section and validates output.
@@ -265,6 +358,7 @@ def _generate_single_section(
     industry_context: str,
     user_notes: str,
     all_sections: list,
+    diagram_plan: dict = {},
     retry: bool = False,
     previous_issues: list = None
 ) -> dict:
@@ -444,21 +538,64 @@ Additional Notes:
     Return exactly ONE clean table.
     """
     else:
+        # Look up whether this section should have a diagram
+        planned_diagram_type = diagram_plan.get(section_name.lower().strip())
+
+        if planned_diagram_type:
+            diagram_instruction = f"""
+    DIAGRAM REQUIRED FOR THIS SECTION:
+    Include ONE diagram_request block at the end of your response.
+    Use diagram_type: "{planned_diagram_type}"
+    Extract 3-6 meaningful nodes from your content.
+    Nodes must be 2-4 words max.
+
+    Example:
+    {{
+    "type": "diagram_request",
+    "diagram_type": "{planned_diagram_type}",
+    "nodes": ["Node 1", "Node 2", "Node 3"],
+    "edges": [["Node 1", "Node 2"], ["Node 2", "Node 3"]],
+    "center": ""
+    }}
+    """
+        else:
+            diagram_instruction = """
+    DO NOT include a diagram_request block for this section.
+    Return only paragraph blocks.
+    """
+
         system_message = f"""
-    You are generating the FINAL VERSION of an enterprise {doc_type} document.
+    You are generating the FINAL VERSION of an enterprise {doc_type} document section.
 
     STRICT LENGTH RULE:
     - Between {min_words} and {max_words} words.
-    - Do NOT exceed limit.
+
+    OUTPUT FORMAT:
+    Return a JSON array of blocks with paragraph content.
+    {diagram_instruction}
 
     STRICT OUTPUT RULES:
-    - Start directly with content.
-    - Do NOT repeat section title.
-    - Do NOT explain what to do.
-    - Do NOT add filler language.
+    - Start directly with content
+    - Do NOT repeat section title
+    - Do NOT explain what to do
+    - Do NOT add filler language
 
-    SECTION CONTEXT CONTROL:
-    - Write content ONLY relevant to the section name.
+    Example output WITH diagram:
+    [
+    {{"type": "paragraph", "content": "Your section content here..."}},
+    {{
+        "type": "diagram_request",
+        "diagram_type": "lifecycle",
+        "nodes": ["Stage 1", "Stage 2", "Stage 3"],
+        "edges": [["Stage 1", "Stage 2"], ["Stage 2", "Stage 3"]],
+        "center": ""
+    }}
+    ]
+
+    Example output WITHOUT diagram:
+    [
+    {{"type": "paragraph", "content": "Your section content here..."}}
+    ]
     """
 
     messages = [
@@ -475,7 +612,7 @@ Additional Notes:
         "version history"
     ]:
         return {
-            "name": section_name,
+            "section_name": section_name,
             "mandatory": mandatory,
             "blocks": [
                 {
@@ -563,14 +700,29 @@ Additional Notes:
         else:
             raise ValueError("Invalid JSON structure")
 
+    # CHANGE TO — strip markdown fences before parsing:
     except Exception:
-        # If LLM fails JSON format, treat entire output as single paragraph block
-        blocks = [
-            {
-                "type": "paragraph",
-                "content": content.strip()
-            }
-        ]
+        # Try stripping markdown fences first
+        cleaned = content.strip()
+        if cleaned.startswith("```"):
+            lines = cleaned.split("\n")
+            cleaned = "\n".join(lines[1:-1] if lines[-1].strip() == "```" else lines[1:])
+        
+        try:
+            parsed_retry = json.loads(cleaned)
+            if isinstance(parsed_retry, dict):
+                parsed_retry = [parsed_retry]
+            if isinstance(parsed_retry, list):
+                blocks = parsed_retry
+            else:
+                raise ValueError("Still invalid")
+        except Exception:
+            blocks = [
+                {
+                    "type": "paragraph",
+                    "content": content.strip()
+                }
+            ]
     combined_text = ""
 
     for block in blocks:
@@ -580,29 +732,49 @@ Additional Notes:
     content = combined_text.strip()
 
     # ---------------- DIAGRAM DETECTION ----------------
+    # Extract diagram_request block if LLM included one
+    final_blocks = []
+    diagram_request = None
 
-    if not isinstance(blocks, list):
-      blocks = []
+    for block in blocks:
+        if block.get("type") == "diagram_request":
+            diagram_request = block
+        else:
+            final_blocks.append(block)
 
-    if _quick_diagram_trigger(section_name, content):
+    blocks = final_blocks
 
-        diagram_data = _extract_diagram_definition(content)
+    # Render diagram if requested and valid
+    if (
+        diagram_request
+        and section_name.lower().strip() not in NEVER_DIAGRAM_SECTIONS
+        and len(diagram_request.get("nodes", [])) >= 3
+    ):
+        signature = tuple(diagram_request["nodes"])
 
-        if diagram_data.get("nodes"):
+        if signature not in generated_diagram_signatures:
+            generated_diagram_signatures.add(signature)
+            dtype = diagram_request.get("diagram_type", "flowchart")
+            diagram_def = {
+                "nodes": diagram_request["nodes"],
+                "edges": diagram_request.get("edges", []),
+                "center": diagram_request.get("center", "")
+            }
+            image_path = _render_flowchart(diagram_def, dtype)
+            file_id = os.path.basename(image_path).replace(".png", "") if image_path else None
 
-            image_path = _render_flowchart(diagram_data)
-
-            # print("DIAGRAM TRIGGER CHECK:", section_name)
-            # print("TRIGGER RESULT:", _quick_diagram_trigger(section_name, content))
-            # print("DIAGRAM DATA:", diagram_data)
-
-            blocks.append({
-                "type": "diagram",
-                "diagram_type": "flowchart",
-                "definition": diagram_data,  
-                "render_path": image_path,
-                "source": "generated"
-            })
+            if image_path:
+                blocks.append({
+                    "type": "diagram",
+                    "diagram_type": dtype,
+                    "definition": diagram_def,
+                    "render_path": image_path,
+                    "diagram_url": f"/diagrams/{file_id}.png" if file_id else None,
+                    "source": "generated"
+                })
+                print(f"[DIAGRAM] '{dtype}' generated for '{section_name}'")
+    else:
+        print(f"[DIAGRAM SKIP] '{section_name}'")
 
     if max_words > 0:
         max_words_allowed = max_words
@@ -643,9 +815,10 @@ Additional Notes:
             section_name=section_name,
             doc_type=doc_type
         )
-
+    print("SECTION NAME:", section_name.lower())
     print("LLM RAW RESULT:", response)
     print("LLM CONTENT:", response.content)
+    print("FINAL BLOCKS:", blocks)
 
     if 'parsed' in locals():
         print("PARSED BLOCKS COUNT:", len(parsed))
@@ -711,11 +884,10 @@ def _compress_sections(sections, max_words):
     per_section_budget = max_words // len(sections)
 
     for s in sections:
-        # Combine paragraph blocks
         combined = " ".join(
             block["content"]
             for block in s["blocks"]
-            if block["type"] == "paragraph"
+            if block.get("type") == "paragraph"
         )
 
         words = combined.split()
@@ -723,15 +895,19 @@ def _compress_sections(sections, max_words):
         if len(words) > per_section_budget:
             trimmed = " ".join(words[:per_section_budget])
 
-            # Replace paragraph blocks only
+            # Keep non-paragraph blocks (diagrams, tables), replace only paragraphs
+            non_paragraph_blocks = [
+                block for block in s["blocks"]
+                if block.get("type") != "paragraph"
+            ]
+
             s["blocks"] = [
                 {
                     "type": "paragraph",
                     "content": trimmed
                 }
-            ]
+            ] + non_paragraph_blocks  # ← diagrams preserved
 
-            # Recalculate validation word count
             s["section_validation"]["word_count"] = len(trimmed.split())
 
     return sections
@@ -762,6 +938,11 @@ def generate_draft(
 
     Returns: draft dict (same shape as before + section_validation per section)
     """
+
+    global generated_diagram_signatures
+    generated_diagram_signatures = set()
+
+    diagram_plan = _plan_document_diagrams(registry_doc, registry_doc["sections"])
 
     #  Step 1: Draft  
     draft = {
@@ -851,6 +1032,7 @@ def generate_draft(
             industry_context=industry_block,
             user_notes=user_notes,
             all_sections=all_sections,
+            diagram_plan=diagram_plan,
             retry  =False
         )
 
@@ -872,6 +1054,7 @@ def generate_draft(
                 industry_context=industry_block,
                 user_notes=user_notes,
                 all_sections=all_sections,
+                diagram_plan=diagram_plan, 
                 retry=True,
                 previous_issues=issues
             )

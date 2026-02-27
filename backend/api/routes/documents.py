@@ -18,6 +18,8 @@ import io
 from sqlalchemy import func
 import json
 from pydantic import BaseModel
+from backend.generation.llm_provider import get_llm
+from langchain_core.messages import SystemMessage, HumanMessage
 
 
 router = APIRouter(prefix="/documents", tags=["Documents"])
@@ -164,7 +166,7 @@ def get_draft_detail(draft_id: int, db: Session = Depends(get_db)):
         "sections": [
             {
                 "section_name": s.section_name,
-                "content": s.content,
+                "blocks": s.content,
                 "status": s.status,
                 "regeneration_count": s.regeneration_count
             }
@@ -411,6 +413,37 @@ def save_section_edit(
         raise HTTPException(status_code=404, detail="Section not found")
 
     try:
+        # -------------------------------
+        # 🔹 Step 1: Improve grammar using LLM
+        # -------------------------------
+
+        llm = get_llm()
+
+        prompt = f"""
+Improve the grammar, clarity, and professionalism of the following text.
+
+Rules:
+- Do NOT change meaning.
+- Do NOT add new information.
+- Do NOT remove important content.
+- Return only the improved version.
+- Keep enterprise tone.
+
+Text:
+{payload.updated_text}
+"""
+
+        response = llm.invoke([
+            SystemMessage(content="You are a professional enterprise document editor."),
+            HumanMessage(content=prompt)
+        ])
+
+        improved_text = response.content.strip()
+
+        # -------------------------------
+        # 🔹 Step 2: Replace paragraph block
+        # -------------------------------
+
         blocks = section.content or []
 
         if not isinstance(blocks, list):
@@ -424,17 +457,20 @@ def save_section_edit(
                 paragraph_found = True
                 new_blocks.append({
                     "type": "paragraph",
-                    "content": payload.updated_text.strip()
+                    "content": improved_text
                 })
             else:
                 new_blocks.append(block)
 
-        # 🔥 If no paragraph existed, create one
         if not paragraph_found:
             new_blocks.append({
                 "type": "paragraph",
-                "content": payload.updated_text.strip()
+                "content": improved_text
             })
+
+        # -------------------------------
+        # 🔹 Step 3: Save
+        # -------------------------------
 
         section.content = new_blocks
         section.status = "draft"
@@ -443,9 +479,7 @@ def save_section_edit(
         db.commit()
         db.refresh(section)
 
-        print("NEW BLOCKS:", new_blocks)
-
-        return {"message": "Section updated successfully"}
+        return {"message": "Section updated and improved successfully"}
 
     except Exception as e:
         db.rollback()

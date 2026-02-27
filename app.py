@@ -364,7 +364,8 @@ if st.session_state.selected_draft_id:
 
             section_name = section["section_name"]
             section_status = section.get("status", "draft")
-            blocks = section["content"]
+            # blocks = section["content"]
+            blocks = section.get("blocks", [])
 
             # 🔥 Handle old double-encoded data
             if isinstance(blocks, str):
@@ -403,15 +404,19 @@ if st.session_state.selected_draft_id:
                         st.table(df)
                     
                     elif block.get("type") == "diagram":
+                        # st.write("DIAGRAM BLOCK FOUND:", block)  # ← debug line
+                        diagram_url = block.get("diagram_url")
                         image_path = block.get("render_path")
-                        if image_path and os.path.exists(image_path):
-                            col_left, col_center, col_right = st.columns([1, 2, 1])
-                            with col_center:
-                                with open(image_path, "rb") as f:
-                                    st.image(f.read(), use_container_width=True)
+                        if diagram_url:
+                            col_l, col_m, col_r = st.columns([1, 3, 1])
+                            with col_m:
+                                st.image(f"{API_BASE_URL}{diagram_url}")
+                        elif image_path and os.path.exists(image_path):
+                            with open(image_path, "rb") as f:
+                                st.image(f.read(), use_container_width=True)
                         else:
-                            st.warning(f"Diagram not found: {image_path}")
-
+                            st.warning(f"Diagram not available — url: {diagram_url}, path: {image_path}")
+            
             # ---------------- PREVIEW CARD ----------------
 
             st.markdown("##### Preview")
@@ -580,7 +585,7 @@ if st.session_state.selected_draft_id:
                 else:
                     st.warning("📝 Draft")
 
-                blocks = section.get("content", [])
+                blocks = section.get("blocks") or []
 
                 if isinstance(blocks, str):
                     try:
@@ -622,14 +627,16 @@ if st.session_state.selected_draft_id:
                             st.table(df)
                     
                     elif block.get("type") == "diagram":
+                        st.write("DIAGRAM BLOCK FOUND:", block)  # ← debug line
+                        diagram_url = block.get("diagram_url")
                         image_path = block.get("render_path")
-                        if image_path and os.path.exists(image_path):
-                            col_left, col_center, col_right = st.columns([1, 2, 1])
-                            with col_center:
-                                with open(image_path, "rb") as f:
-                                    st.image(f.read(), use_container_width=True)
+                        if diagram_url:
+                            st.image(f"{API_BASE_URL}{diagram_url}", use_container_width=True)
+                        elif image_path and os.path.exists(image_path):
+                            with open(image_path, "rb") as f:
+                                st.image(f.read(), use_container_width=True)
                         else:
-                            st.warning(f"Diagram not found: {image_path}")
+                            st.warning(f"Diagram not available — url: {diagram_url}, path: {image_path}")
 
         else:
             st.divider()
