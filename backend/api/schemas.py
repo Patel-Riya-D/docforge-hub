@@ -35,7 +35,7 @@ class DocumentGenerateResponse(BaseModel):
     document_name: str
     department: str
     internal_type: str
-    version: str
+    version: int
     status: str
     sections: List[Dict[str, Any]]
     approval_required: bool

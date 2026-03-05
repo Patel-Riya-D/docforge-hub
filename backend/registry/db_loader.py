@@ -1,11 +1,37 @@
 from sqlalchemy import func
 from backend.db_models import Document
+from backend.utils.redis_client import redis_client
+import json
+
 
 def load_document_from_db(
     db,
     department: str,
     document_filename: str
 ):
+
+    cache_key = f"doc:{department.lower()}:{document_filename.lower()}"
+
+    # -------------------------
+    # Try Redis First
+    # -------------------------
+    try:
+        cached_doc = redis_client.get(cache_key)
+
+        if cached_doc:
+            try:
+                print("REDIS CACHE HIT:", cache_key)
+                return json.loads(cached_doc)
+            except Exception:
+                print("REDIS CACHE MISS:", cache_key)
+                print("Redis cache corrupted, loading from DB")
+
+    except Exception as e:
+        print("Redis cache read failed:", e)
+
+    # -------------------------
+    # Query Database
+    # -------------------------
     doc = db.query(Document).filter(
         func.lower(Document.department) == department.lower(),
         func.lower(Document.document_name) == document_filename.lower()
@@ -14,17 +40,10 @@ def load_document_from_db(
     if not doc:
         raise ValueError(f"Document not found in DB: {department}/{document_filename}")
 
-    # Ensure sections is a list
-    sections = doc.sections
-    if not isinstance(sections, list):
-        sections = []
-    
-    # Ensure input_groups is a list (document-specific groups)
-    input_groups = doc.input_groups
-    if not isinstance(input_groups, list):
-        input_groups = []
+    sections = doc.sections if isinstance(doc.sections, list) else []
+    input_groups = doc.input_groups if isinstance(doc.input_groups, list) else []
 
-    return {
+    result = {
         "document_name": doc.document_name,
         "internal_type": doc.internal_type,
         "risk_level": doc.risk_level,
@@ -34,3 +53,13 @@ def load_document_from_db(
         "input_groups": input_groups,
         "department": doc.department
     }
+
+    # -------------------------
+    # Save to Redis
+    # -------------------------
+    try:
+        redis_client.set(cache_key, json.dumps(result, default=str), ex=3600)
+    except Exception as e:
+        print("Redis cache write failed:", e)
+
+    return result

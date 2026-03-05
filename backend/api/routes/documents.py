@@ -73,7 +73,7 @@ def generate_document(
             document_filename=payload.document_filename,
             company_profile=payload.company_profile,
             document_inputs=payload.document_inputs,
-            user_notes=payload.user_notes
+            user_notes=getattr(payload, "user_notes", None)
         )
 
         latest_version = db.query(func.max(Draft.version)).filter(
@@ -81,7 +81,7 @@ def generate_document(
             Draft.department == payload.department
         ).scalar()
 
-        next_version = (latest_version or 0) + 1
+        next_version = int(latest_version or 0) + 1
 
         draft = Draft(
             document_name=registry_doc["document_name"],
@@ -96,12 +96,14 @@ def generate_document(
 
         import json
 
+        print("SECTIONS STRUCTURE:", draft_result["sections"])
+
         for idx, section in enumerate(draft_result["sections"], start=1):
 
             # Store full structured blocks as JSON string
             db_section = DraftSection(
                 draft_id=draft.id,
-                section_name=section["name"],
+                section_name=section.get("name") or section.get("section_name"),
                 section_order=idx,
                 content=section["blocks"]  # ✅ STORE BLOCKS  #content=json.dumps(section["blocks"])
             )
@@ -118,6 +120,7 @@ def generate_document(
 
     except Exception as e:
         db.rollback()
+        print("GENERATE ERROR:", str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
 
