@@ -76,11 +76,18 @@ def generate_document(
             user_notes=payload.user_notes
         )
 
+        latest_version = db.query(func.max(Draft.version)).filter(
+            Draft.document_name == registry_doc["document_name"],
+            Draft.department == payload.department
+        ).scalar()
+
+        next_version = (latest_version or 0) + 1
+
         draft = Draft(
             document_name=registry_doc["document_name"],
             department=payload.department,
             status=draft_result["status"],  
-            version=1,     
+            version=next_version,     
             regeneration_count=draft_result["generation_metadata"].get("retry_count", 0),      
         )
         db.add(draft)
