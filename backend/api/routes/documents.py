@@ -2,9 +2,11 @@ from fastapi import APIRouter, HTTPException
 from backend.api.schemas import DocumentPreviewRequest
 from backend.models.company_profile import CompanyProfile
 from backend.api.schemas import CompanyProfileCreate
+from backend.generation.question_engine import generate_clarification_questions
 from backend.registry.db_loader import load_document_from_db
 from backend.generation.generator import generate_draft
 from backend.api.schemas import DocumentGenerateRequest
+from backend.api.schemas import QuestionRequest
 from sqlalchemy.orm import Session
 from fastapi import Depends
 from backend.dependencies import get_db
@@ -57,6 +59,14 @@ def generate_document(
             document_filename=payload.document_filename
         )
 
+        # 🔎 Validate that all inputs are filled before generating
+        for key, value in payload.document_inputs.items():
+            if value in ["", None]:
+                return {
+                    "status": "questions_required",
+                    "message": f"Missing value for {key}"
+                }
+        
         draft_result = generate_draft(
             registry_doc=registry_doc,
             department=payload.department,
@@ -484,3 +494,26 @@ Text:
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/generate-questions")
+def generate_questions(
+    payload: QuestionRequest,
+    db: Session = Depends(get_db)
+):
+
+    registry_doc = load_document_from_db(
+        db=db,
+        department=payload.department,
+        document_filename=payload.document_filename
+    )
+
+    if not registry_doc:
+        return {"questions": []}
+
+    questions = generate_clarification_questions(
+        registry_doc=registry_doc,
+        company_profile=payload.company_profile,
+        document_inputs=payload.document_inputs
+    )
+
+    return {"questions": questions}

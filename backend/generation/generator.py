@@ -82,8 +82,8 @@ def _validate_section_output(
         min_words = 0
         max_words = 0
     else:
-        if max_words > 300:
-            max_words = 300
+        if max_words > 500:
+            max_words = 500
 
     repetitive_phrases = [
         "this section constitutes a binding policy requirement",
@@ -402,8 +402,8 @@ def _generate_single_section(
         for i, s in enumerate(all_sections)
     )
     min_words, max_words = get_section_word_limit(doc_type, section_name)
-    if max_words > 300:
-        max_words = 300
+    # keep real section limits
+    max_words = max_words
 
     forbidden_phrases = get_forbidden_phrases(doc_type)
 
@@ -781,7 +781,14 @@ Additional Notes:
         words = content.split()
 
         if len(words) > max_words_allowed:
-            trimmed = " ".join(words[:max_words_allowed])
+            trimmed_words = words[:max_words_allowed]
+            trimmed = " ".join(trimmed_words)
+
+            # ensure last sentence completes
+            if not trimmed.endswith((".", "!", "?")):
+                last_period = trimmed.rfind(".")
+                if last_period != -1:
+                    trimmed = trimmed[: last_period + 1]
 
             # Only update paragraph blocks, keep diagrams
             new_blocks = []
@@ -1076,7 +1083,7 @@ def generate_draft(
 
         #  Global document word cap (max ~2000 words ≈ 4 pages) 
 
-        MAX_TOTAL_WORDS = 1800
+        MAX_TOTAL_WORDS = 4000
         total_words = sum(
             s["section_validation"]["word_count"]
             for s in draft["sections"]

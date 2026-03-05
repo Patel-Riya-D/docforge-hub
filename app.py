@@ -3,7 +3,7 @@ import streamlit as st
 import requests
 from backend.utils.schema_merger import merge_input_groups
 import pandas as pd
-
+from backend.generation.question_label_enhancer import enhance_label
 
 API_BASE_URL = "http://127.0.0.1:8000"
 
@@ -27,6 +27,18 @@ if "last_generated_id" not in st.session_state:
 
 if "generation_in_progress" not in st.session_state:
     st.session_state.generation_in_progress = False
+
+if "pending_questions" not in st.session_state:
+    st.session_state.pending_questions = []
+
+if "question_answers" not in st.session_state:
+    st.session_state.question_answers = {}
+
+if "questions_generated" not in st.session_state:
+    st.session_state.questions_generated = False
+
+if "questions_initialized" not in st.session_state:
+    st.session_state.questions_initialized = False
 
 # ---------------- FIELD RENDERING ----------------
 
@@ -67,7 +79,14 @@ def render_dynamic_form(base_groups, doc_groups, document_name):
         for group in base_groups:
             for field in group["fields"]:
                 key = field["key"]
-                label = field["label"]
+                raw_label = field["label"]
+
+                cache_key = f"enhanced_{document_name}_{raw_label}"
+
+                if cache_key not in st.session_state:
+                    st.session_state[cache_key] = enhance_label(raw_label, document_name)
+
+                label = st.session_state[cache_key]
 
                 if field.get("required"):
                     label += " *"
@@ -88,7 +107,14 @@ def render_dynamic_form(base_groups, doc_groups, document_name):
 
             for field in group["fields"]:
                 key = field["key"]
-                label = field["label"]
+                raw_label = field["label"]
+
+                cache_key = f"enhanced_{document_name}_{raw_label}"
+
+                if cache_key not in st.session_state:
+                    st.session_state[cache_key] = enhance_label(raw_label, document_name)
+
+                label = st.session_state[cache_key]
 
                 if field.get("required"):
                     label += " *"
@@ -168,7 +194,6 @@ with col3:
 
 st.divider()
 
-
 # ---------------- STEP 2: COMPANY PROFILE ----------------
 
 with st.expander("Company Profile", expanded=True):
@@ -192,6 +217,18 @@ st.divider()
 
 if document_filename:
 
+    if st.session_state.get("current_doc") != document_filename:
+        st.session_state.current_doc = document_filename
+        st.session_state.pending_questions = []
+        st.session_state.question_answers = {}
+        st.session_state.questions_generated = False
+        st.session_state.questions_initialized = False
+        st.session_state.questions_locked = False
+
+        for k in list(st.session_state.keys()):
+            if k.startswith("aiq_"):
+                del st.session_state[k]
+
     response = requests.post(
         f"{API_BASE_URL}/documents/preview",
         json={
@@ -205,7 +242,6 @@ if document_filename:
         st.stop()
 
     doc = response.json()
-    # st.write("RAW DOC FROM BACKEND:", doc)
     merged_groups = merge_input_groups(doc)
 
     base_groups = []
@@ -223,7 +259,60 @@ if document_filename:
         doc["document_name"]
     )
 
-    st.divider()
+    # ✅ FETCH AI QUESTIONS ON LOAD (only once per document)
+    if not st.session_state.questions_initialized:
+
+        safe_inputs = {}
+        for key, value in user_inputs.items():
+            if hasattr(value, "isoformat"):
+                safe_inputs[key] = value.isoformat()
+            else:
+                safe_inputs[key] = value
+
+        questions_response = requests.post(
+            f"{API_BASE_URL}/documents/generate-questions",
+            json={
+                "department": department.lower(),
+                "document_filename": document_filename,
+                "company_profile": {
+                    "company_name": company_name,
+                    "industry": industry,
+                    "employee_count": employee_count,
+                    "regions": [region],
+                    "compliance_frameworks": [compliance],
+                    "default_jurisdiction": jurisdiction
+                },
+                "document_inputs": safe_inputs
+            }
+        )
+
+        if questions_response.status_code == 200:
+            fetched = questions_response.json().get("questions", [])
+            st.session_state.pending_questions = fetched
+            st.session_state.questions_locked = True  # 🔒 Lock immediately
+
+        st.session_state.questions_initialized = True
+
+    # ---------------- AI CLARIFICATION QUESTIONS ----------------
+
+    if st.session_state.pending_questions:
+
+        st.divider()
+        st.subheader("Additional Governance Information")
+
+        for q in st.session_state.pending_questions:
+            key = q["key"]
+            question_text = q["question"]
+            q_type = q.get("type", "text")
+
+            unique_key = f"aiq_{department}_{document_filename}_{key}"
+
+            if q_type == "textarea":
+                st.text_area(question_text, key=unique_key)
+            else:
+                st.text_input(question_text, key=unique_key)
+
+            # ✅ DON'T assign here — read from session_state directly in button
 
     # ---------------- GENERATE BUTTON ----------------
 
@@ -238,9 +327,28 @@ if document_filename:
                 st.error(err)
             st.stop()
 
+        # ✅ Read AI answers directly from widget session state keys
+        question_answers = {}
+        for q in st.session_state.pending_questions:
+            key = q["key"]
+            unique_key = f"aiq_{department}_{document_filename}_{key}"
+            value = st.session_state.get(unique_key, "")
+            question_answers[key] = value
+
+        # Block if any unanswered
+        if st.session_state.pending_questions:
+            for q in st.session_state.pending_questions:
+                if not question_answers.get(q["key"]):
+                    st.error(f"Please answer: {q['question']}")
+                    st.stop()
+
+        # Convert date inputs
         for key, value in user_inputs.items():
             if hasattr(value, "isoformat"):
                 user_inputs[key] = value.isoformat()
+
+        # ✅ Merge AI answers into user_inputs
+        user_inputs.update(question_answers)
 
         response = requests.post(
             f"{API_BASE_URL}/documents/generate",
@@ -265,14 +373,21 @@ if document_filename:
             }
         )
 
-        if response.status_code == 200:
-            result = response.json()
+        result = response.json()
+
+        if result.get("status") == "draft_saved":
             st.success("Draft Generated Successfully")
             st.session_state.selected_draft_id = result["draft_id"]
-        else:
-            st.error(f"Generation failed: {response.status_code}")
-            st.error(response.text)
+            st.session_state.pending_questions = []
+            st.session_state.question_answers = {}
+            st.session_state.questions_locked = False
+            st.rerun()
 
+        elif result.get("status") == "questions_required":
+            st.error("Some information is still missing. Please review and try again.")
+
+        else:
+            st.error("Draft generation failed")
 
 # ---------------- DRAFT LIBRARY (ALWAYS VISIBLE) ----------------
 
@@ -627,7 +742,7 @@ if st.session_state.selected_draft_id:
                             st.table(df)
                     
                     elif block.get("type") == "diagram":
-                        st.write("DIAGRAM BLOCK FOUND:", block)  # ← debug line
+                        # st.write("DIAGRAM BLOCK FOUND:", block)  # ← debug line
                         diagram_url = block.get("diagram_url")
                         image_path = block.get("render_path")
                         if diagram_url:

@@ -53,3 +53,9 @@ class CompanyProfileCreate(BaseModel):
     cto_name: Optional[str] = None
     founders: Optional[str] = None
     company_background: Optional[str] = None
+
+class QuestionRequest(BaseModel):
+    department: str
+    document_filename: str
+    company_profile: Dict[str, Any]
+    document_inputs: Dict[str, Any]
