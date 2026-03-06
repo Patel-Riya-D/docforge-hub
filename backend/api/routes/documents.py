@@ -22,7 +22,7 @@ import json
 from pydantic import BaseModel
 from backend.generation.llm_provider import get_llm
 from langchain_core.messages import SystemMessage, HumanMessage
-
+from backend.integrations.notion_publisher import publish_document_to_notion
 
 router = APIRouter(prefix="/documents", tags=["Documents"])
 
@@ -527,3 +527,54 @@ def generate_questions(
     )
 
     return {"questions": questions}
+
+@router.post("/publish-notion/{draft_id}")
+def publish_to_notion(draft_id: int, db: Session = Depends(get_db)):
+
+    draft = db.query(Draft).filter(Draft.id == draft_id).first()
+
+    if not draft:
+        raise HTTPException(status_code=404, detail="Draft not found")
+
+    sections = (
+        db.query(DraftSection)
+        .filter(DraftSection.draft_id == draft_id)
+        .order_by(DraftSection.section_order.asc())
+        .all()
+    )
+
+    if not sections:
+        raise HTTPException(status_code=404, detail="Draft sections not found")
+
+    sections_data = []
+
+    for s in sections:
+
+        blocks = s.content
+
+        if isinstance(blocks, str):
+            try:
+                blocks = json.loads(blocks)
+            except:
+                blocks = []
+
+        if not isinstance(blocks, list):
+            blocks = []
+
+        sections_data.append({
+            "name": s.section_name,
+            "blocks": blocks
+        })
+
+    publish_document_to_notion(
+        document_name=draft.document_name,
+        sections=sections_data,
+        version=draft.version,
+        document_type=draft.document_type,
+        industry=draft.industry,
+        tags=draft.tags or [],
+        created_by=draft.created_by,
+        created_at=str(draft.created_at)
+    )
+
+    return {"message": "Published to Notion successfully"}
