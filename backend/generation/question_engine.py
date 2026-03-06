@@ -87,6 +87,17 @@ SECTIONS TO BE GENERATED
 {sections}
 
 ==============================
+DOCUMENT COMPLETENESS GOAL
+==============================
+Ensure each section has enough information to generate
+a complete enterprise-grade document.
+
+Examples:
+- policies require enforcement mechanisms
+- handbooks require benefits, conduct, grievance procedures
+- employment letters require salary, start date, role details
+
+==============================
 COMPANY PROFILE (ALREADY PROVIDED)
 ==============================
 {company_profile}
@@ -101,8 +112,10 @@ even with different wording.
 {existing_questions_text}
 
 ==============================
-USER PROVIDED INPUT VALUES
+FIELDS ALREADY FILLED BY USER
 ==============================
+These inputs already have values and MUST NOT be asked again.
+
 {document_inputs}
 
 ==============================
@@ -113,12 +126,24 @@ INSTRUCTIONS
 3. NEVER ask about company profile fields.
 4. NEVER ask about: company name, industry, employee count,
    regions, compliance frameworks, jurisdiction.
-5. Maximum 5 questions.
+5. Ask between 5 and 12 questions depending on missing information.
 6. Use short stable snake_case keys.
 7. Before generating each question, check:
    - Is this topic already in the form questions? → SKIP
    - Is this already in user provided inputs? → SKIP
    - Is this in the company profile? → SKIP
+
+==============================
+QUESTION PRIORITY
+==============================
+Prioritize questions for sections that have little or no input.
+
+Ask about:
+- governance
+- operational details
+- compliance
+- roles and responsibilities
+- approvals
 
 ==============================
 OUTPUT FORMAT (STRICT)
@@ -193,7 +218,8 @@ If nothing is missing return: []
             seen_keys.add(key)
             final_questions.append(q)
 
-        return final_questions
+        MAX_AI_QUESTIONS = 12
+        return final_questions[:MAX_AI_QUESTIONS]
 
     except Exception as e:
         print("QUESTION ENGINE ERROR:", str(e))
