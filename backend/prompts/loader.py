@@ -1,4 +1,5 @@
 from pathlib import Path
+from backend.prompts.section_rules import get_section_word_limit
 
 PROMPT_DIR = Path(__file__).parent
 
@@ -27,6 +28,14 @@ def build_section_prompt(context: dict) -> str:
 
     """
     template = load_prompt("section")
+    
+    min_words, max_words = get_section_word_limit(
+        context.get("document_type"),
+        context.get("section_name")
+    )
+
+    context["min_words"] = min_words
+    context["max_words"] = max_words
 
     from collections import defaultdict
     return template.format_map(defaultdict(str, context))

@@ -28,9 +28,9 @@ def keyword_overlap_ratio(a: str, b: str) -> float:
 
 def is_duplicate(new_question: str, existing_questions: list) -> bool:
     for existing in existing_questions:
-        if similarity(new_question, existing) > 0.65:
+        if similarity(new_question, existing) > 0.75:
             return True
-        if keyword_overlap_ratio(new_question, existing) > 0.65:
+        if keyword_overlap_ratio(new_question, existing) > 0.75:
             return True
     return False
 

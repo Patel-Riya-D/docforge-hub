@@ -769,7 +769,7 @@ Additional Notes:
                     "diagram_type": dtype,
                     "definition": diagram_def,
                     "render_path": image_path,
-                    "diagram_url": f"http://localhost:8000/diagrams/{file_id}.png" if file_id else None,
+                    "diagram_url": f"/diagrams/{file_id}.png" if file_id else None,
                     "source": "generated"
                 })
                 print(f"[DIAGRAM] '{dtype}' generated for '{section_name}'")

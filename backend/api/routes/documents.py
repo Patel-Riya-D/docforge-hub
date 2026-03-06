@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from backend.api.schemas import DocumentPreviewRequest
 from backend.models.company_profile import CompanyProfile
+from backend.db_models import CompanyProfile
 from backend.api.schemas import CompanyProfileCreate
 from backend.generation.question_engine import generate_clarification_questions
 from backend.registry.db_loader import load_document_from_db
@@ -86,9 +87,13 @@ def generate_document(
         draft = Draft(
             document_name=registry_doc["document_name"],
             department=payload.department,
-            status=draft_result["status"],  
-            version=next_version,     
-            regeneration_count=draft_result["generation_metadata"].get("retry_count", 0),      
+            document_type=registry_doc.get("internal_type"),
+            industry=payload.company_profile.get("industry"),
+            tags=["docforge"],
+            created_by=payload.company_profile.get("company_name"),
+            status=draft_result["status"],
+            version=next_version,
+            regeneration_count=draft_result["generation_metadata"].get("retry_count", 0)
         )
         db.add(draft)
         db.commit()
@@ -565,15 +570,28 @@ def publish_to_notion(draft_id: int, db: Session = Depends(get_db)):
             "name": s.section_name,
             "blocks": blocks
         })
+    
+    doc_meta = db.query(Document).filter(
+        Document.document_name == draft.document_name,
+        Document.department == draft.department
+    ).first()
+    document_type = doc_meta.internal_type if doc_meta and doc_meta.internal_type else "Policy"
+    company = db.query(CompanyProfile).first()
+    company_name = company.company_name if company else "DocForge"
+    industry = company.industry if company else "SaaS"
+
+    print("DOC TYPE:", document_type)
+    print("INDUSTRY:", industry)
+    print("COMPANY:", company_name)
 
     publish_document_to_notion(
         document_name=draft.document_name,
         sections=sections_data,
-        version=draft.version,
-        document_type=draft.document_type,
-        industry=draft.industry,
-        tags=draft.tags or [],
-        created_by=draft.created_by,
+        version=int(draft.version),
+        document_type=document_type,
+        industry=industry,
+        tags=[draft.department],
+        created_by=company_name,
         created_at=str(draft.created_at)
     )
 

@@ -84,7 +84,7 @@ def publish_document_to_notion(
                 })
 
             # Bullet list
-            elif block["type"] == "bullet":
+            elif block["type"] in ["bullet", "bulleted_list_item"]:
                 blocks.append({
                     "object": "block",
                     "type": "bulleted_list_item",
@@ -97,7 +97,7 @@ def publish_document_to_notion(
                         ]
                     }
                 })
-
+            
             # Image
             elif block["type"] == "image":
                 blocks.append({
@@ -140,8 +140,7 @@ def publish_document_to_notion(
                         "children": rows
                     }
                 })
-
-    notion.pages.create(
+    page = notion.pages.create(
         parent={"database_id": NOTION_DATABASE_ID},
         properties={
             "Name": {
@@ -171,6 +170,18 @@ def publish_document_to_notion(
                     "start": created_at
                 }
             }
-        },
-        children=blocks
+        }
     )
+
+    page_id = page["id"]
+
+    MAX_BLOCKS = 100
+
+    for i in range(0, len(blocks), MAX_BLOCKS):
+
+        chunk = blocks[i:i + MAX_BLOCKS]
+
+        notion.blocks.children.append(
+            block_id=page_id,
+            children=chunk
+        )

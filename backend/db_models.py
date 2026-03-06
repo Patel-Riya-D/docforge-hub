@@ -12,8 +12,15 @@ class Draft(Base):
     id = Column(Integer, primary_key=True, index=True)
     document_name = Column(String(255))
     department = Column(String(100))
+
+    # 🔹 New metadata fields
+    document_type = Column(String(100))
+    industry = Column(String(100))
+    tags = Column(JSON)
+    created_by = Column(String(255))
+
     status = Column(String(50))
-    version = Column(Integer, default=1) 
+    version = Column(Integer, default=1)
     created_at = Column(DateTime, server_default=func.now())
     regeneration_count = Column(Integer, default=0)
 
@@ -66,7 +73,7 @@ class CompanyProfile(Base):
     compliance_frameworks = Column(String, nullable=True)
     default_jurisdiction = Column(String, nullable=True)
 
-    company_profile = Column(JSONB, nullable=True)
+    # company_profile = Column(JSONB, nullable=True)
     founded_year = Column(String, nullable=True)
     headquarters_location = Column(String, nullable=True)
     ceo_name = Column(String, nullable=True)

@@ -198,6 +198,8 @@ st.divider()
 
 with st.expander("Company Profile", expanded=True):
     company_name = st.text_input("Company Name")
+
+    formatted_company_name = company_name.title() if company_name else ""
     industry = st.text_input("Industry")
     employee_count = st.number_input("Employee Count", min_value=1)
     region = st.text_input("Operating Region")
@@ -275,7 +277,7 @@ if document_filename:
                 "department": department.lower(),
                 "document_filename": document_filename,
                 "company_profile": {
-                    "company_name": company_name,
+                    "company_name": formatted_company_name,
                     "industry": industry,
                     "employee_count": employee_count,
                     "regions": [region],
@@ -510,6 +512,9 @@ if st.session_state.selected_draft_id:
 
                     if block.get("type") == "paragraph":
                         paragraph_text += block.get("content", "") + "\n\n"
+                    
+                    elif block.get("type") in ["bullet", "bulleted_list_item"]:
+                        paragraph_text += f"- {block.get('content')}\n"
 
                     elif block.get("type") == "table":
                         df = pd.DataFrame(
@@ -720,6 +725,9 @@ if st.session_state.selected_draft_id:
 
                     if block.get("type") == "paragraph":
                         st.markdown(block.get("content", ""))
+                    
+                    elif block.get("type") in ["bullet", "bulleted_list_item"]:
+                        st.markdown(f"- {block.get('content')}")
 
                     elif block.get("type") == "table":
 
@@ -756,7 +764,28 @@ if st.session_state.selected_draft_id:
         else:
             st.divider()
             st.info("Full document preview will be available after all sections are approved.")
+        
+        if all_approved:
+            #----------------Publish doc to notion-------------------
+            st.divider()
 
+            st.subheader("Publish Document")
 
+            col1, col2 = st.columns([1,3])
+
+            with col1:
+                if st.button("Publish to Notion", use_container_width=True):
+
+                    with st.spinner("Publishing document to Notion..."):
+
+                        publish_response = requests.post(
+                            f"{API_BASE_URL}/documents/publish-notion/{st.session_state.selected_draft_id}"
+                        )
+
+                    if publish_response.status_code == 200:
+                        st.success("Document successfully published to Notion 🎉")
+                    else:
+                        st.error("Failed to publish document to Notion")
+            
     else:
         st.error("Failed to load draft")

@@ -22,6 +22,15 @@ USER PROVIDED INPUTS
 ==============================
 {user_inputs}
 
+If document_type is OFFER_LETTER:
+
+- Each section must be 1–3 sentences only
+- Maximum 60 words
+- Do not generate bullet points
+- Do not repeat information across sections
+- Do not include policy explanations
+- Use concise legal employment language
+
 ========================================================
 SECTION-SPECIFIC STRUCTURE RULES
 ========================================================
@@ -46,6 +55,54 @@ The section "{section_name}" must follow these structural rules:
 For these sections, at least one block MUST be a table block.
 
 All other sections may use paragraph blocks unless tabular representation improves clarity.
+
+========================================================
+ENTERPRISE WRITING STYLE RULES
+========================================================
+
+Follow these writing standards strictly:
+
+CONTENT QUALITY
+- Write clear, concise enterprise-grade content.
+- Avoid repeating the company name more than once per section.
+- Avoid generic filler phrases such as:
+  "This section outlines", "This document describes", "The company operates".
+- Do not repeat information already provided in earlier sections.
+
+STRUCTURE
+- Prefer short paragraphs (2–4 sentences maximum).
+- Use bullet-style structure when describing:
+  • responsibilities
+  • benefits
+  • requirements
+  • features
+  • eligibility criteria
+- Avoid paragraphs longer than 120 words.
+
+TONE
+- Maintain professional enterprise tone.
+- Avoid conversational language.
+- Use direct, confident statements.
+
+READABILITY
+- Sentences should be concise and precise.
+- Avoid repeating the same phrase multiple times.
+- Avoid unnecessary background explanations.
+
+COMPANY REFERENCES
+- Refer to the company as "the Company" after the first mention.
+- Do not restate industry, location, or compliance unless necessary for the section.
+
+DO NOT:
+- repeat the section title inside the content
+- write long narrative paragraphs
+- include filler explanations
+
+REPETITION CONTROL
+
+Do not repeat phrases within the same section.
+If a concept has already been stated, summarize rather than repeat.
+Avoid restating company name multiple times.
 
 ========================================================
 STRICT OUTPUT FORMAT (MANDATORY – NO EXCEPTIONS)
@@ -73,6 +130,13 @@ Each block MUST be one of:
   ]
 }}
 
+3. Bullet block:
+
+{{
+  "type": "bullet",
+  "content": "Bullet item text"
+}}
+
 DOCUMENT_INPUTS_JSON:
 {document_inputs_json}
 
@@ -85,6 +149,14 @@ INPUT ENFORCEMENT RULES:
 - You MUST NOT modify time ranges, numbers, thresholds, or operational details.
 - If a value exists in DOCUMENT_INPUTS_JSON relevant to this section, it must appear exactly in the output.
 - Do NOT replace user-provided values with industry-standard examples.
+
+SECTION LENGTH REQUIREMENT:
+
+The section must contain between {min_words} and {max_words} words.
+
+Do not exceed the maximum word limit.
+Do not generate overly verbose paragraphs.
+Use concise professional language.
 
 CRITICAL RULES:
 - DO NOT generate markdown tables

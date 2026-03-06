@@ -54,6 +54,16 @@ def get_section_rules(document_type: str, section_name: str) -> str:
             "Provide one filled-in example per major section.",
         ],
 
+        "OFFER_LETTER": [
+            "Write in formal employment contract tone.",
+            "Each section must contain 1–3 short sentences only.",
+            "Maximum 60 words per section.",
+            "Do NOT generate lists or bullet points.",
+            "Do NOT generate explanations or background text.",
+            "Do NOT repeat information from other sections.",
+            "Focus strictly on employment terms.",
+        ],
+
         "HANDBOOK": [
             "Use 'we' and 'our' throughout.",
             "Write at 8th-10th grade reading level.",
@@ -130,6 +140,17 @@ def get_section_rules(document_type: str, section_name: str) -> str:
             "Keep to 250-350 words maximum.",
             "Avoid referencing specific policy details.",
             "End with an inspiring or welcoming statement.",
+        ])
+    
+    if "company overview" in section_lower:
+        rules.extend([
+            "Start with a structured company profile.",
+            "Include: Company Name, Industry, Founded Year, Headquarters.",
+            "Include: Founders and leadership team.",
+            "Include: Employee count and departments.",
+            "Follow with a paragraph describing company background.",
+            "Use the company_background input if provided.",
+            "Do NOT invent company history.",
         ])
 
     # --- SCOPE ---
@@ -284,6 +305,11 @@ def get_section_word_limit(document_type: str, section_name: str) -> tuple:
     """
     Returns (min_words, max_words) for the section.
     """
+
+    # OFFER LETTER STRICT LIMIT
+    if document_type.upper() == "OFFER_LETTER":
+        return (20, 60)
+    
     section_lower = section_name.lower()
 
     # Short sections
@@ -309,7 +335,7 @@ def get_section_word_limit(document_type: str, section_name: str) -> tuple:
         "REPORT": (80, 150),
         "STRATEGY": (80, 150),
         "PROPOSAL": (80, 150),
-        "HANDBOOK": (150, 250)
+        "HANDBOOK": (200, 400)
     }
 
     if document_type.upper() in long_map:
