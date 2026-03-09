@@ -14,6 +14,10 @@ from backend.generation.llm_provider import get_llm
 from langchain_core.messages import SystemMessage, HumanMessage
 import json
 from graphviz import Digraph
+from datetime import datetime
+import pytz
+
+ist = pytz.timezone("Asia/Kolkata")
 
 llm = get_llm()
 
@@ -136,7 +140,7 @@ def _validate_section_output(
         "[COMPANY NAME]", "[DATE]"
     ]
     for ph in bad_placeholders:
-        if ph.upper() in content.upper():
+        if ph.upper() in content.upper() and doc_type != "TEMPLATE":
             issues.append(f"Unfilled placeholder found: '{ph}'")
 
     #  Model preamble leak 
@@ -401,6 +405,39 @@ def _generate_single_section(
         f"{i+1}. {s['name']}"
         for i, s in enumerate(all_sections)
     )
+    if section_name.lower() in ["table of contents", "index", "contents"]:
+
+        toc_rows = []
+
+        for i, s in enumerate(all_sections):
+            name = s["name"]
+
+            if name.lower() in ["table of contents", "index", "contents"]:
+                continue
+
+            toc_rows.append([
+                f"{i+1}. {name}",
+                ""
+            ])
+
+        return {
+            "name": section_name,
+            "mandatory": mandatory,
+            "blocks": [
+                {
+                    "type": "table",
+                    "headers": ["Section", "Page"],
+                    "rows": toc_rows
+                }
+            ],
+            "section_validation": {
+                "valid": True,
+                "issues": [],
+                "word_count": 0,
+                "min_words": 0,
+                "max_words": 0
+            }
+        }
     min_words, max_words = get_section_word_limit(doc_type, section_name)
     # keep real section limits
     max_words = max_words
@@ -447,6 +484,7 @@ def _generate_single_section(
 
     if section_name.lower() in [
         "acknowledgement",
+        "acknowledgement and acceptance",
         "review & revision history"
     ]:
         min_words = 0
@@ -479,7 +517,7 @@ def _generate_single_section(
     """
 
     # STRUCTURE ENFORCEMENT
-    if section_name.lower() == "acknowledgement":
+    if "acknowledg" in section_name.lower():
         base_prompt += """
 
     OUTPUT STRUCTURE REQUIREMENT:
@@ -519,10 +557,10 @@ Additional Notes:
 {user_notes or "None provided."}
 """.strip()
 
-    if section_name.lower() in [
-        "review & revision history",
-        "acknowledgement"
-    ]:
+    if (
+        section_name.lower() in ["review & revision history"]
+        or "acknowledg" in section_name.lower()
+    ):
         system_message = f"""
     You are generating structured JSON output.
 
@@ -540,6 +578,12 @@ Additional Notes:
     else:
         # Look up whether this section should have a diagram
         planned_diagram_type = diagram_plan.get(section_name.lower().strip())
+
+        if doc_type.upper() == "FORM":
+            diagram_instruction = """
+            Do NOT generate diagrams.
+            This is a structured form.
+            """
 
         if planned_diagram_type:
             diagram_instruction = f"""
@@ -563,46 +607,109 @@ Additional Notes:
     DO NOT include a diagram_request block for this section.
     Return only paragraph blocks.
     """
+        if doc_type.upper() == "FORM":
+            system_message = f"""
+        You are generating a structured enterprise form.
 
-        system_message = f"""
-    You are generating the FINAL VERSION of an enterprise {doc_type} document section.
+        IMPORTANT:
+        - This document is a FORM.
+        - Do NOT write paragraphs.
+        - Do NOT explain fields.
+        - Do NOT generate diagrams.
 
-    STRICT LENGTH RULE:
-    - Between {min_words} and {max_words} words.
+        Instead output structured form fields.
 
-    OUTPUT FORMAT:
-    Return a JSON array of blocks with paragraph content.
-    {diagram_instruction}
+        Use formats like:
 
-    STRICT OUTPUT RULES:
-    - Start directly with content
-    - Do NOT repeat section title
-    - Do NOT explain what to do
-    - Do NOT add filler language
+        Employee Name: ______________________
 
-    Example output WITH diagram:
-    [
-    {{"type": "paragraph", "content": "Your section content here..."}},
-    {{
-        "type": "diagram_request",
-        "diagram_type": "lifecycle",
-        "nodes": ["Stage 1", "Stage 2", "Stage 3"],
-        "edges": [["Stage 1", "Stage 2"], ["Stage 2", "Stage 3"]],
-        "center": ""
-    }}
-    ]
+        Department: _________________________
 
-    Example output WITHOUT diagram:
-    [
-    {{"type": "paragraph", "content": "Your section content here..."}}
-    ]
-    """
+        ☐ Vacation
+        ☐ Sick Leave
+        ☐ Leave of Absence
+
+        Signature: _________________________
+        Date: ______________________________
+
+        Return JSON blocks like:
+
+        [
+        {{
+            "type": "paragraph",
+            "content": "Employee Name: ______________________"
+        }}
+        ]
+        """
+        elif doc_type.upper() == "TEMPLATE":
+            system_message = f"""
+            You are generating a document TEMPLATE.
+
+            STRICT RULES:
+            - Do NOT generate explanations.
+            - Do NOT generate diagrams.
+            - Do NOT generate long paragraphs.
+
+            Use placeholders only.
+
+            Example:
+
+            [EMPLOYEE_NAME]
+
+            [DEPARTMENT]
+
+            [START_DATE]
+
+            [MANAGER_NAME]
+
+            Return JSON blocks like:
+
+            [
+            {{
+                "type": "paragraph",
+                "content": "[EMPLOYEE_NAME]"
+            }}
+            ]
+            """
+        else:
+            system_message = f"""
+        You are generating the FINAL VERSION of an enterprise {doc_type} document section.
+
+        STRICT LENGTH RULE:
+        - Between {min_words} and {max_words} words.
+
+        OUTPUT FORMAT:
+        Return a JSON array of blocks with paragraph content.
+        {diagram_instruction}
+
+        STRICT OUTPUT RULES:
+        - Start directly with content
+        - Do NOT repeat section title
+        - Do NOT explain what to do
+        - Do NOT add filler language
+
+        Example output WITH diagram:
+        [
+        {{"type": "paragraph", "content": "Your section content here..."}},
+        {{
+            "type": "diagram_request",
+            "diagram_type": "lifecycle",
+            "nodes": ["Stage 1", "Stage 2", "Stage 3"],
+            "edges": [["Stage 1", "Stage 2"], ["Stage 2", "Stage 3"]],
+            "center": ""
+        }}
+        ]
+
+        Example output WITHOUT diagram:
+        [
+        {{"type": "paragraph", "content": "Your section content here..."}}
+        ]
+        """
 
     messages = [
         SystemMessage(content=system_message),
         HumanMessage(content=full_prompt)
     ]
-
 
     response = llm.invoke(messages)
 
@@ -611,6 +718,8 @@ Additional Notes:
         "revision history",
         "version history"
     ]:
+        draft_version = registry_doc.get("version", "v1.0").replace("v","")
+
         return {
             "section_name": section_name,
             "mandatory": mandatory,
@@ -626,7 +735,7 @@ Additional Notes:
                     "rows": [
                         [
                             datetime.now().strftime("%Y-%m-%d"),
-                            "1.0",
+                            draft_version,
                             "Initial creation",
                             "Head of Human Resources (HR Director)"
                         ]
@@ -949,7 +1058,12 @@ def generate_draft(
     global generated_diagram_signatures
     generated_diagram_signatures = set()
 
-    diagram_plan = _plan_document_diagrams(registry_doc, registry_doc["sections"])
+    doc_type = registry_doc["internal_type"].upper()
+
+    if doc_type in ["FORM", "TEMPLATE"]:
+        diagram_plan = {}
+    else:
+        diagram_plan = _plan_document_diagrams(registry_doc, registry_doc["sections"])
 
     #  Step 1: Draft  
     draft = {
@@ -965,10 +1079,10 @@ def generate_draft(
         "version": "v1.0",
         "status": "DRAFT",
         "generation_metadata": {
-            "generated_at":    datetime.now(timezone.utc).isoformat(),
+            "generated_at":    datetime.now(ist).isoformat(),
             "generated_by":    "azure_openai",
             "deterministic":   True,
-            "prompt_version":  "v2",           # ← bumped to v2 after enhancement
+            "version": None,           # ← bumped to v2 after enhancement
             "toc_generated":   should_generate_toc(registry_doc["internal_type"]),
             "retry_count":     0
         },
@@ -984,6 +1098,38 @@ def generate_draft(
             "approved_at":  None
         }
     }
+
+    if doc_type == "FORM":
+
+        blocks = []
+
+        for section in registry_doc.get("sections", []):
+
+            label = section.get("name", "Field")
+
+            key = label.lower().replace(" ", "_")
+
+            value = document_inputs.get(key, "")
+
+            blocks.append({
+                "type": "paragraph",
+                "content": f"{label}: {value if value else '____________________'}"
+            })
+
+        draft["sections"].append({
+            "name": "Form",
+            "mandatory": True,
+            "blocks": blocks,
+            "section_validation": {
+                "valid": True,
+                "issues": [],
+                "word_count": 0,
+                "min_words": 0,
+                "max_words": 0
+            }
+        })
+
+        return draft
 
     #  Step 2: Format context blocks 
     company_block = ""

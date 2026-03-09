@@ -103,14 +103,37 @@ def generate_document(
 
         print("SECTIONS STRUCTURE:", draft_result["sections"])
 
-        for idx, section in enumerate(draft_result["sections"], start=1):
+        for idx, section in enumerate(draft_result.get("sections", []), start=1):
 
-            # Store full structured blocks as JSON string
+            print("SECTION ITEM TYPE:", type(section))
+
+            # Convert string section to dict if needed
+            if isinstance(section, str):
+                try:
+                    section = json.loads(section)
+                except Exception:
+                    continue
+
+            if not isinstance(section, dict):
+                continue
+
+            blocks = section.get("blocks", [])
+
+            # Ensure blocks is a list
+            if isinstance(blocks, str):
+                try:
+                    blocks = json.loads(blocks)
+                except Exception:
+                    blocks = []
+
+            if not isinstance(blocks, list):
+                blocks = []
+
             db_section = DraftSection(
                 draft_id=draft.id,
-                section_name=section.get("name") or section.get("section_name"),
+                section_name=section.get("name") or section.get("section_name", "Section"),
                 section_order=idx,
-                content=section["blocks"]  # ✅ STORE BLOCKS  #content=json.dumps(section["blocks"])
+                content=blocks
             )
 
             db.add(db_section)
@@ -227,8 +250,8 @@ def export_draft(draft_id: int, file_type: str, db: Session = Depends(get_db)):
 
     # Fetch original document metadata
     doc_meta = db.query(Document).filter(
-        Document.document_name == draft_obj.document_name,
-        Document.department == draft_obj.department
+        func.lower(Document.document_name) == draft_obj.document_name.lower(),
+        func.lower(Document.department) == draft_obj.department.lower()
     ).first()
 
     internal_type = doc_meta.internal_type if doc_meta else ""
@@ -239,6 +262,9 @@ def export_draft(draft_id: int, file_type: str, db: Session = Depends(get_db)):
     for s in sections:
 
         blocks = s.content
+
+        if not isinstance(blocks, list):
+            blocks = []
 
         if isinstance(blocks, str):
             try:
@@ -570,12 +596,13 @@ def publish_to_notion(draft_id: int, db: Session = Depends(get_db)):
             "name": s.section_name,
             "blocks": blocks
         })
-    
+
     doc_meta = db.query(Document).filter(
-        Document.document_name == draft.document_name,
-        Document.department == draft.department
+        func.lower(Document.document_name) == draft.document_name.lower(),
+        func.lower(Document.department) == draft.department.lower()
     ).first()
-    document_type = doc_meta.internal_type if doc_meta and doc_meta.internal_type else "Policy"
+
+    document_type = (doc_meta.internal_type.title() if doc_meta and doc_meta.internal_type else "Policy")
     company = db.query(CompanyProfile).first()
     company_name = company.company_name if company else "DocForge"
     industry = company.industry if company else "SaaS"
@@ -583,6 +610,8 @@ def publish_to_notion(draft_id: int, db: Session = Depends(get_db)):
     print("DOC TYPE:", document_type)
     print("INDUSTRY:", industry)
     print("COMPANY:", company_name)
+
+    print("DOCUMENT TYPE SENT TO NOTION:", document_type)
 
     publish_document_to_notion(
         document_name=draft.document_name,

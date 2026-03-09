@@ -8,6 +8,13 @@ def get_section_rules(document_type: str, section_name: str) -> str:
 
     rules = []
 
+    NO_COMPANY_PROFILE_DOCS = {
+        "OFFER_LETTER",
+        "FORM",
+        "TEMPLATE",
+        "RUNBOOK"
+    }
+
     # DOCUMENT TYPE BASE RULES
 
     doc_type_rules = {
@@ -142,18 +149,23 @@ def get_section_rules(document_type: str, section_name: str) -> str:
             "End with an inspiring or welcoming statement.",
         ])
     
-    if "company overview" in section_lower:
+    if (
+        "company overview" in section_lower
+        and document_type.upper() in ["HANDBOOK", "COMPANY_PROFILE"]
+    ):
         rules.extend([
             "Start with a structured company profile.",
-            "Include: Company Name, Industry, Founded Year, Headquarters.",
-            "Include: Founders and leadership team.",
-            "Include: Employee count and departments.",
-            "Follow with a paragraph describing company background.",
-            "Use the company_background input if provided.",
-            "Do NOT invent company history.",
-        ])
+            "Include company name, industry, employee count, and operating region.",
+            
+            "Include a subsection titled 'Founders and Leadership'.",
+            "Mention the founder or CEO using ceo_name if provided.",
+            "Mention CTO or technical leadership using cto_name if provided.",
 
-    # --- SCOPE ---
+            "Include a subsection titled 'Company Background'.",
+            "Use the company_background input to describe company history and mission.",
+            "Do NOT invent company history if company_background is provided."
+        ])
+        # --- SCOPE ---
     if "scope" in section_lower:
         rules.extend([
             "Explicitly state WHO this applies to.",
@@ -291,8 +303,13 @@ def get_section_rules(document_type: str, section_name: str) -> str:
             "Do NOT add any other text or narrative.",
         ]
         return "\n".join(f"• {r}" for r in rules)
+    
+    if document_type.upper() in NO_COMPANY_PROFILE_DOCS:
+        return ""
 
     return "\n".join(f"• {r}" for r in rules)
+
+
 
 
 def requires_toc(document_type: str) -> bool:

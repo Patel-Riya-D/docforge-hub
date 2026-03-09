@@ -10,6 +10,22 @@ Regions: {regions}
 Compliance Frameworks: {compliance_frameworks}
 Jurisdiction: {default_jurisdiction}
 
+=============================
+COMPANY PROFILE DATA
+=============================
+
+If company profile fields are provided, they MUST be used where relevant.
+
+Examples:
+
+Company Overview section:
+- Include company_background
+- Include ceo_name or founders
+- Include industry and employee_count
+
+Do NOT ignore provided company profile fields.
+Do NOT invent company information if it already exists in the input.
+
 ==============================
 DOCUMENT CONTEXT
 ==============================

@@ -1,6 +1,7 @@
 from notion_client import Client
 import os
 from dotenv import load_dotenv
+import base64
 
 load_dotenv()
 
@@ -14,6 +15,7 @@ def convert_table(headers, rows):
     table_rows = []
 
     table_rows.append({
+        "object": "block",
         "type": "table_row",
         "table_row": {
             "cells": [[{"type": "text", "text": {"content": h}}] for h in headers]
@@ -49,12 +51,32 @@ def publish_document_to_notion(
     tags,
     created_by,
     created_at,
-    template_id=None
+    template_id=None    
 ):
 
     blocks = []
 
+    blocks.insert(0,{
+        "object":"block",
+        "type":"heading_1",
+        "heading_1":{
+            "rich_text":[{
+                "type":"text",
+                "text":{"content":document_name}
+            }]
+        }
+    })
+
     for section in sections:
+
+        if not isinstance(section, dict):
+            continue
+
+        blocks.append({
+            "object": "block",
+            "type": "divider",
+            "divider": {}
+        })
 
         blocks.append({
             "object": "block",
@@ -66,25 +88,97 @@ def publish_document_to_notion(
             }
         })
 
-        for block in section["blocks"]:
+        # FORM rendering (table instead of paragraphs)
+        if document_type.upper() == "FORM":
+
+            form_rows = []
+
+            for block in section.get("blocks", []):
+
+                if not isinstance(block, dict):
+                    continue
+
+                if block.get("type") == "paragraph":
+
+                    text = block.get("content", "").strip()
+
+                    if text.startswith("☐"):
+
+                        blocks.append({
+                            "object": "block",
+                            "type": "to_do",
+                            "to_do": {
+                                "rich_text": [{
+                                    "type": "text",
+                                    "text": {"content": text.replace("☐", "").strip()}
+                                }],
+                                "checked": False
+                            }
+                        })
+
+                    else:
+
+                        field = text.split(":")[0].strip()
+                        value = text.split(":")[1].strip() if ":" in text else ""
+
+                        form_rows.append([field, value])
+
+            if form_rows:
+                blocks.append(
+                    convert_table(
+                        ["Field", "Value"],
+                        form_rows
+                    )
+                )
+
+            continue
+
+        for block in section.get("blocks", []):
+
+            if not isinstance(block, dict):
+
+                continue
 
             # Paragraph
-            if block["type"] == "paragraph":
-                blocks.append({
-                    "object": "block",
-                    "type": "paragraph",
-                    "paragraph": {
-                        "rich_text": [
-                            {
-                                "type": "text",
-                                "text": {"content": block["content"]}
-                            }
-                        ]
-                    }
-                })
+            if block.get("type") == "paragraph":
 
+                text = block.get("content", "")
+                lines = [l.strip() for l in text.split("\n") if l.strip()]
+
+                if all(l.startswith(("-", "•")) for l in lines):
+
+                    for line in lines:
+                        clean = line.lstrip("-• ").strip()
+
+                        blocks.append({
+                            "object": "block",
+                            "type": "bulleted_list_item",
+                            "bulleted_list_item": {
+                                "rich_text": [{
+                                    "type": "text",
+                                    "text": {"content": clean}
+                                }]
+                            }
+                        })
+
+                else:
+                    blocks.append({
+                        "object": "block",
+                        "type": "paragraph",
+                        "paragraph": {
+                            "rich_text": [{
+                                "type": "text",
+                                "text": {"content": text}
+                            }]
+                        }
+                    })
+            
+            elif block.get("type") == "diagram":
+                # Notion cannot display local diagrams
+                continue
+            
             # Bullet list
-            elif block["type"] in ["bullet", "bulleted_list_item"]:
+            elif block.get("type") in ["bullet", "bulleted_list_item"]:
                 blocks.append({
                     "object": "block",
                     "type": "bulleted_list_item",
@@ -99,7 +193,7 @@ def publish_document_to_notion(
                 })
             
             # Image
-            elif block["type"] == "image":
+            elif block.get("type") == "image":
                 blocks.append({
                     "object": "block",
                     "type": "image",
@@ -112,34 +206,15 @@ def publish_document_to_notion(
                 })
 
             # Table
-            elif block["type"] == "table":
+            elif block.get("type") == "table":
 
-                rows = []
+                table_block = convert_table(
+                    block.get("headers", []),
+                    block.get("rows", [])
+                )
 
-                for row in block["rows"]:
-                    cells = []
+                blocks.append(table_block)
 
-                    for cell in row:
-                        cells.append([{
-                            "type": "text",
-                            "text": {"content": str(cell)}
-                        }])
-
-                    rows.append({
-                        "type": "table_row",
-                        "table_row": {"cells": cells}
-                    })
-
-                blocks.append({
-                    "object": "block",
-                    "type": "table",
-                    "table": {
-                        "table_width": len(block["rows"][0]),
-                        "has_column_header": True,
-                        "has_row_header": False,
-                        "children": rows
-                    }
-                })
     page = notion.pages.create(
         parent={"database_id": NOTION_DATABASE_ID},
         properties={
