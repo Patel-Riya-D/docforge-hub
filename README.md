@@ -2,17 +2,27 @@
 
 AI-powered Enterprise Document Automation Platform
 
+DocForge Hub is a SaaS-based platform that automates enterprise document creation using Large Language Models (LLMs).
+It enables organizations to generate structured, compliant, and professional business documents such as policies, PRDs, SOPs, and internal documentation with minimal manual effort.
+
+The platform combines AI-powered content generation, structured document schemas, and human-in-the-loop validation to produce high-quality documents efficiently.
+
 ## 🚀 Overview
 
-DocForge Hub is a SaaS-based system designed to automate enterprise document drafting using Azure OpenAI.
+Organizations spend significant time drafting and maintaining internal documents.
+DocForge Hub solves this by providing a structured AI-assisted document generation workflow.
 
-It provides:
-- Document registry management
-- AI-generated structured drafts
-- Section-level storage
-- Version tracking
-- Regeneration tracking
-- Export to DOCX / PDF / XLS
+Users select a document type, provide company information, and the platform generates a complete structured document section-by-section using AI.
+
+The system ensures:
+
+- Consistent document structure
+
+- Context-aware content generation
+
+- Controlled human review
+
+- Easy document publishing and export
 
 ---
 
@@ -21,8 +31,39 @@ It provides:
 🤖 AI Section-Based Generation:
 
 - Generates documents section-by-section
-- Context-aware prompts (document type, risk level, industry, compliance)
-- Enforced word limits and validation rules
+- Uses context-aware prompts including:
+- Document type
+- Industry
+- Compliance requirements
+- Risk level
+- Enforces validation rules and word limits
+- Maintains consistent professional formatting
+
+🧠 Dynamic Question Generation
+
+DocForge Hub automatically detects missing information required for a document.
+
+The system:
+
+- Analyzes document schemas
+- Identifies critical missing inputs
+- Generates clarification questions dynamically
+- Ensures the document contains complete and relevant information
+- This significantly improves AI output accuracy.
+
+🧩 Document Registry System
+
+All documents are defined using a schema-based registry system.
+
+Each document definition includes:
+
+- Document metadata
+- Required inputs
+- Section structure
+- Validation rules
+- Industry tags
+
+This allows new document types to be added without modifying core code.
 
 🧠 Human-in-the-Loop Workflow
 
@@ -39,6 +80,16 @@ It provides:
 - Special handling for:
       - Revision History
       - Acknowledgement / Signature blocks
+
+📤 Notion Integration
+
+Generated documents can be published directly to Notion.
+
+This enables:
+
+- Knowledge base integration
+- Documentation sharing across teams
+- Centralized document management
 
 📄 Professional DOCX Export
 
@@ -57,42 +108,68 @@ Backend:
 - PostgreSQL
 - SQLAlchemy
 - Azure OpenAI
+- LangChain (LLM integration)
 
 Frontend:
 - Streamlit
 
+Integrations:
+
+- Notion API
+- Azure OpenAI
+
 ---
 
+## 📊 Database Design
+
+The platform uses a structured database to manage:
+
+- Document registries
+- Section definitions
+- Generated drafts
+- Version history
+- Regeneration logs
+- User inputs
+
 ## Architecture
-Streamlit UI
-      ↓
+
+Streamlit Frontend
+        │
+        ▼
 FastAPI Backend
-      ↓
+        │
+        ▼
+Document Generation Engine
+        │
+        ▼
 PostgreSQL Database
-      ↓
+        │
+        ▼
 Azure OpenAI (LLM)
 
 ---
 
-## Flow
+## 🔄 Document Generation Flow
 
-- User selects Department & Document
+1️⃣ User selects Department and Document Type
 
-- Backend loads document template from DB
+2️⃣ Backend loads the document schema from the registry
 
-- Section-by-section prompt generation
+3️⃣ System detects missing inputs
 
-- Azure OpenAI generates structured content
+4️⃣ AI generates clarification questions
 
-- Draft saved in database
+5️⃣ User provides answers
 
-- User can:
+6️⃣ AI generates document section-by-section
 
-   - Preview full document
+7️⃣ Sections are stored and reviewed by the user
 
-   - Regenerate specific sections
+8️⃣ Final document can be:
 
-Download as DOCX / PDF / XLS
+    - Exported as DOCX / PDF / XLS
+
+    - Published to Notion
 
 ---
 

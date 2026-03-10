@@ -1,9 +1,13 @@
 from notion_client import Client
 import os
 from dotenv import load_dotenv
-import base64
+from datetime import datetime
+import pytz
+
 
 load_dotenv()
+
+IST = pytz.timezone("Asia/Kolkata")
 
 NOTION_TOKEN = os.getenv("NOTION_TOKEN")
 NOTION_DATABASE_ID = os.getenv("NOTION_DATABASE_ID")
@@ -214,6 +218,16 @@ def publish_document_to_notion(
                 )
 
                 blocks.append(table_block)
+            
+    # Ensure timestamp is IST
+    if not created_at:
+        created_at = datetime.now(IST).isoformat()
+    else:
+        try:
+            created_at = datetime.fromisoformat(created_at)
+            created_at = created_at.astimezone(IST).isoformat()
+        except:
+            created_at = datetime.now(IST).isoformat()
 
     page = notion.pages.create(
         parent={"database_id": NOTION_DATABASE_ID},

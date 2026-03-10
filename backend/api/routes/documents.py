@@ -102,6 +102,7 @@ def generate_document(
         import json
 
         print("SECTIONS STRUCTURE:", draft_result["sections"])
+        # print("DOCUMENT INPUTS RECEIVED:", payload.document_inputs)
 
         for idx, section in enumerate(draft_result.get("sections", []), start=1):
 

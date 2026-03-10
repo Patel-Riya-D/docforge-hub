@@ -261,10 +261,12 @@ if document_filename:
         doc["document_name"]
     )
 
-    # ✅ FETCH AI QUESTIONS ON LOAD (only once per document)
-    if not st.session_state.questions_initialized:
+    # AUTO GENERATE AI QUESTIONS AFTER DOCUMENT QUESTIONS
+
+    if not st.session_state.pending_questions:
 
         safe_inputs = {}
+
         for key, value in user_inputs.items():
             if hasattr(value, "isoformat"):
                 safe_inputs[key] = value.isoformat()
@@ -289,11 +291,8 @@ if document_filename:
         )
 
         if questions_response.status_code == 200:
-            fetched = questions_response.json().get("questions", [])
-            st.session_state.pending_questions = fetched
-            st.session_state.questions_locked = True  # 🔒 Lock immediately
+            st.session_state.pending_questions = questions_response.json().get("questions", [])
 
-        st.session_state.questions_initialized = True
 
     # ---------------- AI CLARIFICATION QUESTIONS ----------------
 
@@ -380,9 +379,8 @@ if document_filename:
         if result.get("status") == "draft_saved":
             st.success("Draft Generated Successfully")
             st.session_state.selected_draft_id = result["draft_id"]
-            st.session_state.pending_questions = []
-            st.session_state.question_answers = {}
-            st.session_state.questions_locked = False
+
+            # Keep AI questions visible
             st.rerun()
 
         elif result.get("status") == "questions_required":

@@ -379,7 +379,28 @@ def _generate_single_section(
         }
     """
 
-    document_inputs_json = json.dumps(document_inputs or {}, indent=2)
+    document_inputs_json = json.dumps(document_inputs or {}, indent=2, ensure_ascii=False)
+
+    # Escape curly braces to prevent format errors
+    document_inputs_json = document_inputs_json.replace("{", "{{").replace("}", "}}")
+
+    # Extract only inputs relevant to this section
+    section_inputs = {}
+
+    for k, v in (document_inputs or {}).items():
+        if section_name.lower() in k.lower():
+            section_inputs[k] = v
+
+    # Convert section inputs to readable prompt text
+    user_input_text = ""
+
+    if section_inputs:
+        for k, v in section_inputs.items():
+            if v:
+                safe_value = str(v).replace("{", "{{").replace("}", "}}")
+                user_input_text += f"\n{k}: {safe_value}\n"
+
+    print("DOCUMENT INPUTS RECEIVED:", document_inputs)
 
     doc_type      = registry_doc["internal_type"]
     risk_level    = registry_doc["risk_level"]
@@ -480,7 +501,15 @@ def _generate_single_section(
         "company_background": company_background
     }
 
-    base_prompt = build_section_prompt(context)
+    safe_context = {}
+
+    for k, v in context.items():
+        if isinstance(v, str):
+            safe_context[k] = v.replace("{", "{{").replace("}", "}}")
+        else:
+            safe_context[k] = v
+
+    base_prompt = build_section_prompt(safe_context)
 
     if section_name.lower() in [
         "acknowledgement",
@@ -493,7 +522,10 @@ def _generate_single_section(
     if section_name.lower() in [
         "review & revision history",
         "revision history",
-        "version history"
+        "version history",
+        "approval matrix",
+        "record keeping",
+        "documentation"
     ]:
         base_prompt += """
 
@@ -550,12 +582,34 @@ def _generate_single_section(
             + "\n\nRe-generate the section addressing every issue listed above.\n"
         )
 
+    user_inputs_block = f"""
+    USER PROVIDED ANSWERS (USE THESE IN CONTENT):
+
+    {document_inputs_json}
+
+    IMPORTANT:
+    - These answers were provided by the user.
+    - If relevant to this section, incorporate them directly into the generated content.
+    - Do NOT ignore them.
+    """
+
     full_prompt = f"""
-{base_prompt}
-{retry_block}
-Additional Notes:
-{user_notes or "None provided."}
-""".strip()
+    {base_prompt}
+
+    {user_inputs_block}
+
+    {retry_block}
+
+    Additional Notes:
+    {user_notes or "None provided."}
+
+    USER PROVIDED CONTENT (MUST BE USED EXACTLY AS WRITTEN):
+    {user_input_text}
+
+    RULE:
+    If user information exists above, it MUST be included in this section.
+    Do NOT move it to another section.
+    """.strip()
 
     if (
         section_name.lower() in ["review & revision history"]
@@ -682,23 +736,51 @@ Additional Notes:
         Return a JSON array of blocks with paragraph content.
         {diagram_instruction}
 
-        STRICT OUTPUT RULES:
-        - Start directly with content
-        - Do NOT repeat section title
-        - Do NOT explain what to do
-        - Do NOT add filler language
+        OUTPUT FORMAT:
 
-        Example output WITH diagram:
-        [
-        {{"type": "paragraph", "content": "Your section content here..."}},
+        Return a JSON array of blocks.
+
+        Each block can be one of the following types:
+
+        1.Paragraph
+
         {{
-            "type": "diagram_request",
-            "diagram_type": "lifecycle",
-            "nodes": ["Stage 1", "Stage 2", "Stage 3"],
-            "edges": [["Stage 1", "Stage 2"], ["Stage 2", "Stage 3"]],
-            "center": ""
+        "type": "paragraph",
+        "content": "Text content"
         }}
+
+        2.Table (when structured data is needed)
+
+        {{
+        "type": "table",
+        "headers": ["Column1","Column2","Column3"],
+        "rows": [
+        ["value1","value2","value3"],
+        ["value1","value2","value3"]
         ]
+        }}
+
+        3.Bullet list
+
+        {{
+        "type": "bullet",
+        "content": "List item text"
+        }}
+
+        4.Diagram request (optional)
+
+        {{
+        "type": "diagram_request",
+        "diagram_type": "flowchart",
+        "nodes": ["A","B","C"],
+        "edges": [["A","B"],["B","C"]],
+        "center": ""
+        }}
+
+        RULES:
+        • Use tables when information contains multiple fields or structured data.
+        • Use paragraphs for explanations.
+        • Do not convert tables into text paragraphs.
 
         Example output WITHOUT diagram:
         [
@@ -805,6 +887,20 @@ Additional Notes:
                     unique_blocks.append(block)
 
             blocks = unique_blocks
+            # Remove duplicate paragraph blocks
+            seen_text = set()
+            dedup_blocks = []
+
+            for block in blocks:
+                if block.get("type") == "paragraph":
+                    text = block.get("content", "").strip()
+                    if text in seen_text:
+                        continue
+                    seen_text.add(text)
+
+                dedup_blocks.append(block)
+
+            blocks = dedup_blocks
             print("PARSED BLOCKS COUNT:", len(parsed))
         else:
             raise ValueError("Invalid JSON structure")
@@ -955,16 +1051,21 @@ def regenerate_section_llm(draft: dict, section: dict, issues: list) -> str:
 
     template = load_prompt("regenerate_prompt")
 
+    original_content_text = " ".join(
+        block.get("content", "")
+        for block in section.get("blocks", [])
+        if isinstance(block, dict) and block.get("type") == "paragraph"
+    )
+
+    # Escape curly braces so .format() doesn't break
+    original_content_text = original_content_text.replace("{", "{{").replace("}", "}}")
+
     formatted_prompt = template.format(
         document_type=draft["source_document"]["internal_type"],
         risk_level=draft["source_document"]["risk_level"],
         department=draft["source_document"]["department"],
         section_name=section["name"],
-        original_content=" ".join(
-            block.get("content", "")
-            for block in section.get("blocks", [])
-            if isinstance(block, dict) and block.get("type") == "paragraph"
-        ),
+        original_content = original_content_text,
         issues="\n".join(issues)
     )
 
