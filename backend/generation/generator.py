@@ -349,6 +349,34 @@ If no sections need diagrams:
         print(f"[DIAGRAM PLAN FAILED] {e}")
         return {}
 
+def markdown_to_table(text):
+    """
+    Convert markdown table to JSON table block.
+    """
+
+    if "|" not in text:
+        return None
+
+    rows = [r.strip() for r in text.split("\n") if "|" in r]
+
+    if len(rows) < 2:
+        return None
+
+    headers = [h.strip() for h in rows[0].split("|") if h.strip()]
+
+    table_rows = []
+
+    for r in rows[1:]:
+        cols = [c.strip() for c in r.split("|") if c.strip()]
+        if len(cols) == len(headers):
+            table_rows.append(cols)
+
+    return {
+        "type": "table",
+        "headers": headers,
+        "rows": table_rows
+    }
+
 # SINGLE SECTION GENERATOR
 # Calls AzureOpenAI for one section and validates output.
 
@@ -778,9 +806,24 @@ def _generate_single_section(
         }}
 
         RULES:
-        • Use tables when information contains multiple fields or structured data.
+        Do NOT convert tables into paragraphs.
+        Do NOT describe tables in text.
         • Use paragraphs for explanations.
         • Do not convert tables into text paragraphs.
+
+        MANDATORY TABLE RULE:
+
+        If the section contains structured data such as:
+        - roles
+        - responsibilities
+        - levels
+        - steps
+        - version history
+        - escalation matrix
+        - comparison
+        - dependencies
+
+        YOU MUST return a JSON table block.
 
         Example output WITHOUT diagram:
         [
@@ -922,12 +965,18 @@ def _generate_single_section(
             else:
                 raise ValueError("Still invalid")
         except Exception:
-            blocks = [
-                {
-                    "type": "paragraph",
-                    "content": content.strip()
-                }
-            ]
+
+            table_block = markdown_to_table(content)
+
+            if table_block:
+                blocks = [table_block]
+            else:
+                blocks = [
+                    {
+                        "type": "paragraph",
+                        "content": content.strip()
+                    }
+                ]
     combined_text = ""
 
     for block in blocks:
@@ -1010,10 +1059,20 @@ def _generate_single_section(
             blocks = new_blocks
             content = trimmed
 
-    if section_name.lower() in [
-        "review & revision history",
-        "acknowledgement"
-    ]:
+    TABLE_SECTIONS = [
+        "revision history",
+        "version history",
+        "approval matrix",
+        "roles and responsibilities",
+        "responsibilities",
+        "escalation process",
+        "escalation matrix",
+        "approval workflow",
+        "contact matrix"
+    ]
+
+    if any(k in section_name.lower() for k in TABLE_SECTIONS):
+
         section_validation = {
             "valid": True,
             "issues": [],
