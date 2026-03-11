@@ -1,4 +1,4 @@
-# 📡 DocForge Hub API Documentation
+#  DocForge Hub API Documentation
 
 Base URL
 
@@ -233,7 +233,7 @@ GET /documents/export/1/docx
 * docx (Microsoft Word)
 * pdf (PDF Document)
 
-⚠️ All sections must be **approved** before exporting.
+ All sections must be **approved** before exporting.
 
 ---
 
