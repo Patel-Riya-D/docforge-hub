@@ -170,7 +170,7 @@ Azure OpenAI (LLM)
 
 8️⃣ Final document can be:
 
-    - Exported as DOCX / PDF / XLS
+    - Exported as DOCX
 
     - Published to Notion
 
