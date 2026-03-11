@@ -232,7 +232,6 @@ GET /documents/export/1/docx
 
 * docx (Microsoft Word)
 * pdf (PDF Document)
-* xls (Excel Spreadsheet)
 
 ⚠️ All sections must be **approved** before exporting.
 
