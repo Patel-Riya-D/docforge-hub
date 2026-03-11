@@ -133,6 +133,8 @@ The platform uses a structured database to manage:
 
 ## Architecture
 
+```
+
 Streamlit Frontend
         │
         ▼
@@ -147,6 +149,7 @@ PostgreSQL Database
         ▼
 Azure OpenAI (LLM)
 
+```
 ---
 
 ## 🔄 Document Generation Flow
