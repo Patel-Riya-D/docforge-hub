@@ -24,7 +24,6 @@ venv/
 .streamlit/secrets.toml
 
 # Local testing files
-api_documentation.md
 testing_registry.py
 txt
 docs/

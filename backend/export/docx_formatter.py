@@ -73,16 +73,24 @@ def build_docx(draft: dict) -> bytes:
                 continue
 
             # 🔹 Special formatting for Definitions section
+            print("BLOCK:", block)
+            
             if block.get("type") == "paragraph":
 
+                text = (
+                    block.get("content")
+                    or block.get("text")
+                    or ""
+                )
+
                 if section_name.lower() == "definitions":
-                    items = block.get("content", "").split(". ")
+                    items = text.split(". ")
                     for item in items:
                         cleaned = item.strip()
                         if cleaned:
                             doc.add_paragraph(cleaned, style="List Bullet")
                 else:
-                    doc.add_paragraph(block.get("content", ""))
+                    doc.add_paragraph(text)
 
             elif block.get("type") == "table":
 
