@@ -21,9 +21,10 @@ st.set_page_config(
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
     .stApp {
         background: #f8fafc;
-        font-family: 'Inter', sans-serif;
+        font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
     .block-container {
         padding-top: 1rem;
@@ -177,7 +178,7 @@ st.markdown("""
         margin-top: 0 !important;
     }
     /* Ensure all images in document preview are limited */
-    img {
+    .document-paper img {
         max-width: 100%;
         height: auto;
         display: block;
