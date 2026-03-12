@@ -264,16 +264,16 @@ def export_draft(draft_id: int, file_type: str, db: Session = Depends(get_db)):
 
         blocks = s.content
 
-        if not isinstance(blocks, list):
-            blocks = []
-
         if isinstance(blocks, str):
             try:
                 blocks = json.loads(blocks)
             except:
-                blocks = []
+                blocks = [{"type": "paragraph", "content": blocks}]
 
-        if not isinstance(blocks, list):
+        elif isinstance(blocks, dict):
+            blocks = [blocks]
+
+        elif not isinstance(blocks, list):
             blocks = []
 
         sections_data.append({
@@ -299,6 +299,7 @@ def export_draft(draft_id: int, file_type: str, db: Session = Depends(get_db)):
     filename = draft_obj.document_name.replace(" ", "_")
 
     if file_type == "docx":
+        print("SECTIONS SENT TO DOCX:", draft_dict["sections"])
         docx_bytes = build_docx(draft_dict)
 
         return StreamingResponse(

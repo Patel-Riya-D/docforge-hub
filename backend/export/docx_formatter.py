@@ -50,6 +50,7 @@ def build_docx(draft: dict) -> bytes:
     doc.add_page_break()
 
     # ── Sections ───────────────────────────────
+    # ── Sections ───────────────────────────────
     for section in draft.get("sections", []):
 
         section_name = section.get("name", "")
@@ -58,24 +59,33 @@ def build_docx(draft: dict) -> bytes:
         heading = doc.add_heading(section_name, level=1)
         heading.runs[0].bold = True
 
-        doc.add_paragraph("")  # spacing
+        doc.add_paragraph("")
 
-        # Remove duplicated heading from first paragraph if present
-        if blocks and blocks[0].get("type") == "paragraph":
-            first_text = blocks[0].get("content", "").strip()
+        # Normalize blocks
+        if isinstance(blocks, str):
+            blocks = [{"type": "paragraph", "content": blocks}]
 
-            if first_text.lower().startswith(section_name.lower()):
-                blocks[0]["content"] = first_text[len(section_name):].strip()
+        if not isinstance(blocks, list):
+            blocks = []
 
         for block in blocks:
+
+            print("BLOCK:", block)
+
+            # If block is raw string
+            if isinstance(block, str):
+                doc.add_paragraph(block)
+                continue
 
             if not isinstance(block, dict):
                 continue
 
-            # 🔹 Special formatting for Definitions section
-            print("BLOCK:", block)
-            
-            if block.get("type") == "paragraph":
+            block_type = block.get("type")
+
+            # -----------------------------
+            # Paragraph
+            # -----------------------------
+            if block_type == "paragraph":
 
                 text = (
                     block.get("content")
@@ -83,55 +93,34 @@ def build_docx(draft: dict) -> bytes:
                     or ""
                 )
 
-                if section_name.lower() == "definitions":
-                    items = text.split(". ")
-                    for item in items:
-                        cleaned = item.strip()
-                        if cleaned:
-                            doc.add_paragraph(cleaned, style="List Bullet")
-                else:
+                if text.strip():
                     doc.add_paragraph(text)
 
-            elif block.get("type") == "table":
+            # -----------------------------
+            # Table
+            # -----------------------------
+            elif block_type == "table":
 
                 headers = block.get("headers", [])
                 rows = block.get("rows", [])
 
-                # Signature-type sections
-                if section_name.lower() in [
-                    "acknowledgement",
-                    "acknowledgement and acceptance",
-                    "remote work agreement"
-                ]:
-                    for row in rows:
-                        label = row[0]
-
-                        p = doc.add_paragraph()
-                        run = p.add_run(f"{label}: ")
-                        run.bold = True
-
-                        p.add_run(" ____________________________")
-
-                    doc.add_paragraph("")
-                    continue
-
-                # Normal data table
                 if not headers:
                     continue
 
                 table = doc.add_table(rows=len(rows) + 1, cols=len(headers))
                 table.style = "Table Grid"
 
-                # Header row
                 for col_idx, header in enumerate(headers):
                     table.rows[0].cells[col_idx].text = str(header)
 
-                # Data rows
                 for row_idx, row in enumerate(rows):
                     for col_idx, cell in enumerate(row):
                         table.rows[row_idx + 1].cells[col_idx].text = str(cell)
-                
-            elif block.get("type") == "diagram":
+
+            # -----------------------------
+            # Diagram
+            # -----------------------------
+            elif block_type == "diagram":
 
                 image_path = block.get("render_path")
 

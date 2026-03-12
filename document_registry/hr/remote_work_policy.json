@@ -47,7 +47,7 @@
           "key": "vpn_required",
           "label": "Is VPN Required?",
           "type": "boolean",
-          "required": true
+          "required": false
         }
       ]
     }

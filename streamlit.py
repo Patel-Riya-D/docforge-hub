@@ -2,9 +2,10 @@ import os
 import streamlit as st
 import requests
 from backend.utils.schema_merger import merge_input_groups
+import pandas as pd
+from backend.generation.question_label_enhancer import enhance_label
 from datetime import datetime, date
 import json
-import pandas as pd
 
 API_BASE_URL = "http://127.0.0.1:8000"
 
@@ -16,7 +17,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Elegant light theme (from streamlit.py)
+# Elegant light theme with extra fixes for checkbox and images
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -24,13 +25,9 @@ st.markdown("""
         background: #f8fafc;
         font-family: 'Inter', sans-serif;
     }
-    .main > div {
-        background: #ffffff;
-        border-radius: 24px;
-        padding: 2rem;
-        margin: 1rem;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
-        border: 1px solid #eef2f6;
+    .block-container {
+        padding-top: 1rem;
+        padding-bottom: 1rem;
     }
     [data-testid="stSidebar"] {
         background: #ffffff;
@@ -80,7 +77,6 @@ st.markdown("""
         background: linear-gradient(90deg, #2563eb, #3b82f6) !important;
         border-radius: 10px;
     }
-    /* Reduce space after progress bar and step container */
     .stProgress {
         margin-bottom: 5px !important;
     }
@@ -165,13 +161,27 @@ st.markdown("""
         color: #0f172a; margin-top: 30px; margin-bottom: 15px;
         border-bottom: 2px solid #eef2f6; padding-bottom: 8px;
     }
-    /* Tighten expanders inside document preview */
     .document-paper .stExpander {
         margin-top: 0 !important;
         padding-top: 0 !important;
     }
     .document-paper .stExpander > div:first-child {
         margin-top: 0 !important;
+    }
+    /* Remove empty space after expand-all checkbox */
+    .stCheckbox {
+        margin-bottom: 0 !important;
+        padding-bottom: 0 !important;
+    }
+    .stCheckbox + div {
+        margin-top: 0 !important;
+    }
+    /* Ensure all images in document preview are limited */
+    img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        margin: 20px auto;
     }
     .stTextInput input, .stTextArea textarea, .stNumberInput input,
     .stDateInput input, input[type="text"], input[type="number"], textarea {
@@ -263,7 +273,6 @@ st.markdown("""
         content: ''; position: absolute; top: 0; left: 25%; width: 50%; height: 1px;
         background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
     }
-    /* Force remove any extra space after progress bar and step container */
     .stProgress {
         margin-bottom: 0 !important;
         padding-bottom: 0 !important;
@@ -279,7 +288,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ---------------- SESSION STATE (keep original + add step state) ----------------
+# ---------------- SESSION STATE ----------------
 if "selected_draft_id" not in st.session_state:
     st.session_state.selected_draft_id = None
 if "last_generated_id" not in st.session_state:
@@ -306,7 +315,17 @@ if "company_profile" not in st.session_state:
         "company_background": ""
     }
 
-# ---------------- HELPER FUNCTIONS (from streamlit.py) ----------------
+# Original AI‑related session states
+if "pending_questions" not in st.session_state:
+    st.session_state.pending_questions = []
+if "question_answers" not in st.session_state:
+    st.session_state.question_answers = {}
+if "questions_generated" not in st.session_state:
+    st.session_state.questions_generated = False
+if "questions_initialized" not in st.session_state:
+    st.session_state.questions_initialized = False
+
+# ---------------- HELPER FUNCTIONS ----------------
 def format_date(date_string):
     try:
         date_obj = datetime.fromisoformat(date_string.replace('Z', '+00:00'))
@@ -387,9 +406,11 @@ def render_company_step():
         "founders": founders,
         "company_background": company_background
     })
+    # For AI questions we need the formatted name
+    st.session_state.formatted_company_name = company_name.title() if company_name else ""
 
 def render_document_step(step_idx, group, doc_name):
-    """Render a document group step (base or doc)"""
+    """Render a document group step (base or doc) with label enhancement"""
     st.markdown(f"""
         <div class="group-card">
             <div class="group-header">
@@ -407,7 +428,13 @@ def render_document_step(step_idx, group, doc_name):
     user_inputs = {}
     validation_errors = []
     for idx, field in enumerate(fields):
-        key, label = field["key"], field["label"]
+        key = field["key"]
+        raw_label = field["label"]
+        # Apply label enhancer (original logic)
+        cache_key = f"enhanced_{doc_name}_{raw_label}"
+        if cache_key not in st.session_state:
+            st.session_state[cache_key] = enhance_label(raw_label, doc_name)
+        label = st.session_state[cache_key]
         if field.get("required"): 
             label = f"{label} *"
         with cols[idx % 2]:
@@ -465,6 +492,19 @@ tab_gen, tab_lib = st.tabs(["✨ Generate Draft", "📚 Draft Library"])
 # ==================== GENERATE DRAFT TAB ====================
 with tab_gen:
     if document_filename:
+        # Reset wizard state when document changes (original logic)
+        if st.session_state.get("current_doc") != document_filename:
+            st.session_state.current_doc = document_filename
+            st.session_state.current_step = 0
+            st.session_state.form_data = {}
+            st.session_state.pending_questions = []
+            st.session_state.question_answers = {}
+            st.session_state.questions_generated = False
+            st.session_state.questions_initialized = False
+            for k in list(st.session_state.keys()):
+                if k.startswith("aiq_"):
+                    del st.session_state[k]
+
         try:
             # Fetch document configuration
             response = requests.post(f"{API_BASE_URL}/documents/preview", 
@@ -477,16 +517,24 @@ with tab_gen:
                 base_groups = [g for g in merged_groups if g.get("source") == "base"]
                 doc_groups = [g for g in merged_groups if g.get("source") != "base"]
                 
-                # Total steps: 1 (company) + base + doc
-                doc_step_count = len(base_groups) + len(doc_groups)
-                total_steps = 1 + doc_step_count
+                # --- MERGE DOCUMENT GROUPS INTO LARGER STEPS ---
+                all_doc_groups = base_groups + doc_groups
+                merged_steps = []          # list of lists of (original_index, group)
+                step_size = 3               # combine 3 groups per step – adjust as needed
+                for i in range(0, len(all_doc_groups), step_size):
+                    step_groups = []
+                    for j in range(i, min(i+step_size, len(all_doc_groups))):
+                        step_groups.append((j, all_doc_groups[j]))
+                    merged_steps.append(step_groups)
+                doc_step_count = len(merged_steps)
+                total_steps = 1 + doc_step_count + 1   # company + merged doc steps + AI questions
                 current_step = st.session_state.current_step
                 
                 # Progress bar
                 st.progress((current_step + 1) / total_steps, text=f"Step {current_step + 1} of {total_steps}")
                 
                 # Step indicators
-                step_names = ["Company Profile"] + ["Document Info"] + [f"Section {i+2}" for i in range(doc_step_count-1)] if doc_step_count > 1 else ["Company Profile", "Document Info"]
+                step_names = ["Company Profile"] + [f"Section {i+1}" for i in range(doc_step_count)] + ["AI Questions"]
                 st.markdown('<div class="step-container">', unsafe_allow_html=True)
                 cols = st.columns(total_steps)
                 for i, col in enumerate(cols):
@@ -506,93 +554,374 @@ with tab_gen:
                                 <div class='step-text {text_class}'>{step_names[i]}</div>
                             </div>
                         """, unsafe_allow_html=True)
-                st.markdown('</div>', unsafe_allow_html=True)
+                # st.markdown('</div>', unsafe_allow_html=True)
                 
                 # Render current step
+                validation_errors = []
                 if current_step == 0:
                     # Company profile step
                     render_company_step()
-                    validation_errors = []  # no doc validation yet
+                elif current_step <= doc_step_count:
+                    # Document step (index current_step - 1 in merged_steps)
+                    step_groups = merged_steps[current_step - 1]
+                    for (orig_idx, group) in step_groups:
+                        if 'icon' not in group:
+                            group['icon'] = "📄"
+                        if 'description' not in group:
+                            group['description'] = f"{doc_config['document_name']} details"
+                        user_inputs, errs = render_document_step(orig_idx, group, doc_config['document_name'])
+                        validation_errors.extend(errs)
+                        # Save inputs to session state
+                        for key, value in user_inputs.items():
+                            st.session_state.form_data[f"{orig_idx}_{key}"] = value
                 else:
-                    # Document step (index current_step - 1 in merged groups)
-                    doc_idx = current_step - 1
-                    all_groups = base_groups + doc_groups
-                    group = all_groups[doc_idx]
-                    # Add icon if missing
-                    if 'icon' not in group:
-                        group['icon'] = "📄"
-                    if 'description' not in group:
-                        group['description'] = f"{doc_config['document_name']} details"
-                    user_inputs, validation_errors = render_document_step(doc_idx, group, doc_config['document_name'])
-                    # Save inputs to session state
-                    for key, value in user_inputs.items():
-                        st.session_state.form_data[f"{doc_idx}_{key}"] = value
+                    # Last step: AI Questions
+                    st.markdown("### Additional Governance Information")
+                    # Generate AI questions if not already done
+                    if not st.session_state.pending_questions and not st.session_state.questions_generated:
+                        # Collect all document inputs so far
+                        all_inputs = {}
+                        for step in range(len(all_doc_groups)):
+                            for field in all_doc_groups[step]["fields"]:
+                                key = f"step_{step}_{field['key']}"
+                                if key in st.session_state:
+                                    all_inputs[field['key']] = st.session_state[key]
+                        # Prepare safe inputs for API
+                        safe_inputs = {}
+                        for key, value in all_inputs.items():
+                            if hasattr(value, "isoformat"):
+                                safe_inputs[key] = value.isoformat()
+                            else:
+                                safe_inputs[key] = value
+                        # Call generate-questions
+                        questions_response = requests.post(
+                            f"{API_BASE_URL}/documents/generate-questions",
+                            json={
+                                "department": department.lower(),
+                                "document_filename": document_filename,
+                                "company_profile": {
+                                    "company_name": st.session_state.company_profile.get("company_name", ""),
+                                    "industry": st.session_state.company_profile.get("industry", ""),
+                                    "employee_count": st.session_state.company_profile.get("employee_count", 0),
+                                    "regions": [st.session_state.company_profile.get("region", "")],
+                                    "compliance_frameworks": [st.session_state.company_profile.get("compliance", "")],
+                                    "default_jurisdiction": st.session_state.company_profile.get("jurisdiction", "")
+                                },
+                                "document_inputs": safe_inputs
+                            }
+                        )
+                        if questions_response.status_code == 200:
+                            st.session_state.pending_questions = questions_response.json().get("questions", [])
+                            st.session_state.questions_generated = True
+                    # Display AI questions
+                    for q in st.session_state.pending_questions:
+                        key = q["key"]
+                        question_text = q["question"]
+                        q_type = q.get("type", "text")
+                        unique_key = f"aiq_{department}_{document_filename}_{key}"
+                        if q_type == "textarea":
+                            st.text_area(question_text, key=unique_key)
+                        else:
+                            st.text_input(question_text, key=unique_key)
                 
                 # Navigation buttons
-                col1, col2, col3 = st.columns([1, 2, 1])
-                with col1:
+                nav_col1, nav_col2, nav_col3 = st.columns([1, 2, 1])
+                with nav_col1:
                     if current_step > 0:
                         if st.button("◀ Previous", use_container_width=True):
                             st.session_state.current_step -= 1
                             st.rerun()
-                with col3:
+                with nav_col3:
                     if current_step < total_steps - 1:
                         if st.button("Next ▶", use_container_width=True, type="primary"):
-                            # Validate only if on a document step (not company)
-                            if current_step > 0 and validation_errors:
+                            # Validate only if on a document step (not company or AI)
+                            if 0 < current_step <= doc_step_count and validation_errors:
                                 for err in validation_errors:
                                     st.error(f"❌ {err}")
                             else:
                                 st.session_state.current_step += 1
                                 st.rerun()
                     else:
-                        # Last step: Generate
-                        if st.button("🚀 Generate Draft", use_container_width=True, type="primary"):
-                            # Validate company profile mandatory fields
-                            company = st.session_state.company_profile
-                            if not all([company["company_name"], company["industry"], company["region"], company["jurisdiction"]]):
-                                st.error("❌ Please complete all mandatory Company Profile fields (Name, Industry, Region, Jurisdiction).")
-                            elif validation_errors:
-                                for err in validation_errors:
-                                    st.error(f"❌ {err}")
+                        # Last step: Generate button
+                        generate_clicked = st.button("🚀 Generate Draft", use_container_width=True, type="primary")
+                
+                # Spinner appears after the button – we can't move it, but we can add a blank column to balance
+                if current_step == total_steps - 1 and generate_clicked:
+                    # Validate company profile mandatory fields
+                    company = st.session_state.company_profile
+                    if not all([company["company_name"], company["industry"], company["region"], company["jurisdiction"]]):
+                        st.error("❌ Please complete all mandatory Company Profile fields (Name, Industry, Region, Jurisdiction).")
+                        st.stop()
+                    # Validate AI questions
+                    question_answers = {}
+                    for q in st.session_state.pending_questions:
+                        key = q["key"]
+                        unique_key = f"aiq_{department}_{document_filename}_{key}"
+                        value = st.session_state.get(unique_key, "")
+                        question_answers[key] = value
+                        if not value:
+                            st.error(f"Please answer: {q['question']}")
+                            st.stop()
+                    
+                    # Collect all document inputs
+                    all_inputs = {}
+                    for step in range(len(all_doc_groups)):
+                        for field in all_doc_groups[step]["fields"]:
+                            key = f"step_{step}_{field['key']}"
+                            if key in st.session_state:
+                                all_inputs[field['key']] = st.session_state[key]
+                    
+                    # Convert dates to ISO
+                    for key, value in all_inputs.items():
+                        if hasattr(value, "isoformat"):
+                            all_inputs[key] = value.isoformat()
+                    
+                    # Merge AI answers
+                    all_inputs.update(question_answers)
+                    
+                    # Generate final draft
+                    with st.spinner("🎨 Crafting your document..."):
+                        try:
+                            gen_resp = requests.post(
+                                f"{API_BASE_URL}/documents/generate",
+                                json={
+                                    "department": department.lower(),
+                                    "document_filename": document_filename,
+                                    "company_profile": company,
+                                    "document_inputs": all_inputs
+                                }
+                            )
+                            result = gen_resp.json()
+                            if result.get("status") == "draft_saved":
+                                st.success("✅ Draft Generated Successfully!")
+                                st.balloons()
+                                st.session_state.selected_draft_id = result["draft_id"]
+                                st.session_state.current_step = 0
+                                st.rerun()
+                            elif result.get("status") == "questions_required":
+                                st.error("Some information is still missing. Please review and try again.")
                             else:
-                                # Collect all document inputs
-                                all_inputs = {}
-                                for step in range(doc_step_count):
-                                    for field in all_groups[step]["fields"]:
-                                        key = f"step_{step}_{field['key']}"
-                                        if key in st.session_state:
-                                            all_inputs[field['key']] = st.session_state[key]
-                                
-                                # Convert dates to ISO
-                                for key, value in all_inputs.items():
-                                    if hasattr(value, "isoformat"): 
-                                        all_inputs[key] = value.isoformat()
-                                
-                                with st.spinner("🎨 Crafting your document..."):
-                                    try:
-                                        gen_resp = requests.post(f"{API_BASE_URL}/documents/generate", json={
-                                            "department": department.lower(),
-                                            "document_filename": document_filename,
-                                            "company_profile": company,
-                                            "document_inputs": all_inputs
-                                        })
-                                        if gen_resp.status_code == 200:
-                                            st.success("✅ Draft Generated Successfully!")
-                                            st.balloons()
-                                            st.session_state.selected_draft_id = gen_resp.json()["draft_id"]
-                                            st.session_state.current_step = 0  # reset
-                                            st.rerun()
-                                        else:
-                                            st.error(f"❌ Generation failed. Please try again. (Status {gen_resp.status_code})")
-                                    except Exception as e:
-                                        st.error(f"❌ Backend connection error: {e}")
+                                st.error("Draft generation failed")
+                        except Exception as e:
+                            st.error(f"❌ Backend connection error: {e}")
             else:
                 st.error("Failed to load document configuration.")
         except Exception as e:
             st.error(f"❌ Backend connection error: {e}")
-    else:
-        st.info("👈 Select a document template from sidebar")
+
+    # ==================== DOCUMENT REVIEW & PREVIEW ====================
+    if st.session_state.selected_draft_id:
+        st.markdown("<hr style='margin: 30px 0; border-color: #eef2f6;'>", unsafe_allow_html=True)
+        
+        try:
+            resp = requests.get(f"{API_BASE_URL}/documents/draft/{st.session_state.selected_draft_id}")
+            if resp.status_code == 200:
+                draft_detail = resp.json()
+                
+                # ----- Section Review & Approval (original logic) -----
+                st.subheader("Section Review & Approval")
+                total_sections = len(draft_detail["sections"])
+                approved_sections = sum(1 for s in draft_detail["sections"] if s.get("status") == "approved")
+                progress_ratio = approved_sections / total_sections if total_sections else 0
+                st.markdown(f"**{approved_sections} of {total_sections} Sections Confirmed**")
+                st.progress(progress_ratio)
+                st.divider()
+                
+                all_approved = True
+                for section in draft_detail["sections"]:
+                    section_name = section["section_name"]
+                    section_status = section.get("status", "draft")
+                    blocks = section.get("blocks", [])
+                    
+                    # Handle old double-encoded data
+                    if isinstance(blocks, str):
+                        try:
+                            blocks = json.loads(blocks)
+                        except:
+                            blocks = []
+                    if not isinstance(blocks, list):
+                        blocks = []
+                    
+                    st.markdown(f"## {section_name}")
+                    if section_status == "approved":
+                        st.success("✅ Approved")
+                    else:
+                        st.warning("📝 Draft")
+                        all_approved = False
+                    
+                    # Render content
+                    paragraph_text = ""
+                    for block in blocks:
+                        if isinstance(block, dict):
+                            if block.get("type") == "paragraph":
+                                paragraph_text += block.get("content", "") + "\n\n"
+                            elif block.get("type") in ["bullet", "bulleted_list_item"]:
+                                paragraph_text += f"- {block.get('content')}\n"
+                            elif block.get("type") == "table":
+                                df = pd.DataFrame(block.get("rows", []), columns=block.get("headers", []))
+                                st.table(df)
+                            elif block.get("type") == "diagram":
+                                diagram_url = block.get("diagram_url")
+                                image_path = block.get("render_path")
+                                if diagram_url:
+                                    col_l, col_m, col_r = st.columns([1, 3, 1])
+                                    with col_m:
+                                        st.image(f"{API_BASE_URL}{diagram_url}", width=600) # fixed width
+                                elif image_path and os.path.exists(image_path):
+                                    with open(image_path, "rb") as f:
+                                        st.image(f.read(), width=600)
+                                else:
+                                    st.warning(f"Diagram not available — url: {diagram_url}, path: {image_path}")
+                    
+                    st.markdown("##### Preview")
+                    if paragraph_text.strip():
+                        st.markdown(paragraph_text)
+                    
+                    # Action row (Edit, Confirm, Regenerate)
+                    action_col1, action_col2, action_col3 = st.columns([1,1,2])
+                    edit_key = f"edit_mode_{draft_detail['id']}_{section_name}"
+                    if edit_key not in st.session_state:
+                        st.session_state[edit_key] = False
+                    is_editing = st.session_state[edit_key]
+                    
+                    with action_col1:
+                        if section_status != "approved":
+                            if st.button("✏ Edit", key=f"toggle_edit_{draft_detail['id']}_{section_name}"):
+                                st.session_state[edit_key] = True
+                                st.rerun()
+                    with action_col2:
+                        if section_status != "approved":
+                            if st.button("✓ Confirm", key=f"approve_{section_name}"):
+                                requests.post(
+                                    f"{API_BASE_URL}/documents/approve-section",
+                                    params={"draft_id": st.session_state.selected_draft_id, "section_name": section_name}
+                                )
+                                st.success("Section Locked")
+                                st.rerun()
+                    
+                    # Regenerate section
+                    structured_sections = ["review & revision history", "acknowledgement", "acknowledgement and acceptance"]
+                    if section_status != "approved" and section_name.lower() not in structured_sections:
+                        with action_col3:
+                            feedback = st.text_input("Improvement Note", key=f"feedback_{section_name}")
+                            if st.button("🔄 Regenerate", key=f"regen_{section_name}"):
+                                regen_response = requests.post(
+                                    f"{API_BASE_URL}/documents/regenerate-section",
+                                    params={"draft_id": st.session_state.selected_draft_id, "section_name": section_name, "improvement_note": feedback}
+                                )
+                                if regen_response.status_code == 200:
+                                    st.success("Section Regenerated")
+                                    st.rerun()
+                                else:
+                                    st.error(regen_response.text)
+                    
+                    # Edit mode area
+                    if is_editing and section_status != "approved":
+                        edited_text = st.text_area(
+                            "Edit Section Content",
+                            value=paragraph_text.strip(),
+                            height=200,
+                            key=f"edit_content_{draft_detail['id']}_{section_name}"
+                        )
+                        save_col1, save_col2 = st.columns([1,3])
+                        with save_col1:
+                            if st.button("Save Changes", key=f"save_edit_{draft_detail['id']}_{section_name}"):
+                                save_response = requests.post(
+                                    f"{API_BASE_URL}/documents/save-section-edit",
+                                    json={
+                                        "draft_id": st.session_state.selected_draft_id,
+                                        "section_name": section_name,
+                                        "updated_text": edited_text
+                                    }
+                                )
+                                if save_response.status_code == 200:
+                                    st.success("Changes Saved")
+                                    st.session_state[edit_key] = False
+                                    text_key = f"edit_content_{draft_detail['id']}_{section_name}"
+                                    if text_key in st.session_state:
+                                        del st.session_state[text_key]
+                                    st.rerun()
+                                else:
+                                    st.error(save_response.text)
+                    st.divider()
+                
+                # ----- Export buttons (only DOCX kept) -----
+                st.subheader("Final Document Export")
+                col1, col2, col3 = st.columns([1, 1, 3])  # left aligned for the button
+                if all_approved:
+                    with col1:
+                        if st.button("Download DOCX"):
+                            st.markdown(
+                                f'<a href="{API_BASE_URL}/documents/export/{st.session_state.selected_draft_id}/docx" target="_blank">Click here to download DOCX</a>',
+                                unsafe_allow_html=True
+                            )
+                
+                # ----- Full Document Preview (enhanced with expanders + .document-paper) -----
+                if all_approved:
+                    st.divider()
+                    st.subheader("Full Document Preview")
+                    expand_all = st.checkbox("Expand all sections", value=False)
+        
+                    for section in draft_detail["sections"]:
+                        section_name = section["section_name"]
+                        with st.expander(f"📄 {section_name}", expanded=expand_all):
+                            blocks = section.get("blocks", [])
+                            if isinstance(blocks, str):
+                                try:
+                                    blocks = json.loads(blocks)
+                                except:
+                                    blocks = []
+                            if not isinstance(blocks, list):
+                                st.markdown("Invalid section format")
+                                continue
+                            for block in blocks:
+                                if isinstance(block, dict):
+                                    if block.get("type") == "paragraph":
+                                        st.markdown(block.get("content", ""))
+                                    elif block.get("type") in ["bullet", "bulleted_list_item"]:
+                                        st.markdown(f"- {block.get('content')}")
+                                    elif block.get("type") == "table":
+                                        if section_name.lower() in ["acknowledgement", "acknowledgement and acceptance"]:
+                                            for row in block.get("rows", []):
+                                                label = row[0]
+                                                st.markdown(f"**{label}:** ____________________________")
+                                        else:
+                                            df = pd.DataFrame(block.get("rows", []), columns=block.get("headers", []))
+                                            st.table(df)
+                                    elif block.get("type") == "diagram":
+                                        diagram_url = block.get("diagram_url")
+                                        image_path = block.get("render_path")
+                                        if diagram_url:
+                                            st.image(f"{API_BASE_URL}{diagram_url}", width=600)
+                                        elif image_path and os.path.exists(image_path):
+                                            with open(image_path, "rb") as f:
+                                                st.image(f.read(), width=600)
+                                        else:
+                                            st.warning(f"Diagram not found: {image_path}")
+                    # st.markdown('</div>', unsafe_allow_html=True)
+                else:
+                    st.divider()
+                    st.info("Full document preview will be available after all sections are approved.")
+                
+                if all_approved:
+                    #----------------Publish doc to notion-------------------
+                    st.divider()
+                    st.subheader("Publish Document")
+                    col1, col2 = st.columns([1,3])
+                    with col1:
+                        if st.button("Publish to Notion", use_container_width=True):
+                            with st.spinner("Publishing document to Notion..."):
+                                publish_response = requests.post(
+                                    f"{API_BASE_URL}/documents/publish-notion/{st.session_state.selected_draft_id}"
+                                )
+                            if publish_response.status_code == 200:
+                                st.success("Document successfully published to Notion 🎉")
+                            else:
+                                st.error("Failed to publish document to Notion")
+        except Exception as e:
+            st.error(f"❌ Failed to load draft: {e}")
+    # else:
+    #     st.info("👈 Select a document template from sidebar")
 
 # ==================== DRAFT LIBRARY TAB ====================
 with tab_lib:
@@ -605,7 +934,6 @@ with tab_lib:
         if response.status_code == 200:
             drafts = response.json()
             if drafts:
-                # Keep only latest version per document
                 unique_docs = {}
                 for draft in drafts:
                     name = draft["document_name"]
@@ -651,196 +979,7 @@ with tab_lib:
     except Exception as e:
         st.error(f"❌ Failed to load drafts: {e}")
 
-# ==================== DOCUMENT REVIEW & PREVIEW ====================
-if st.session_state.selected_draft_id:
-    st.markdown("<hr style='margin: 30px 0; border-color: #eef2f6;'>", unsafe_allow_html=True)
-    
-    try:
-        resp = requests.get(f"{API_BASE_URL}/documents/draft/{st.session_state.selected_draft_id}")
-        if resp.status_code == 200:
-            draft_detail = resp.json()
-            
-            # ----- Section Review & Approval (original logic) -----
-            st.subheader("Section Review & Approval")
-            total_sections = len(draft_detail["sections"])
-            approved_sections = sum(1 for s in draft_detail["sections"] if s.get("status") == "approved")
-            progress_ratio = approved_sections / total_sections if total_sections else 0
-            st.markdown(f"**{approved_sections} of {total_sections} Sections Confirmed**")
-            st.progress(progress_ratio)
-            st.divider()
-            
-            all_approved = True
-            for section in draft_detail["sections"]:
-                section_name = section["section_name"]
-                section_status = section.get("status", "draft")
-                blocks = section["content"]
-                
-                # Handle old double-encoded data
-                if isinstance(blocks, str):
-                    try:
-                        blocks = json.loads(blocks)
-                    except:
-                        blocks = []
-                if not isinstance(blocks, list):
-                    blocks = []
-                
-                st.markdown(f"## {section_name}")
-                if section_status == "approved":
-                    st.success("✅ Approved")
-                else:
-                    st.warning("📝 Draft")
-                    all_approved = False
-                
-                # Render content
-                paragraph_text = ""
-                for block in blocks:
-                    if isinstance(block, dict):
-                        if block.get("type") == "paragraph":
-                            paragraph_text += block.get("content", "") + "\n\n"
-                        elif block.get("type") == "table":
-                            df = pd.DataFrame(block.get("rows", []), columns=block.get("headers", []))
-                            st.table(df)
-                        elif block.get("type") == "diagram":
-                            image_path = block.get("render_path")
-                            if image_path and os.path.exists(image_path):
-                                col_left, col_center, col_right = st.columns([1, 2, 1])
-                                with col_center:
-                                    with open(image_path, "rb") as f:
-                                        st.image(f.read(), use_container_width=True)
-                            else:
-                                st.warning(f"Diagram not found: {image_path}")
-                
-                st.markdown("##### Preview")
-                if paragraph_text.strip():
-                    st.markdown(paragraph_text)
-                
-                # Action row (Edit, Confirm, Regenerate)
-                action_col1, action_col2, action_col3 = st.columns([1,1,2])
-                edit_key = f"edit_mode_{draft_detail['id']}_{section_name}"
-                if edit_key not in st.session_state:
-                    st.session_state[edit_key] = False
-                is_editing = st.session_state[edit_key]
-                
-                with action_col1:
-                    if section_status != "approved":
-                        if st.button("✏ Edit", key=f"toggle_edit_{draft_detail['id']}_{section_name}"):
-                            st.session_state[edit_key] = True
-                            st.rerun()
-                with action_col2:
-                    if section_status != "approved":
-                        if st.button("✓ Confirm", key=f"approve_{section_name}"):
-                            requests.post(
-                                f"{API_BASE_URL}/documents/approve-section",
-                                params={"draft_id": st.session_state.selected_draft_id, "section_name": section_name}
-                            )
-                            st.success("Section Locked")
-                            st.rerun()
-                
-                # Regenerate section
-                structured_sections = ["review & revision history", "acknowledgement", "acknowledgement and acceptance"]
-                if section_status != "approved" and section_name.lower() not in structured_sections:
-                    with action_col3:
-                        feedback = st.text_input("Improvement Note", key=f"feedback_{section_name}")
-                        if st.button("🔄 Regenerate", key=f"regen_{section_name}"):
-                            regen_response = requests.post(
-                                f"{API_BASE_URL}/documents/regenerate-section",
-                                params={"draft_id": st.session_state.selected_draft_id, "section_name": section_name, "improvement_note": feedback}
-                            )
-                            if regen_response.status_code == 200:
-                                st.success("Section Regenerated")
-                                st.rerun()
-                            else:
-                                st.error(regen_response.text)
-                
-                # Edit mode area
-                if is_editing and section_status != "approved":
-                    edited_text = st.text_area(
-                        "Edit Section Content",
-                        value=paragraph_text.strip(),
-                        height=200,
-                        key=f"edit_content_{draft_detail['id']}_{section_name}"
-                    )
-                    save_col1, save_col2 = st.columns([1,3])
-                    with save_col1:
-                        if st.button("Save Changes", key=f"save_edit_{draft_detail['id']}_{section_name}"):
-                            save_response = requests.post(
-                                f"{API_BASE_URL}/documents/save-section-edit",
-                                json={
-                                    "draft_id": st.session_state.selected_draft_id,
-                                    "section_name": section_name,
-                                    "updated_text": edited_text
-                                }
-                            )
-                            if save_response.status_code == 200:
-                                st.success("Changes Saved")
-                                st.session_state[edit_key] = False
-                                text_key = f"edit_content_{draft_detail['id']}_{section_name}"
-                                if text_key in st.session_state:
-                                    del st.session_state[text_key]
-                                st.rerun()
-                            else:
-                                st.error(save_response.text)
-                st.divider()
-            
-            # ----- Export buttons (original) -----
-            st.subheader("Final Document Export")
-            col1, col2, col3 = st.columns(3)
-            if all_approved:
-                with col1:
-                    if st.button("Download PDF"):
-                        st.markdown(f'<a href="{API_BASE_URL}/documents/export/{st.session_state.selected_draft_id}/pdf" target="_blank">Click here to download PDF</a>', unsafe_allow_html=True)
-                with col2:
-                    if st.button("Download DOCX"):
-                        st.markdown(f'<a href="{API_BASE_URL}/documents/export/{st.session_state.selected_draft_id}/docx" target="_blank">Click here to download DOCX</a>', unsafe_allow_html=True)
-                with col3:
-                    if st.button("Download XLS"):
-                        st.markdown(f'<a href="{API_BASE_URL}/documents/export/{st.session_state.selected_draft_id}/xls" target="_blank">Click here to download XLS</a>', unsafe_allow_html=True)
-            
-            # ----- Full Document Preview (enhanced with expanders + .document-paper) -----
-            if all_approved:
-                st.divider()
-                st.subheader("Full Document Preview")
-                expand_all = st.checkbox("Expand all sections", value=False)
-                st.markdown('<div class="document-paper">', unsafe_allow_html=True)
-                for section in draft_detail["sections"]:
-                    section_name = section["section_name"]
-                    with st.expander(f"📄 {section_name}", expanded=expand_all):
-                        blocks = section.get("content", [])
-                        if isinstance(blocks, str):
-                            try:
-                                blocks = json.loads(blocks)
-                            except:
-                                blocks = []
-                        if not isinstance(blocks, list):
-                            st.markdown("Invalid section format")
-                            continue
-                        for block in blocks:
-                            if isinstance(block, dict):
-                                if block.get("type") == "paragraph":
-                                    st.markdown(block.get("content", ""))
-                                elif block.get("type") == "table":
-                                    if section_name.lower() in ["acknowledgement", "acknowledgement and acceptance"]:
-                                        for row in block.get("rows", []):
-                                            label = row[0]
-                                            st.markdown(f"**{label}:** ____________________________")
-                                    else:
-                                        df = pd.DataFrame(block.get("rows", []), columns=block.get("headers", []))
-                                        st.table(df)
-                                elif block.get("type") == "diagram":
-                                    image_path = block.get("render_path")
-                                    if image_path and os.path.exists(image_path):
-                                        col_left, col_center, col_right = st.columns([1, 2, 1])
-                                        with col_center:
-                                            with open(image_path, "rb") as f:
-                                                st.image(f.read(), use_container_width=True)
-                                    else:
-                                        st.warning(f"Diagram not found: {image_path}")
-                st.markdown('</div>', unsafe_allow_html=True)
-            else:
-                st.divider()
-                st.info("Full document preview will be available after all sections are approved.")
-    except Exception as e:
-        st.error(f"❌ Failed to load draft: {e}")
+
 
 # ---------------- FOOTER ----------------
 st.markdown("""

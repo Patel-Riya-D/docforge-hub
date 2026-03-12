@@ -128,12 +128,23 @@ def publish_document_to_notion(
                         form_rows.append([field, value])
 
             if form_rows:
-                blocks.append(
-                    convert_table(
-                        ["Field", "Value"],
-                        form_rows
-                    )
-                )
+
+                for row in form_rows:
+
+                    field = row[0]
+
+                    blocks.append({
+                        "object": "block",
+                        "type": "paragraph",
+                        "paragraph": {
+                            "rich_text": [{
+                                "type": "text",
+                                "text": {
+                                    "content": f"{field}: _______________________"
+                                }
+                            }]
+                        }
+                    })
 
             continue
 
@@ -212,10 +223,16 @@ def publish_document_to_notion(
             # Table
             elif block.get("type") == "table":
 
-                table_block = convert_table(
-                    block.get("headers", []),
-                    block.get("rows", [])
-                )
+                headers = block.get("headers", [])
+                rows = block.get("rows", [])
+
+                # Fix Table of Contents (remove Page column)
+                if headers == ["Section", "Page"]:
+
+                    headers = ["Section"]
+                    rows = [[f"{i+1}. {row[0]}"] for i, row in enumerate(rows)]
+
+                table_block = convert_table(headers, rows)
 
                 blocks.append(table_block)
             
