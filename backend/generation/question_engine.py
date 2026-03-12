@@ -138,6 +138,11 @@ QUESTION PRIORITY
 ==============================
 Prioritize questions for sections that have little or no input.
 
+SPECIAL RULE FOR LEAVE / TIME-OFF FORMS:
+If the document relates to leave requests, ensure BOTH dates are collected:
+- leave_start_date
+- leave_end_date
+
 Ask about:
 - governance
 - operational details
@@ -183,6 +188,14 @@ If nothing is missing return: []
             content = content.strip()
 
         questions = json.loads(content)
+
+        # Ensure leave end date is always asked if start date exists
+        if "leave_start_date" in document_inputs and "leave_end_date" not in document_inputs:
+            questions.append({
+                "key": "leave_end_date",
+                "question": "What is the end date of the leave?",
+                "type": "text"
+            })
 
         if not isinstance(questions, list):
             return []

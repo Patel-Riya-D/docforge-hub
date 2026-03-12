@@ -1270,7 +1270,7 @@ def generate_draft(
 
             key = label.lower().replace(" ", "_")
 
-            value = document_inputs.get(key, "")
+            value = document_inputs.get(key) or document_inputs.get(section.get("key")) or ""
 
             blocks.append({
                 "type": "paragraph",
