@@ -534,7 +534,7 @@ with tab_gen:
                 st.progress((current_step + 1) / total_steps, text=f"Step {current_step + 1} of {total_steps}")
                 
                 # Step indicators
-                step_names = ["Company Profile"] + [f"Section {i+1}" for i in range(doc_step_count)] + ["AI Questions"]
+                step_names = ["Company Profile"] + [f"Section {i+1}" for i in range(doc_step_count)] + ["Document Specific Questions"]
                 st.markdown('<div class="step-container">', unsafe_allow_html=True)
                 cols = st.columns(total_steps)
                 for i, col in enumerate(cols):
