@@ -470,28 +470,41 @@ def save_section_edit(
         # 🔹 Step 1: Improve grammar using LLM
         # -------------------------------
 
-        llm = get_llm()
+                # Detect document type
+        doc_meta = db.query(Document).filter(
+            func.lower(Document.document_name) == draft.document_name.lower(),
+            func.lower(Document.department) == draft.department.lower()
+        ).first()
 
-        prompt = f"""
-Improve the grammar, clarity, and professionalism of the following text.
+        document_type = doc_meta.internal_type if doc_meta else ""
 
-Rules:
-- Do NOT change meaning.
-- Do NOT add new information.
-- Do NOT remove important content.
-- Return only the improved version.
-- Keep enterprise tone.
+        # Skip LLM editing for FORM documents
+        if document_type.upper() == "FORM":
+            improved_text = payload.updated_text
+        else:
+            llm = get_llm()
 
-Text:
-{payload.updated_text}
-"""
+            prompt = f"""
+        Improve the grammar, clarity, and professionalism of the following text.
 
-        response = llm.invoke([
-            SystemMessage(content="You are a professional enterprise document editor."),
-            HumanMessage(content=prompt)
-        ])
+        Rules:
+        - Do NOT change meaning.
+        - Do NOT add new information.
+        - Do NOT remove important content.
+        - Return only the improved version.
+        - Keep enterprise tone.
 
-        improved_text = response.content.strip()
+        Text:
+        {payload.updated_text}
+        """
+
+            response = llm.invoke([
+                SystemMessage(content="You are a professional enterprise document editor."),
+                HumanMessage(content=prompt)
+            ])
+
+            improved_text = response.content.strip()
+
 
         # -------------------------------
         # 🔹 Step 2: Replace paragraph block
