@@ -724,6 +724,7 @@ def _generate_single_section(
         ]
         """
         elif doc_type.upper() == "TEMPLATE":
+            
             system_message = f"""
             You are generating a document TEMPLATE.
 
