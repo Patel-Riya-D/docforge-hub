@@ -800,7 +800,14 @@ with tab_gen:
                                 st.rerun()
                     
                     # Regenerate section
-                    structured_sections = ["review & revision history", "acknowledgement", "acknowledgement and acceptance"]
+                    structured_sections = [
+                        "review & revision history", 
+                        "acknowledgement", 
+                        "acknowledgement and acceptance",
+                        "form",
+                        "title",
+                        "signature"
+                        ]
                     if section_status != "approved" and section_name.lower() not in structured_sections:
                         with action_col3:
                             feedback = st.text_input("Improvement Note", key=f"feedback_{section_name}")
