@@ -176,20 +176,6 @@ Azure OpenAI (LLM)
 
 ---
 
-## Wireframe 
-
-![Wireframe Step 1](https://github.com/Patel-Riya-D/docforge-hub/blob/feature/project-setup/wireframe/main.png)
-
----
-
-![Wireframe Step 2](https://github.com/Patel-Riya-D/docforge-hub/blob/feature/project-setup/wireframe/step2.png)
-
----
-
-![Wireframe Step 2](https://github.com/Patel-Riya-D/docforge-hub/blob/feature/project-setup/wireframe/library.png)
-
----
-
 ## ER Diagram
 
 ![ER Diagram](https://github.com/Patel-Riya-D/docforge-hub/blob/feature/project-setup/wireframe/phase1.drawio.png)
