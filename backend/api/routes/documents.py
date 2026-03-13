@@ -129,6 +129,10 @@ def generate_document(
 
             if not isinstance(blocks, list):
                 blocks = []
+            
+            section_name = str(
+                section.get("name") or section.get("section_name") or "Section"
+            ).strip()
 
             db_section = DraftSection(
                 draft_id=draft.id,
