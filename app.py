@@ -647,10 +647,7 @@ if st.session_state.selected_draft_id:
 
                         else:
                             st.error(save_response.text)
-
-            # elif section_status != "approved" and section_name.lower() in structured_sections:
-            #     st.info("Regeneration disabled for structured section.")
-            # st.success("🎉 All sections approved. Document ready for export.")   
+  
             st.divider()
 
         # 🔐 EXPORT SECTION
