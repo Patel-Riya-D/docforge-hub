@@ -435,7 +435,7 @@ if response.status_code == 200:
                         f"{API_BASE_URL}/documents/draft/{draft['id']}"
                     )
                     st.success("Draft deleted")
-                    st.experimental_rerun()
+                    st.rerun()
     else:
         st.info("No drafts found.")
 

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from backend.api.routes import documents
-from backend.approval import routes as approval_routes
+# from backend.approval import routes as approval_routes
 from fastapi.staticfiles import StaticFiles
 
 app = FastAPI(
@@ -10,7 +10,7 @@ app = FastAPI(
 )
 
 app.include_router(documents.router)
-app.include_router(approval_routes.router)
+# app.include_router(approval_routes.router)
 
 
 @app.get("/")

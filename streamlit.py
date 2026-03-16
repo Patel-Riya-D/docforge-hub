@@ -184,10 +184,6 @@ st.markdown("""
         display: block;
         margin: 20px auto;
     }
-    /* ---------- UNIVERSAL TEXT & CURSOR VISIBILITY FIX ---------- */
-    .stApp, .stApp * {
-        font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
-    }
 
     /* Main content text – dark gray, never light */
     .stApp h1, .stApp h2, .stApp h3, .stApp h4,
@@ -282,18 +278,6 @@ st.markdown("""
         transform: translateY(-2px) !important;
         box-shadow: 0 8px 18px rgba(37, 99, 235, 0.3) !important;
     }
-
-    /* ---------- FINAL DEFENSE: HIDE UNWANTED PSEUDO-ELEMENT CONTENT ---------- */
-    *::before,
-    *::after {
-        content: none !important;
-        font-family: inherit !important;
-    }
-
-    /* Ultra‑safe font fallback */
-    .stApp * {
-        font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
-    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -351,19 +335,19 @@ def get_status_badge(status):
     badge_class, text = colors.get(status.lower(), ("badge-draft", status))
     return f'<span class="status-badge {badge_class}">{text}</span>'
 
-def get_icon(icon_name):
-    icon_map = {
-        "keyboard_double_arrow_left": "⬅️",
-        "keyboard_double_arrow_right": "➡️",
-        "double_arrow_right": "➡️",
-        "double_arrow_left": "⬅️",
-        "arrow_right": "➡️",
-        "arrow_left": "⬅️",
-        "document": "📄",
-        "company": "🏢"
-    }
+# def get_icon(icon_name):
+#     icon_map = {
+#         "keyboard_double_arrow_left": "⬅️",
+#         "keyboard_double_arrow_right": "➡️",
+#         "double_arrow_right": "➡️",
+#         "double_arrow_left": "⬅️",
+#         "arrow_right": "➡️",
+#         "arrow_left": "⬅️",
+#         "document": "📄",
+#         "company": "🏢"
+#     }
 
-    return icon_map.get(icon_name, "📄")
+#     return icon_map.get(icon_name, "📄")
 
 def render_field(label, field, key):
     field_type = field["type"]
@@ -437,7 +421,6 @@ def render_document_step(step_idx, group, doc_name):
     st.markdown(f"""
         <div class="group-card">
             <div class="group-header">
-                <div class="group-icon">{get_icon(group.get('icon'))}</div>
                 <div>
                     <div class="group-title">{group['group_name']}</div>
                     <div class="group-description">{group.get('description', '')}</div>
