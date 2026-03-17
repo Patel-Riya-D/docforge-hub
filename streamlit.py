@@ -486,7 +486,7 @@ with tab_rag:
 
     st.subheader("🔎 CiteRAG Knowledge Search")
 
-    # ---------------- FILTERS ----------------
+    # ---------------- FILTERS (GLOBAL) ----------------
     st.markdown("### Filters")
 
     col1, col2 = st.columns(2)
@@ -507,124 +507,30 @@ with tab_rag:
     doc_type_filter = None if doc_type == "All" else doc_type
     industry_filter = None if industry == "All" else industry
 
-    st.caption("Ask questions about company documents stored in Notion")
-
-    # ---------------- QUESTION INPUT ----------------
-    question = st.text_input(
-        "Ask a question about company policies or procedures",
-        key="rag_question"
-    )
-
-    # ---------------- RAG SEARCH ----------------
-    if question:
-
-        with st.spinner("Searching knowledge base..."):
-
-            try:
-                response = requests.post(
-                    f"{API_BASE_URL}/documents/rag-query",
-                    json={
-                        "question": question,
-                        "doc_type": doc_type_filter,
-                        "industry": industry_filter
-                    }
-                )
-
-                result = response.json()
-
-                st.markdown("### 🔍 Interpreted Query")
-                st.write(result.get("refined_query", question))
-
-                # ---------------- ANSWER ----------------
-                st.markdown("### 📌 Answer")
-                st.write(result.get("answer", "No answer found"))
-
-                # ---------------- SOURCES ----------------
-                st.markdown("### 📚 Sources")
-                for source in result.get("sources", []):
-                    st.write(f"• {source}")
-
-                # ---------------- CONTEXT ----------------
-                st.markdown("### 🔎 Retrieved Context")
-
-                for chunk in result.get("chunks", []):
-                    with st.expander(f"{chunk['doc_title']} → {chunk['section']}"):
-                        st.write(chunk["text"])
-
-            except Exception as e:
-                st.error(f"Query failed: {e}")
+    # ---------------- TOOL TABS ----------------
+    tool_tabs = st.tabs(["🔎 Search", "📘 Compare", "📝 Summarize"])
 
     # ======================================================
-    # ---------------- COMPARE TOOL ----------------
+    # 🔎 SEARCH TAB
     # ======================================================
+    with tool_tabs[0]:
 
-    st.divider()
-    st.subheader("📘 Compare Documents")
+        st.caption("Ask questions about company documents stored in Notion")
 
-    col1, col2 = st.columns(2)
+        question = st.text_input(
+            "Ask a question about company policies or procedures",
+            key="rag_question"
+        )
 
-    with col1:
-        doc_a = st.text_input("Document A", key="compare_doc_a")
+        if question:
 
-    with col2:
-        doc_b = st.text_input("Document B", key="compare_doc_b")
-
-    topic = st.text_input("Comparison Topic", key="compare_topic")
-
-    if st.button("Compare"):
-
-        if not doc_a or not doc_b:
-            st.warning("Please enter both documents")
-        else:
-            with st.spinner("Comparing documents..."):
+            with st.spinner("Searching knowledge base..."):
 
                 try:
                     response = requests.post(
-                        f"{API_BASE_URL}/documents/rag-compare",
+                        f"{API_BASE_URL}/documents/rag-query",
                         json={
-                            "doc_a": doc_a,
-                            "doc_b": doc_b,
-                            "topic": topic
-                        }
-                    )
-
-                    result = response.json()
-
-                    # ---------------- RESULT ----------------
-                    st.markdown("### 📌 Comparison")
-                    st.write(result.get("answer", "No comparison found"))
-
-                    # ---------------- SOURCES ----------------
-                    st.markdown("### 📚 Sources")
-                    for s in result.get("sources", []):
-                        st.write(f"• {s}")
-
-                except Exception as e:
-                    st.error(f"Comparison failed: {e}")
-    
-    # ======================================================
-    # ---------------- SUMMARIZING TOOL ----------------
-    # ======================================================
-    st.divider()
-    st.subheader("📝 Summarize Document")
-
-    summary_query = st.text_input(
-        "Enter document name or topic to summarize",
-        key="summary_query"
-    )
-
-    if st.button("Summarize"):
-
-        if not summary_query:
-            st.warning("Please enter something to summarize")
-        else:
-            with st.spinner("Generating summary..."):
-
-                try:
-                    response = requests.post(
-                        f"{API_BASE_URL}/documents/rag-summarize",
-                        json={
-                            "query": summary_query,
+                            "question": question,
                             "doc_type": doc_type_filter,
                             "industry": industry_filter
                         }
@@ -632,11 +538,111 @@ with tab_rag:
 
                     result = response.json()
 
-                    st.markdown("### 📝 Summary")
-                    st.write(result.get("summary", ""))
+                    # 🔍 Refined Query
+                    st.markdown("### 🔍 Interpreted Query")
+                    st.write(result.get("refined_query", question))
+
+                    # 📌 Answer
+                    st.markdown("### 📌 Answer")
+                    st.write(result.get("answer", "No answer found"))
+
+                    # 📚 Sources
+                    st.markdown("### 📚 Sources")
+                    for source in result.get("sources", []):
+                        st.write(f"• {source}")
+
+                    # 🔎 Context
+                    st.markdown("### 🔎 Retrieved Context")
+
+                    for chunk in result.get("chunks", []):
+                        with st.expander(f"{chunk['doc_title']} → {chunk['section']}"):
+                            st.write(chunk["text"])
 
                 except Exception as e:
-                    st.error(f"Summarization failed: {e}")
+                    st.error(f"Query failed: {e}")
+
+    # ======================================================
+    # 📘 COMPARE TAB
+    # ======================================================
+    with tool_tabs[1]:
+
+        st.subheader("Compare Documents")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            doc_a = st.text_input("Document A", key="compare_doc_a")
+
+        with col2:
+            doc_b = st.text_input("Document B", key="compare_doc_b")
+
+        topic = st.text_input("Comparison Topic", key="compare_topic")
+
+        if st.button("Compare"):
+
+            if not doc_a or not doc_b:
+                st.warning("Please enter both documents")
+            else:
+                with st.spinner("Comparing documents..."):
+
+                    try:
+                        response = requests.post(
+                            f"{API_BASE_URL}/documents/rag-compare",
+                            json={
+                                "doc_a": doc_a,
+                                "doc_b": doc_b,
+                                "topic": topic
+                            }
+                        )
+
+                        result = response.json()
+
+                        st.markdown("### 📌 Comparison")
+                        st.write(result.get("answer", ""))
+
+                        st.markdown("### 📚 Sources")
+                        for s in result.get("sources", []):
+                            st.write(f"• {s}")
+
+                    except Exception as e:
+                        st.error(f"Comparison failed: {e}")
+
+    # ======================================================
+    # 📝 SUMMARIZE TAB
+    # ======================================================
+    with tool_tabs[2]:
+
+        st.subheader("Summarize Document")
+
+        summary_query = st.text_input(
+            "Enter document name or topic",
+            key="summary_query"
+        )
+
+        if st.button("Summarize"):
+
+            if not summary_query:
+                st.warning("Please enter something to summarize")
+            else:
+                with st.spinner("Generating summary..."):
+
+                    try:
+                        response = requests.post(
+                            f"{API_BASE_URL}/documents/rag-summarize",
+                            json={
+                                "query": summary_query,
+                                "doc_type": doc_type_filter,
+                                "industry": industry_filter
+                            }
+                        )
+
+                        result = response.json()
+
+                        st.markdown("### 📝 Summary")
+                        st.write(result.get("summary", ""))
+
+                    except Exception as e:
+                        st.error(f"Summarization failed: {e}")
 
 
 # ==================== DOCUMENT REVIEW & PREVIEW ====================

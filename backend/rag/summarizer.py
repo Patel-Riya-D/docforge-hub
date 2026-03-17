@@ -44,12 +44,7 @@ Content:
         HumanMessage(content=prompt)
     ])
 
-    sources = list(set(
-        [f"{c['doc_title']} → {c['section']}" for c in chunks]
-    ))
-
     return {
         "summary": response.content,
-        "sources": sources,
         "chunks": chunks
     }
