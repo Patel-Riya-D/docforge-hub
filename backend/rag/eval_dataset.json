@@ -1,14 +1,82 @@
 [
   {
     "question": "What is the probation period?",
-    "ground_truth": "The probation period ranges from 3 to 6 months."
+    "ground_truth": "The probation period for new employees ranges from 3 to 6 months."
   },
   {
-    "question": "What is company mission?",
-    "ground_truth": "The company aims to empower businesses through technology."
+    "question": "How long is the probation period for new employees?",
+    "ground_truth": "New employees undergo a probation period ranging from three to six months."
   },
   {
-    "question": "What are employee benefits?",
-    "ground_truth": "Employees receive benefits such as leave and compensation."
+    "question": "What is the minimum probation duration?",
+    "ground_truth": "The minimum probation duration is 3 months."
+  },
+  {
+    "question": "What is the maximum probation duration?",
+    "ground_truth": "The maximum probation duration is 6 months."
+  },
+  {
+    "question": "What happens during the probation period?",
+    "ground_truth": "During the probation period, employee performance and suitability for the role are evaluated."
+  },
+  {
+    "question": "What is the company’s mission?",
+    "ground_truth": "The company’s mission is to deliver innovative and reliable solutions that empower businesses through technology."
+  },
+  {
+    "question": "What does the company aim to achieve?",
+    "ground_truth": "The company aims to empower businesses by providing innovative and reliable technology solutions."
+  },
+  {
+    "question": "What are the core objectives of the company?",
+    "ground_truth": "The company focuses on delivering innovative, reliable, and technology-driven solutions to support business growth."
+  },
+  {
+    "question": "What benefits do employees receive?",
+    "ground_truth": "Employees receive benefits such as health insurance, leave policies, and compensation packages."
+  },
+  {
+    "question": "What kind of employee benefits are offered?",
+    "ground_truth": "The company provides employee benefits including health insurance, paid leave, and structured compensation."
+  },
+  {
+    "question": "Are employees eligible for health insurance?",
+    "ground_truth": "Yes, employees are eligible for health insurance benefits."
+  },
+  {
+    "question": "What leave benefits are provided to employees?",
+    "ground_truth": "Employees are entitled to leave benefits as part of their employment package."
+  },
+  {
+    "question": "How is employee compensation structured?",
+    "ground_truth": "Employee compensation includes salary and additional benefits as defined by company policy."
+  },
+  {
+    "question": "What is included in the employee compensation package?",
+    "ground_truth": "The compensation package includes salary along with benefits such as insurance and leave."
+  },
+  {
+    "question": "Who is eligible for employee benefits?",
+    "ground_truth": "All eligible employees are entitled to receive company benefits as per policy."
+  },
+  {
+    "question": "What policies govern employee benefits?",
+    "ground_truth": "Employee benefits are governed by company policies related to compensation, leave, and insurance."
+  },
+  {
+    "question": "Does the company provide remote work options?",
+    "ground_truth": "Not Available"
+  },
+  {
+    "question": "What is the company’s stock or equity policy?",
+    "ground_truth": "Not Available"
+  },
+  {
+    "question": "Are employees provided relocation assistance?",
+    "ground_truth": "Not Available"
+  },
+  {
+    "question": "Is there any policy regarding bonuses or incentives?",
+    "ground_truth": "Not Available"
   }
 ]

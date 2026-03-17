@@ -664,20 +664,29 @@ with tab_rag:
 
     if st.button("Run Evaluation"):
 
-        with st.spinner("Running evaluation..."):
+        with st.spinner("Running evaluation... ⏳"):
 
-            response = requests.post(
-                f"{API_BASE_URL}/documents/rag-evaluate"
-            )
+            response = requests.post(f"{API_BASE_URL}/documents/rag-evaluate")
 
-            st.write("Status Code:", response.status_code)
-            st.write("Raw Response:", response.text)
+        if response.status_code == 200:
 
-            try:
-                result = response.json()
-                st.write(result)
-            except Exception as e:
-                st.error(f"JSON Error: {e}")
+            result = response.json()
+
+            # 📋 Table
+            st.subheader("📋 Detailed Results")
+            st.dataframe(result["data"])
+
+            # 📈 Metrics
+            st.subheader("📈 Average Scores")
+
+            col1, col2 = st.columns(2)
+
+            col1.metric("Faithfulness", f"{result['avg_faithfulness']:.3f}")
+            col2.metric("Answer Relevancy", f"{result['avg_relevancy']:.3f}")
+
+        else:
+            st.error("Evaluation failed")
+            st.write(response.text)
 
 # ==================== DOCUMENT REVIEW & PREVIEW ====================
 if st.session_state.selected_draft_id:

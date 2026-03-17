@@ -2,9 +2,8 @@ import json
 from datasets import Dataset
 from ragas import evaluate
 from ragas.metrics import faithfulness, answer_relevancy
-from ragas.metrics import ContextRecall
 from backend.rag.query_search_engine import answer_question
-from ragas.llms import llm_factory
+from langchain_openai import OpenAIEmbeddings
 from openai import OpenAI
 import os
 from dotenv import load_dotenv
@@ -12,6 +11,11 @@ load_dotenv()
 
 openai_client = OpenAI(
     api_key=os.getenv("OPENAI_API_KEY"),
+    base_url=os.getenv("OPENAI_BASE_URL")
+)
+embeddings = OpenAIEmbeddings(
+    model="text-embedding-3-large",
+    openai_api_key=os.getenv("OPENAI_API_KEY"),
     base_url=os.getenv("OPENAI_BASE_URL")
 )
 
@@ -52,22 +56,17 @@ def run_evaluation():
         "ground_truth": ground_truths
     })
 
-    # ragas LLM
-    ragas_llm = llm_factory(
-        "gpt-4o-mini",
-        client=openai_client
-    )
-
     metrics = [
         faithfulness, answer_relevancy]
 
     result = evaluate(
         dataset=dataset,
-        metrics=metrics
+        metrics=metrics,
+        embeddings=embeddings
     )
 
     print("\n📊 RAGAS RESULTS:")
-    print(result.to_pandas())
+    return result.to_pandas()
 
 
 if __name__ == "__main__":

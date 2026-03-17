@@ -70,6 +70,10 @@ Context:
 Question:
 {refined_question}
 
+Answer ONLY based on the provided context.
+Be concise and directly answer the question.
+Do not add extra information.
+
 If the answer is not present in the context, say:
 "I could not find the answer in the available documents."
 """

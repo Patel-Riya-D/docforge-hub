@@ -696,9 +696,11 @@ def rag_summarize(data: dict):
 @router.post("/rag-evaluate")
 def rag_evaluate():
 
-    result = run_evaluation()
+    df = run_evaluation()
 
     return {
         "message": "Evaluation completed",
-        "scores": dict(result) 
+        "data": df.to_dict(orient="records"),
+        "avg_faithfulness": float(df["faithfulness"].mean()),
+        "avg_relevancy": float(df["answer_relevancy"].mean())
     }
