@@ -1,0 +1,110 @@
+from backend.rag.notion_reader import fetch_all_pages, fetch_page_blocks
+
+
+def split_text(text, max_chars=500):
+
+    chunks = []
+
+    if len(text) <= max_chars:
+        return [text]
+
+    words = text.split()
+    current = ""
+
+    for w in words:
+
+        if len(current) + len(w) + 1 > max_chars:
+            chunks.append(current.strip())
+            current = w
+        else:
+            current += " " + w
+
+    if current:
+        chunks.append(current.strip())
+
+    return chunks
+
+
+def ingest_documents():
+
+    pages = fetch_all_pages()
+
+    all_chunks = []
+
+    for page in pages:
+
+        page_id = page["id"]
+
+        title_list = page["properties"].get("Name", {}).get("title", [])
+        title = title_list[0]["plain_text"] if title_list else "Untitled"
+
+        doc_type_field = page["properties"].get("Document Type", {}).get("select")
+        doc_type = doc_type_field["name"] if doc_type_field else "Unknown"
+
+        industry_field = page["properties"].get("Industry", {}).get("select")
+        industry = industry_field["name"] if industry_field else "Unknown"
+
+        blocks = fetch_page_blocks(page_id)
+
+        current_section = None
+
+        for block in blocks:
+
+            block_type = block["type"]
+
+            # Detect section
+            if block_type == "heading_2":
+
+                current_section = block["heading_2"]["rich_text"][0]["plain_text"]
+
+            # Paragraph
+            elif block_type == "paragraph":
+
+                rich = block["paragraph"]["rich_text"]
+
+                if not rich:
+                    continue
+
+                text = rich[0]["plain_text"]
+
+                text_chunks = split_text(text)
+
+                for chunk_text in text_chunks:
+
+                    chunk = {
+                        "doc_title": title,
+                        "section": current_section,
+                        "text": chunk_text,
+                        "doc_type": doc_type,
+                        "industry": industry,
+                        "page_id": page_id
+                    }
+
+                    all_chunks.append(chunk)
+
+            # Bullet list
+            elif block_type == "bulleted_list_item":
+
+                rich = block["bulleted_list_item"]["rich_text"]
+
+                if not rich:
+                    continue
+
+                text = rich[0]["plain_text"]
+
+                text_chunks = split_text(text)
+
+                for chunk_text in text_chunks:
+
+                    chunk = {
+                        "doc_title": title,
+                        "section": current_section,
+                        "text": chunk_text,
+                        "doc_type": doc_type,
+                        "industry": industry,
+                        "page_id": page_id
+                    }
+
+                    all_chunks.append(chunk)
+
+    return all_chunks

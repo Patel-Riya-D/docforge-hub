@@ -25,6 +25,10 @@ venv/
 
 # Local testing files
 testing_registry.py
+app.py
+backend/rag/test_query.py
+backend/rag/test_notion.py
+backend/rag/test_ingestion.py
 txt
 docs/
 

@@ -1,0 +1,55 @@
+from backend.rag.retriever import Retriever
+from backend.generation.llm_provider import get_llm
+from langchain_core.messages import SystemMessage, HumanMessage
+
+retriever = Retriever()
+llm = get_llm()
+
+
+def summarize_document(query, filters=None):
+    """
+    Generate a concise summary of a document or topic using RAG.
+
+    This function:
+    1. Retrieves relevant chunks based on query.
+    2. Uses LLM to summarize content into key points.
+    3. Returns summary along with sources.
+
+    Args:
+        query (str): Document name or topic to summarize.
+        filters (dict, optional): Metadata filters.
+
+    """
+
+    # 🔍 Retrieve relevant chunks
+    chunks = retriever.search(query, k=8, filters=filters)
+
+    context = "\n".join([c["text"] for c in chunks])
+
+    prompt = f"""
+Summarize the following company document content.
+
+Rules:
+- Keep it concise
+- Use bullet points
+- Focus on key policies / important details
+- Do NOT add new information
+
+Content:
+{context}
+"""
+
+    response = llm.invoke([
+        SystemMessage(content="You summarize enterprise documents."),
+        HumanMessage(content=prompt)
+    ])
+
+    sources = list(set(
+        [f"{c['doc_title']} → {c['section']}" for c in chunks]
+    ))
+
+    return {
+        "summary": response.content,
+        "sources": sources,
+        "chunks": chunks
+    }

@@ -142,7 +142,7 @@ def get_section_rules(document_type: str, section_name: str) -> str:
     # --- WELCOME / INTRODUCTION ---
     if any(s in section_lower for s in ["welcome", "introduction", "about this"]):
         rules.extend([
-            "Write in warm, personal tone.",
+            "Write in warm, professional tone.",
             "If HANDBOOK: Write from CEO/HR Director perspective.",
             "Keep to 250-350 words maximum.",
             "Avoid referencing specific policy details.",

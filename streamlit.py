@@ -9,277 +9,13 @@ import json
 
 API_BASE_URL = "http://127.0.0.1:8000"
 
-# ---------------- UI CONFIG & ENHANCED STYLING ----------------
+# ---------------- UI CONFIG ----------------
 st.set_page_config(
     page_title="DocForge Hub",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
 )
-
-# Elegant light theme with extra fixes for checkbox, images, universal text visibility, and cursor
-st.markdown("""
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
-    .stApp {
-        background: #f8fafc;
-        font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-    }
-    .block-container {
-        padding-top: 1rem;
-        padding-bottom: 1rem;
-    }
-    [data-testid="stSidebar"] {
-        background: #ffffff;
-        border-right: 1px solid #eef2f6;
-        box-shadow: 2px 0 20px rgba(0, 0, 0, 0.02);
-    }
-    [data-testid="stSidebar"] .stMarkdown,
-    [data-testid="stSidebar"] p,
-    [data-testid="stSidebar"] .stSelectbox label,
-    [data-testid="stSidebar"] .stTextInput label,
-    [data-testid="stSidebar"] h1,
-    [data-testid="stSidebar"] h2,
-    [data-testid="stSidebar"] h3 {
-        color: #1e293b !important;
-    }
-    [data-testid="stSidebar"] hr {
-        border-color: #eef2f6 !important;
-    }
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-        background: #f1f5f9;
-        padding: 4px;
-        border-radius: 40px;
-        border: 1px solid #e2e8f0;
-        width: 100%;
-    }
-    .stTabs [data-baseweb="tab"] {
-        flex: 1;
-        text-align: center;
-        border-radius: 30px;
-        padding: 8px 20px;
-        font-weight: 500;
-        color: #64748b;
-        transition: all 0.2s;
-    }
-    .stTabs [data-baseweb="tab"]:hover {
-        background: #e2e8f0;
-        color: #0f172a;
-    }
-    .stTabs [aria-selected="true"] {
-        background: #ffffff !important;
-        color: #2563eb !important;
-        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
-        border: 1px solid #e2e8f0;
-    }
-    .stProgress > div > div > div > div {
-        background: linear-gradient(90deg, #2563eb, #3b82f6) !important;
-        border-radius: 10px;
-    }
-    .stProgress {
-        margin-bottom: 5px !important;
-    }
-    .step-container {
-        display: flex;
-        justify-content: center;
-        gap: 30px;
-        margin: 10px 0 20px 0;
-        padding: 15px;
-        background: #f8fafc;
-        border-radius: 60px;
-        border: 1px solid #eef2f6;
-    }
-    .step-item {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 5px 15px;
-        border-radius: 30px;
-        transition: all 0.3s ease;
-    }
-    .step-item.active {
-        background: rgba(37, 99, 235, 0.1);
-        border: 1px solid rgba(37, 99, 235, 0.3);
-    }
-    .step-number {
-        width: 32px; height: 32px; border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        font-weight: 600; font-size: 0.9rem;
-    }
-    .step-number.active   { background: #2563eb; color: white; }
-    .step-number.completed { background: #10b981; color: white; }
-    .step-number.pending  { background: #e2e8f0; color: #64748b; }
-    .step-text { font-size: 0.9rem; font-weight: 500; color: #64748b; }
-    .step-text.active { color: #2563eb; }
-    .group-card {
-        background: #ffffff;
-        border: 1px solid #eef2f6;
-        border-radius: 20px;
-        padding: 25px;
-        margin-top: 0;
-        margin-bottom: 25px;
-        transition: all 0.2s ease;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
-    }
-    .group-card:hover {
-        border-color: #2563eb40;
-        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.05);
-    }
-    .group-header {
-        display: flex; align-items: center; gap: 15px;
-        margin-bottom: 20px; padding-bottom: 15px;
-        border-bottom: 1px solid #eef2f6;
-    }
-    .group-icon {
-        width: 48px; height: 48px;
-        background: #f1f5f9;
-        border-radius: 14px;
-        display: flex; align-items: center; justify-content: center;
-        color: #2563eb; font-size: 1.6rem;
-    }
-    .group-title { font-size: 1.2rem; font-weight: 600; color: #0f172a; }
-    .group-description { font-size: 0.85rem; color: #64748b; }
-    .document-paper {
-        background: #ffffff;
-        padding: 60px 80px;
-        border-radius: 20px;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
-        font-family: 'Inter', sans-serif;
-        line-height: 1.7;
-        color: #1e293b;
-        max-width: 900px;
-        margin: 30px auto;
-        border: 1px solid #eef2f6;
-    }
-    .document-paper h1 {
-        font-size: 2.5rem; font-weight: 700;
-        color: #0f172a; margin-bottom: 25px; text-align: center;
-    }
-    .document-paper h2 {
-        font-size: 1.6rem; font-weight: 600;
-        color: #0f172a; margin-top: 30px; margin-bottom: 15px;
-        border-bottom: 2px solid #eef2f6; padding-bottom: 8px;
-    }
-    .document-paper .stExpander {
-        margin-top: 0 !important;
-        padding-top: 0 !important;
-    }
-    .document-paper .stExpander > div:first-child {
-        margin-top: 0 !important;
-    }
-    /* Remove empty space after expand-all checkbox */
-    .stCheckbox {
-        margin-bottom: 0 !important;
-        padding-bottom: 0 !important;
-    }
-    .stCheckbox + div {
-        margin-top: 0 !important;
-    }
-    /* Ensure all images in document preview are limited */
-    .document-paper img {
-        max-width: 100%;
-        height: auto;
-        display: block;
-        margin: 20px auto;
-    }
-
-    /* Main content text – dark gray, never light */
-    .stApp h1, .stApp h2, .stApp h3, .stApp h4,
-    .stApp p, .stApp li, .stApp span, .stApp div,
-    .stApp .stMarkdown, .stApp .stMarkdown p,
-    .stApp [data-testid="stMarkdownContainer"] * {
-        color: #1e293b !important;
-    }
-
-    /* Sidebar text – also dark */
-    [data-testid="stSidebar"] * {
-        color: #1e293b !important;
-    }
-    [data-testid="stSidebar"] .stSelectbox label,
-    [data-testid="stSidebar"] .stTextInput label {
-        color: #0f172a !important;
-        font-weight: 500;
-    }
-
-    /* Form labels – ensure visibility */
-    .stTextInput label, .stTextArea label, .stSelectbox label,
-    .stDateInput label, .stNumberInput label {
-        color: #0f172a !important;
-        font-weight: 500;
-    }
-
-    /* Input text – always black/dark, with visible cursor */
-    .stTextInput input, .stTextArea textarea, .stNumberInput input,
-    .stDateInput input, input[type="text"], input[type="number"], textarea {
-        color: #0f172a !important;
-        background: #ffffff !important;
-        border: 1px solid #cbd5e1 !important;
-        caret-color: #2563eb !important;  /* blue cursor for visibility */
-    }
-
-    /* Ensure cursor stays visible on focus and active */
-    .stTextInput input:focus, .stTextInput input:active,
-    .stTextArea textarea:focus, .stTextArea textarea:active,
-    .stNumberInput input:focus, .stNumberInput input:active,
-    .stDateInput input:focus, .stDateInput input:active {
-        caret-color: #2563eb !important;
-        color: #0f172a !important;
-        background: #ffffff !important;
-        border-color: #2563eb !important;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
-    }
-
-    /* Placeholders – visible but muted */
-    ::placeholder {
-        color: #64748b !important;
-        opacity: 1 !important;
-    }
-
-    /* Dropdown options */
-    [data-baseweb="popover"] li {
-        color: #0f172a !important;
-        background: #ffffff !important;
-    }
-    [data-baseweb="popover"] li:hover {
-        background: #f1f5f9 !important;
-    }
-
-    /* Progress bar text */
-    .stProgress + div small,
-    [data-testid="stProgressBarMessage"] {
-        color: #334155 !important;
-    }
-
-    /* Footer – lighter but still visible */
-    .footer p {
-        color: #475569 !important;
-    }
-
-    /* ---------- DOWNLOAD BUTTON STYLES ---------- */
-    .download-button {
-        display: inline-block;
-        background: linear-gradient(135deg, #2563eb, #3b82f6) !important;
-        color: white !important;
-        border: none !important;
-        border-radius: 30px !important;
-        padding: 10px 25px !important;
-        font-weight: 500 !important;
-        font-size: 0.9rem !important;
-        text-decoration: none;
-        transition: all 0.2s ease !important;
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2) !important;
-        text-align: center;
-        width: 100%;
-        cursor: pointer;
-    }
-    .download-button:hover {
-        transform: translateY(-2px) !important;
-        box-shadow: 0 8px 18px rgba(37, 99, 235, 0.3) !important;
-    }
-    </style>
-""", unsafe_allow_html=True)
 
 # ---------------- SESSION STATE ----------------
 if "selected_draft_id" not in st.session_state:
@@ -326,28 +62,18 @@ def format_date(date_string):
     except:
         return date_string
 
-def get_status_badge(status):
-    colors = {
-        "draft": ("badge-draft", "📝 Draft"),
-        "published": ("badge-published", "✅ Published"),
-        "archived": ("badge-draft", "📦 Archived")
+def get_icon(icon_name):
+    icon_map = {
+        "keyboard_double_arrow_left": "⬅️",
+        "keyboard_double_arrow_right": "➡️",
+        "double_arrow_right": "➡️",
+        "double_arrow_left": "⬅️",
+        "arrow_right": "➡️",
+        "arrow_left": "⬅️",
+        "document": "📄",
+        "company": "🏢"
     }
-    badge_class, text = colors.get(status.lower(), ("badge-draft", status))
-    return f'<span class="status-badge {badge_class}">{text}</span>'
-
-# def get_icon(icon_name):
-#     icon_map = {
-#         "keyboard_double_arrow_left": "⬅️",
-#         "keyboard_double_arrow_right": "➡️",
-#         "double_arrow_right": "➡️",
-#         "double_arrow_left": "⬅️",
-#         "arrow_right": "➡️",
-#         "arrow_left": "⬅️",
-#         "document": "📄",
-#         "company": "🏢"
-#     }
-
-#     return icon_map.get(icon_name, "📄")
+    return icon_map.get(icon_name, "📄")
 
 def render_field(label, field, key):
     field_type = field["type"]
@@ -370,17 +96,13 @@ def render_field(label, field, key):
 
 def render_company_step():
     """Render the company profile step with a card layout"""
-    st.markdown("""
-        <div class="group-card">
-            <div class="group-header">
-                <div class="group-icon">🏢</div>
-                <div>
-                    <div class="group-title">Company Profile</div>
-                    <div class="group-description">Mandatory: Profile details are embedded into the document.</div>
-                </div>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
+    with st.container(border=True):
+        col1, col2 = st.columns([1, 11])
+        with col1:
+            st.markdown("# 🏢")
+        with col2:
+            st.subheader("Company Profile")
+            st.caption("Mandatory: Profile details are embedded into the document.")
     
     col1, col2 = st.columns(2)
     with col1:
@@ -418,16 +140,13 @@ def render_company_step():
 
 def render_document_step(step_idx, group, doc_name):
     """Render a document group step (base or doc) with label enhancement"""
-    st.markdown(f"""
-        <div class="group-card">
-            <div class="group-header">
-                <div>
-                    <div class="group-title">{group['group_name']}</div>
-                    <div class="group-description">{group.get('description', '')}</div>
-                </div>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
+    with st.container(border=True):
+        col1, col2 = st.columns([1, 11])
+        with col1:
+            st.markdown(f"# {get_icon(group.get('icon'))}")
+        with col2:
+            st.subheader(group['group_name'])
+            st.caption(group.get('description', ''))
     
     fields = group["fields"]
     cols = st.columns(2)
@@ -450,25 +169,20 @@ def render_document_step(step_idx, group, doc_name):
                 validation_errors.append(f"{field['label']} is required.")
     return user_inputs, validation_errors
 
-# ---------------- SIDEBAR (streamlined) ----------------
+# ---------------- SIDEBAR (company profile removed) ----------------
 with st.sidebar:
-    st.markdown("""
-        <div style='text-align: center; padding: 20px 0;'>
-            <div style='font-size: 2.5rem;'>⚡</div>
-            <h1 style='color: #0f172a; font-size: 1.5rem;'>DocForge Hub</h1>
-            <p style='color: #64748b; font-size: 0.8rem;'>AI-Powered Document Generation</p>
-        </div>
-    """, unsafe_allow_html=True)
+    st.title("⚡ DocForge Hub")
+    st.caption("AI-Powered Document Generation")
     
-    st.markdown("<hr>", unsafe_allow_html=True)
+    st.divider()
     
-    st.markdown("### 📍 Document")
+    st.subheader("📍 Document")
     departments = [
         "HR", "IT Operations", "Legal", "Marketing", "Finance & Accounting",
         "Engineering", "Quality Assurance", "Security & Compliance",
         "Customer Success", "Product Management"
     ]
-    department = st.selectbox("Department", departments, key="sidebar_department")
+    department = st.selectbox("Department", departments, key="sidebar_department", label_visibility="collapsed")
 
     try:
         response = requests.get(f"{API_BASE_URL}/documents/list", params={"department": department})
@@ -478,24 +192,22 @@ with st.sidebar:
         st.warning("⚠️ Backend connection failed")
 
     document_types = sorted(set(doc["internal_type"] for doc in documents_meta))
-    selected_type = st.selectbox("Document Type", ["ALL"] + document_types, key="sidebar_doc_type")
+    selected_type = st.selectbox("Document Type", ["ALL"] + document_types, key="sidebar_doc_type", label_visibility="collapsed")
 
     filtered_docs = documents_meta if selected_type == "ALL" else [doc for doc in documents_meta if doc["internal_type"] == selected_type]
-    document_filename = st.selectbox("Document Template", [doc["document_name"] for doc in filtered_docs], key="sidebar_document") if filtered_docs else None
+    document_filename = st.selectbox("Document Template", [doc["document_name"] for doc in filtered_docs], key="sidebar_document", label_visibility="collapsed") if filtered_docs else None
+    
+    if document_filename:
+        st.info(f"Selected: {document_filename}")
 
 # ---------------- MAIN CONTENT ----------------
-st.markdown("""
-    <div class='welcome-header'>
-        <div style='text-align: center; padding: 20px 0;'>
-            <h1>⚡ DocForge Hub</h1>
-            <p style='color: #64748b;'>Intelligent document generation platform powered by AI</p>
-        </div>
-    </div>
-""", unsafe_allow_html=True)
+st.header("⚡ DocForge Hub")
+st.caption("Intelligent document generation platform powered by AI")
 
-tabs = st.tabs(["✨ Generate Draft", "📚 Draft Library"])
+tabs = st.tabs(["✨ Generate Draft", "📚 Draft Library","🔎CiteRag Lab"])
 tab_gen = tabs[0]
 tab_lib = tabs[1]
+tab_rag = tabs[2]
 
 # ==================== GENERATE DRAFT TAB ====================
 with tab_gen:
@@ -539,30 +251,22 @@ with tab_gen:
                 current_step = st.session_state.current_step
                 
                 # Progress bar
-                st.progress((current_step + 1) / total_steps, text=f"Step {current_step + 1} of {total_steps}")
+                progress_text = f"Step {current_step + 1} of {total_steps}"
+                st.progress((current_step + 1) / total_steps, text=progress_text)
                 
-                # Step indicators
-                step_names = ["Company Profile"] + [f"Section {i+1}" for i in range(doc_step_count)] + ["Document Specific Questions"]
-                st.markdown('<div class="step-container">', unsafe_allow_html=True)
+                # Step indicators using columns
+                step_names = ["🏢 Company"] + [f"📄 Section {i+1}" for i in range(doc_step_count)] + ["❓ Questions"]
                 cols = st.columns(total_steps)
                 for i, col in enumerate(cols):
                     with col:
                         if i == current_step:
-                            number_class = "active"
-                            text_class = "active"
+                            st.info(f"**{step_names[i]}**")
                         elif i < current_step:
-                            number_class = "completed"
-                            text_class = "pending"
+                            st.success(f"✅ {step_names[i]}")
                         else:
-                            number_class = "pending"
-                            text_class = "pending"
-                        st.markdown(f"""
-                            <div class='step-item {text_class}'>
-                                <div class='step-number {number_class}'>{i+1}</div>
-                                <div class='step-text {text_class}'>{step_names[i]}</div>
-                            </div>
-                        """, unsafe_allow_html=True)
-                st.markdown('</div>', unsafe_allow_html=True)
+                            st.write(f"⏳ {step_names[i]}")
+                
+                st.divider()
                 
                 # Render current step
                 validation_errors = []
@@ -584,7 +288,7 @@ with tab_gen:
                             st.session_state.form_data[f"{orig_idx}_{key}"] = value
                 else:
                     # Last step: AI Questions
-                    st.markdown("### Additional Governance Information")
+                    st.subheader("Additional Governance Information")
                     # Generate AI questions if not already done
                     if not st.session_state.pending_questions and not st.session_state.questions_generated:
                         # Collect all document inputs so far
@@ -621,25 +325,29 @@ with tab_gen:
                         if questions_response.status_code == 200:
                             st.session_state.pending_questions = questions_response.json().get("questions", [])
                             st.session_state.questions_generated = True
-                    # Display AI questions
-                    for q in st.session_state.pending_questions:
-                        key = q["key"]
-                        question_text = q["question"]
-                        q_type = q.get("type", "text")
-                        unique_key = f"aiq_{department}_{document_filename}_{key}"
-                        if q_type == "textarea":
-                            st.text_area(question_text, key=unique_key)
-                        else:
-                            st.text_input(question_text, key=unique_key)
+                    
+                    # Display AI questions in a container
+                    with st.container(border=True):
+                        for q in st.session_state.pending_questions:
+                            key = q["key"]
+                            question_text = q["question"]
+                            q_type = q.get("type", "text")
+                            unique_key = f"aiq_{department}_{document_filename}_{key}"
+                            if q_type == "textarea":
+                                st.text_area(question_text, key=unique_key)
+                            else:
+                                st.text_input(question_text, key=unique_key)
                 
                 # Navigation buttons
-                nav_col1, nav_col2, nav_col3 = st.columns([1, 2, 1])
-                with nav_col1:
+                st.divider()
+                col1, col2, col3, col4, col5 = st.columns([1, 1, 2, 1, 1])
+                with col1:
                     if current_step > 0:
                         if st.button("◀ Previous", use_container_width=True):
                             st.session_state.current_step -= 1
                             st.rerun()
-                with nav_col3:
+                
+                with col5:
                     if current_step < total_steps - 1:
                         if st.button("Next ▶", use_container_width=True, type="primary"):
                             # Validate only if on a document step (not company or AI)
@@ -653,7 +361,6 @@ with tab_gen:
                         # Last step: Generate button
                         generate_clicked = st.button("🚀 Generate Draft", use_container_width=True, type="primary")
                 
-                # Spinner appears after the button – we can't move it, but we can add a blank column to balance
                 if current_step == total_steps - 1 and generate_clicked:
                     # Validate company profile mandatory fields
                     company = st.session_state.company_profile
@@ -716,12 +423,14 @@ with tab_gen:
                 st.error("Failed to load document configuration.")
         except Exception as e:
             st.error(f"❌ Backend connection error: {e}")
+    else:
+        st.info("👈 Select a document template from the sidebar to begin")
 
 # ==================== DRAFT LIBRARY TAB ====================
 with tab_lib:
-    st.markdown("### 📚 Document Library")
+    st.subheader("📚 Document Library")
     
-    search = st.text_input("🔍 Search", placeholder="Type to search...", key="lib_search")
+    search = st.text_input("🔍 Search documents", placeholder="Type to search...", key="lib_search")
     
     try:
         response = requests.get(f"{API_BASE_URL}/documents/drafts")
@@ -745,27 +454,26 @@ with tab_lib:
                             if i + j < len(filtered_drafts):
                                 draft = filtered_drafts[i + j]
                                 with cols[j]:
-                                    st.markdown(f"""
-                                        <div class="draft-card">
-                                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                                                <div>
-                                                    <strong style="color: #0f172a;">{draft['document_name'][:25]}{'...' if len(draft['document_name']) > 25 else ''}</strong>
-                                                    <div style="font-size: 0.8rem; color: #64748b;">v{draft.get('version', '1.0')}</div>
-                                                </div>
-                                                {get_status_badge(draft['status'])}
-                                            </div>
-                                        </div>
-                                    """, unsafe_allow_html=True)
-                                    
-                                    col1, col2 = st.columns(2)
-                                    with col1:
-                                        if st.button("👁️ View", key=f"v_{draft['id']}", use_container_width=True):
-                                            st.session_state.selected_draft_id = draft["id"]
-                                            st.rerun()
-                                    with col2:
-                                        if st.button("🗑️", key=f"d_{draft['id']}", use_container_width=True):
-                                            requests.delete(f"{API_BASE_URL}/documents/draft/{draft['id']}")
-                                            st.rerun()
+                                    with st.container(border=True):
+                                        col1, col2 = st.columns([3, 1])
+                                        with col1:
+                                            st.write(f"**{draft['document_name'][:25]}{'...' if len(draft['document_name']) > 25 else ''}**")
+                                            st.caption(f"v{draft.get('version', '1.0')}")
+                                        with col2:
+                                            if draft['status'] == 'published':
+                                                st.success("✅ Published")
+                                            else:
+                                                st.warning("📝 Draft")
+                                        
+                                        col1, col2 = st.columns(2)
+                                        with col1:
+                                            if st.button("👁️ View", key=f"v_{draft['id']}", use_container_width=True):
+                                                st.session_state.selected_draft_id = draft["id"]
+                                                st.rerun()
+                                        with col2:
+                                            if st.button("🗑️ Delete", key=f"d_{draft['id']}", use_container_width=True):
+                                                requests.delete(f"{API_BASE_URL}/documents/draft/{draft['id']}")
+                                                st.rerun()
                 else:
                     st.info("No matching documents found")
             else:
@@ -773,9 +481,167 @@ with tab_lib:
     except Exception as e:
         st.error(f"❌ Failed to load drafts: {e}")
 
-# ==================== DOCUMENT REVIEW & PREVIEW (always visible) ====================
+# ==================== CITERAG LAB TAB ====================
+with tab_rag:
+
+    st.subheader("🔎 CiteRAG Knowledge Search")
+
+    # ---------------- FILTERS ----------------
+    st.markdown("### Filters")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        doc_type = st.selectbox(
+            "Document Type",
+            ["All", "Policy", "Runbook", "Handbook", "Template"]
+        )
+
+    with col2:
+        industry = st.radio(
+            "Industry",
+            ["All", "SaaS"],
+            horizontal=True
+        )
+
+    doc_type_filter = None if doc_type == "All" else doc_type
+    industry_filter = None if industry == "All" else industry
+
+    st.caption("Ask questions about company documents stored in Notion")
+
+    # ---------------- QUESTION INPUT ----------------
+    question = st.text_input(
+        "Ask a question about company policies or procedures",
+        key="rag_question"
+    )
+
+    # ---------------- RAG SEARCH ----------------
+    if question:
+
+        with st.spinner("Searching knowledge base..."):
+
+            try:
+                response = requests.post(
+                    f"{API_BASE_URL}/documents/rag-query",
+                    json={
+                        "question": question,
+                        "doc_type": doc_type_filter,
+                        "industry": industry_filter
+                    }
+                )
+
+                result = response.json()
+
+                st.markdown("### 🔍 Interpreted Query")
+                st.write(result.get("refined_query", question))
+
+                # ---------------- ANSWER ----------------
+                st.markdown("### 📌 Answer")
+                st.write(result.get("answer", "No answer found"))
+
+                # ---------------- SOURCES ----------------
+                st.markdown("### 📚 Sources")
+                for source in result.get("sources", []):
+                    st.write(f"• {source}")
+
+                # ---------------- CONTEXT ----------------
+                st.markdown("### 🔎 Retrieved Context")
+
+                for chunk in result.get("chunks", []):
+                    with st.expander(f"{chunk['doc_title']} → {chunk['section']}"):
+                        st.write(chunk["text"])
+
+            except Exception as e:
+                st.error(f"Query failed: {e}")
+
+    # ======================================================
+    # ---------------- COMPARE TOOL ----------------
+    # ======================================================
+
+    st.divider()
+    st.subheader("📘 Compare Documents")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        doc_a = st.text_input("Document A", key="compare_doc_a")
+
+    with col2:
+        doc_b = st.text_input("Document B", key="compare_doc_b")
+
+    topic = st.text_input("Comparison Topic", key="compare_topic")
+
+    if st.button("Compare"):
+
+        if not doc_a or not doc_b:
+            st.warning("Please enter both documents")
+        else:
+            with st.spinner("Comparing documents..."):
+
+                try:
+                    response = requests.post(
+                        f"{API_BASE_URL}/documents/rag-compare",
+                        json={
+                            "doc_a": doc_a,
+                            "doc_b": doc_b,
+                            "topic": topic
+                        }
+                    )
+
+                    result = response.json()
+
+                    # ---------------- RESULT ----------------
+                    st.markdown("### 📌 Comparison")
+                    st.write(result.get("answer", "No comparison found"))
+
+                    # ---------------- SOURCES ----------------
+                    st.markdown("### 📚 Sources")
+                    for s in result.get("sources", []):
+                        st.write(f"• {s}")
+
+                except Exception as e:
+                    st.error(f"Comparison failed: {e}")
+    
+    # ======================================================
+    # ---------------- SUMMARIZING TOOL ----------------
+    # ======================================================
+    st.divider()
+    st.subheader("📝 Summarize Document")
+
+    summary_query = st.text_input(
+        "Enter document name or topic to summarize",
+        key="summary_query"
+    )
+
+    if st.button("Summarize"):
+
+        if not summary_query:
+            st.warning("Please enter something to summarize")
+        else:
+            with st.spinner("Generating summary..."):
+
+                try:
+                    response = requests.post(
+                        f"{API_BASE_URL}/documents/rag-summarize",
+                        json={
+                            "query": summary_query,
+                            "doc_type": doc_type_filter,
+                            "industry": industry_filter
+                        }
+                    )
+
+                    result = response.json()
+
+                    st.markdown("### 📝 Summary")
+                    st.write(result.get("summary", ""))
+
+                except Exception as e:
+                    st.error(f"Summarization failed: {e}")
+
+
+# ==================== DOCUMENT REVIEW & PREVIEW ====================
 if st.session_state.selected_draft_id:
-    st.markdown("<hr style='margin: 30px 0; border-color: #eef2f6;'>", unsafe_allow_html=True)
+    st.divider()
     
     try:
         resp = requests.get(f"{API_BASE_URL}/documents/draft/{st.session_state.selected_draft_id}")
@@ -845,7 +711,8 @@ if st.session_state.selected_draft_id:
                 
                 st.markdown("##### Preview")
                 if paragraph_text.strip():
-                    st.markdown(paragraph_text)
+                    with st.container(border=True):
+                        st.markdown(paragraph_text)
                 
                 # Action row (Edit, Confirm, Regenerate)
                 action_col1, action_col2, action_col3 = st.columns([1,1,2])
@@ -922,17 +789,14 @@ if st.session_state.selected_draft_id:
                                 st.error(save_response.text)
                     st.divider()
             
-            # ----- Export buttons (only DOCX kept, now a direct download link) -----
+            # ----- Export buttons (only DOCX kept) -----
             st.subheader("Final Document Export")
             col1, col2, col3 = st.columns([1, 1, 3])
             if all_approved:
                 with col1:
-                    st.markdown(
-                        f'<a href="{API_BASE_URL}/documents/export/{st.session_state.selected_draft_id}/docx" target="_blank" class="download-button">📥 Download DOCX</a>',
-                        unsafe_allow_html=True
-                    )
+                    st.link_button("📥 Download DOCX", f"{API_BASE_URL}/documents/export/{st.session_state.selected_draft_id}/docx", use_container_width=True)
             
-            # ----- Full Document Preview (enhanced with expanders) -----
+            # ----- Full Document Preview -----
             if all_approved:
                 st.divider()
                 st.subheader("Full Document Preview")
@@ -1001,9 +865,8 @@ if st.session_state.selected_draft_id:
         st.error(f"❌ Failed to load draft: {e}")
 
 # ---------------- FOOTER ----------------
-st.markdown("""
-    <div class="footer">
-        <p>⚡ DocForge Hub - AI-Powered Intelligent Document Generation Platform</p>
-        <p style='font-size: 0.7rem; margin-top: 5px;'>© 2024 All rights reserved</p>
-    </div>
-""", unsafe_allow_html=True)
+st.divider()
+col1, col2, col3 = st.columns(3)
+with col2:
+    st.caption("⚡ DocForge Hub - AI-Powered Intelligent Document Generation Platform")
+    st.caption("© 2024 All rights reserved")

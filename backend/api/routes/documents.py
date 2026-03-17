@@ -24,6 +24,9 @@ from pydantic import BaseModel
 from backend.generation.llm_provider import get_llm
 from langchain_core.messages import SystemMessage, HumanMessage
 from backend.integrations.notion_publisher import publish_document_to_notion
+from backend.rag.query_search_engine import answer_question
+from backend.rag.compare_engine import compare_documents
+from backend.rag.summarizer import summarize_document
 
 router = APIRouter(prefix="/documents", tags=["Documents"])
 
@@ -644,3 +647,47 @@ def publish_to_notion(draft_id: int, db: Session = Depends(get_db)):
     )
 
     return {"message": "Published to Notion successfully"}
+
+@router.post("/rag-query")
+def rag_query(data: dict):
+
+    question = data.get("question")
+
+    filters = {
+        "doc_type": data.get("doc_type"),
+        "industry": data.get("industry")
+    }
+
+    if not question:
+        raise HTTPException(status_code=400, detail="Question is required")
+
+    result = answer_question(question,filters)
+
+    return result
+
+@router.post("/rag-compare")
+def rag_compare(data: dict):
+
+    doc_a = data.get("doc_a")
+    doc_b = data.get("doc_b")
+    topic = data.get("topic", "")
+
+    if not doc_a or not doc_b:
+        raise HTTPException(status_code=400, detail="doc_a and doc_b required")
+
+    return compare_documents(doc_a, doc_b, topic)
+
+@router.post("/rag-summarize")
+def rag_summarize(data: dict):
+
+    query = data.get("query")
+
+    filters = {
+        "doc_type": data.get("doc_type"),
+        "industry": data.get("industry")
+    }
+
+    if not query:
+        raise HTTPException(status_code=400, detail="Query is required")
+
+    return summarize_document(query, filters)
