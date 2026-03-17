@@ -546,6 +546,20 @@ with tab_rag:
                     st.markdown("### 📌 Answer")
                     st.write(result.get("answer", "No answer found"))
 
+                    # 📊 Confidence
+                    st.markdown("### 📊 Confidence")
+
+                    confidence = result.get("confidence", "UNKNOWN")
+
+                    if confidence == "HIGH":
+                        st.success("Confidence: HIGH ✅ (Strong match with documents)")
+                    elif confidence == "MEDIUM":
+                        st.warning("Confidence: MEDIUM ⚠️ (Partial match found)")
+                    elif confidence == "LOW":
+                        st.error("Confidence: LOW ❌ (Weak or no reliable match)")
+                    else:
+                        st.info("Confidence: UNKNOWN")
+
                     # 📚 Sources
                     st.markdown("### 📚 Sources")
                     for source in result.get("sources", []):
@@ -557,7 +571,8 @@ with tab_rag:
                     for chunk in result.get("chunks", []):
                         with st.expander(f"{chunk['doc_title']} → {chunk['section']}"):
                             st.write(chunk["text"])
-
+                            st.caption(f"Score: {chunk.get('score', 0):.3f}")
+                
                 except Exception as e:
                     st.error(f"Query failed: {e}")
 
@@ -644,6 +659,25 @@ with tab_rag:
                     except Exception as e:
                         st.error(f"Summarization failed: {e}")
 
+    st.divider()
+    st.subheader("📊 RAG Evaluation")
+
+    if st.button("Run Evaluation"):
+
+        with st.spinner("Running evaluation..."):
+
+            response = requests.post(
+                f"{API_BASE_URL}/documents/rag-evaluate"
+            )
+
+            st.write("Status Code:", response.status_code)
+            st.write("Raw Response:", response.text)
+
+            try:
+                result = response.json()
+                st.write(result)
+            except Exception as e:
+                st.error(f"JSON Error: {e}")
 
 # ==================== DOCUMENT REVIEW & PREVIEW ====================
 if st.session_state.selected_draft_id:

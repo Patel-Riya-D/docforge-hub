@@ -27,6 +27,7 @@ from backend.integrations.notion_publisher import publish_document_to_notion
 from backend.rag.query_search_engine import answer_question
 from backend.rag.compare_engine import compare_documents
 from backend.rag.summarizer import summarize_document
+from backend.rag.evaluate import run_evaluation
 
 router = APIRouter(prefix="/documents", tags=["Documents"])
 
@@ -691,3 +692,13 @@ def rag_summarize(data: dict):
         raise HTTPException(status_code=400, detail="Query is required")
 
     return summarize_document(query, filters)
+
+@router.post("/rag-evaluate")
+def rag_evaluate():
+
+    result = run_evaluation()
+
+    return {
+        "message": "Evaluation completed",
+        "scores": dict(result) 
+    }

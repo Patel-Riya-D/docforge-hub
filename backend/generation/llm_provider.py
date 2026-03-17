@@ -1,5 +1,6 @@
 import os
 from langchain_openai import AzureChatOpenAI
+from langchain_openai import AzureOpenAIEmbeddings
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -12,4 +13,12 @@ def get_llm():
         azure_endpoint=os.getenv("AZURE_LLM_ENDPOINT"),
         api_key=os.getenv("AZURE_OPENAI_LLM_KEY"),
         temperature=0.3,
+    )
+
+def get_embeddings():
+    return AzureOpenAIEmbeddings(
+        azure_deployment=os.getenv("AZURE_EMBEDDING_DEPLOYMENT"),
+        api_key=os.getenv("AZURE_OPENAI_LLM_KEY"),
+        azure_endpoint=os.getenv("AZURE_LLM_ENDPOINT"),
+        api_version=os.getenv("AZURE_LLM_API_VERSION"),
     )

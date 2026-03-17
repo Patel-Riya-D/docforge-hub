@@ -1,0 +1,14 @@
+[
+  {
+    "question": "What is the probation period?",
+    "ground_truth": "The probation period ranges from 3 to 6 months."
+  },
+  {
+    "question": "What is company mission?",
+    "ground_truth": "The company aims to empower businesses through technology."
+  },
+  {
+    "question": "What are employee benefits?",
+    "ground_truth": "Employees receive benefits such as leave and compensation."
+  }
+]

@@ -7,6 +7,25 @@ from backend.rag.query_refiner import refine_query
 retriever = Retriever()
 llm = get_llm()
 
+def calculate_confidence(chunks):
+
+    if not chunks:
+        return "LOW"
+
+    scores = [c.get("score", 1.5) for c in chunks]
+
+    avg_score = sum(scores) / len(scores)
+
+    print("scores:", scores)
+    print("avg_score:", avg_score)
+
+    if avg_score < 0.5:
+        return "HIGH"
+    elif avg_score < 1.0:
+        return "MEDIUM"
+    else:
+        return "LOW"
+    
 # =============== search tool + refine ===============
 
 def answer_question(question, filters=None):
@@ -60,10 +79,13 @@ If the answer is not present in the context, say:
         HumanMessage(content=prompt)
     ])
 
+    confidence = calculate_confidence(chunks)
+
     # 📦 Step 4: Return result
     return {
         "answer": response.content,
         "sources": list(set(sources)),
         "chunks": chunks,
-        "refined_query": refined_question   # ✅ NEW
+        "refined_query": refined_question,
+        "confidence": confidence
     }

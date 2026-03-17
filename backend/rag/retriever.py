@@ -16,6 +16,38 @@ class Retriever:
         self.embedding_model = get_embedding_model()
 
     def search(self, query, k=5, filters=None):
+        """
+        Perform vector-based semantic search on indexed document chunks.
+
+        This function:
+        1. Converts the user query into an embedding vector.
+        2. Searches the FAISS index to find top-k similar chunks.
+        3. Applies optional metadata filters (doc_type, industry).
+        4. Attaches similarity score (distance) to each result.
+
+        Args:
+            query (str): User query or search text.
+            k (int, optional): Number of top results to return. Default is 5.
+            filters (dict, optional): Metadata filters such as:
+                {
+                    "doc_type": str or None,
+                    "industry": str or None
+                }
+
+        Returns:
+            list[dict]: List of retrieved chunks with metadata and score:
+                [
+                    {
+                        "doc_title": str,
+                        "section": str,
+                        "text": str,
+                        "doc_type": str,
+                        "industry": str,
+                        "page_id": str,
+                        "score": float   # FAISS distance (lower is better)
+                    }
+                ]
+        """
 
         query_embedding = self.embedding_model.embed_query(query)
 
@@ -25,9 +57,11 @@ class Retriever:
 
         results = []
 
-        for idx in indices[0]:
+        for i, idx in enumerate(indices[0]):
 
             chunk = self.metadata[idx]
+
+            score = float(distances[0][i])
 
             # Apply metadata filters
             if filters:
@@ -37,8 +71,14 @@ class Retriever:
 
                 if filters.get("industry") and chunk["industry"] != filters["industry"]:
                     continue
+            
+            #attach score to chunk
+            chunk_with_score = {
+                **chunk,
+                "score": score
+            }
 
-            results.append(chunk)
+            results.append(chunk_with_score)
 
             if len(results) >= k:
                 break
