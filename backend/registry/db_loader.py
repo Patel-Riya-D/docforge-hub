@@ -2,6 +2,10 @@ from sqlalchemy import func
 from backend.db_models import Document
 from backend.utils.redis_client import redis_client
 import json
+from backend.utils.logger import get_logger
+import time
+
+logger = get_logger("DB_LOADER")
 
 
 def load_document_from_db(
@@ -10,34 +14,47 @@ def load_document_from_db(
     document_filename: str
 ):
 
+    start_time = time.time()
+
+    logger.info(f"Loading document: {department}/{document_filename}")
+
     cache_key = f"doc:{department.lower()}:{document_filename.lower()}"
 
     # -------------------------
-    # Try Redis First
+    # ⚡ Try Redis First
     # -------------------------
     try:
         cached_doc = redis_client.get(cache_key)
 
         if cached_doc:
+            logger.info(f"Cache HIT: {cache_key}")
             try:
-                print("REDIS CACHE HIT:", cache_key)
                 return json.loads(cached_doc)
             except Exception:
-                print("REDIS CACHE MISS:", cache_key)
-                print("Redis cache corrupted, loading from DB")
+                logger.warning("Cache corrupted, loading from DB")
+
+        else:
+            logger.info(f"Cache MISS: {cache_key}")
 
     except Exception as e:
-        print("Redis cache read failed:", e)
+        logger.error(f"Redis read failed: {str(e)}")
 
     # -------------------------
-    # Query Database
+    # 🗄️ Query Database
     # -------------------------
-    doc = db.query(Document).filter(
-        func.lower(Document.department) == department.lower(),
-        func.lower(Document.document_name) == document_filename.lower()
-    ).first()
+    logger.info("Querying database...")
+
+    try:
+        doc = db.query(Document).filter(
+            func.lower(Document.department) == department.lower(),
+            func.lower(Document.document_name) == document_filename.lower()
+        ).first()
+    except Exception as e:
+        logger.error(f"DB query failed: {str(e)}")
+        raise
 
     if not doc:
+        logger.warning(f"Document not found: {department}/{document_filename}")
         raise ValueError(f"Document not found in DB: {department}/{document_filename}")
 
     sections = doc.sections if isinstance(doc.sections, list) else []
@@ -55,11 +72,15 @@ def load_document_from_db(
     }
 
     # -------------------------
-    # Save to Redis
+    # 💾 Save to Redis
     # -------------------------
     try:
         redis_client.set(cache_key, json.dumps(result, default=str), ex=3600)
+        logger.info(f"Cache SET: {cache_key}")
     except Exception as e:
-        print("Redis cache write failed:", e)
+        logger.error(f"Redis write failed: {str(e)}")
+
+    end_time = time.time()
+    logger.info(f"DB loader response time: {round(end_time - start_time, 2)} sec")
 
     return result

@@ -2,6 +2,9 @@ import faiss
 import pickle
 import numpy as np
 from backend.rag.embeddings import get_embedding_model
+from backend.utils.logger import get_logger
+
+logger = get_logger("RETRIEVER")
 
 
 class Retriever:
@@ -16,6 +19,7 @@ class Retriever:
         self.embedding_model = get_embedding_model()
 
     def search(self, query, k=5, filters=None):
+
         """
         Perform vector-based semantic search on indexed document chunks.
 
@@ -49,11 +53,15 @@ class Retriever:
                 ]
         """
 
+        logger.info(f"Search query: {query}")
+        logger.info(f"Top K: {k}, Filters: {filters}")
+
         query_embedding = self.embedding_model.embed_query(query)
 
         query_vector = np.array([query_embedding]).astype("float32")
 
         distances, indices = self.index.search(query_vector, k)
+        logger.info("FAISS search completed")
 
         results = []
 
@@ -82,5 +90,7 @@ class Retriever:
 
             if len(results) >= k:
                 break
+        
+        logger.info(f"Results returned: {len(results)}")
 
         return results

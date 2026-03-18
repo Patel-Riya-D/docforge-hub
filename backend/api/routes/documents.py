@@ -28,6 +28,9 @@ from backend.rag.query_search_engine import answer_question
 from backend.rag.compare_engine import compare_documents
 from backend.rag.summarizer import summarize_document
 from backend.rag.evaluate import run_evaluation
+from backend.utils.logger import get_logger
+
+logger = get_logger("API")
 
 router = APIRouter(prefix="/documents", tags=["Documents"])
 
@@ -37,26 +40,32 @@ def preview_document(
     payload: DocumentPreviewRequest,
     db: Session = Depends(get_db)
 ):
+    logger.info(f"/preview called: {payload.department}/{payload.document_filename}")
+
     try:
         doc = load_document_from_db(
             db=db,
             department=payload.department,
             document_filename=payload.document_filename
         )
+
+        logger.info("Preview document loaded successfully")
         return doc
 
     except ValueError as e:
+        logger.warning(f"Preview not found: {str(e)}")
         raise HTTPException(status_code=404, detail=str(e))
 
     except Exception as e:
+        logger.error(f"Preview error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @router.post("/generate")
 def generate_document(
     payload: DocumentGenerateRequest,
     db: Session = Depends(get_db)
 ):
+    logger.info(f"/generate called: {payload.document_filename}")
     try:
         registry_doc = load_document_from_db(
             db=db,
@@ -71,6 +80,8 @@ def generate_document(
                     "status": "questions_required",
                     "message": f"Missing value for {key}"
                 }
+        
+        logger.info("Starting draft generation")
         
         draft_result = generate_draft(
             registry_doc=registry_doc,
@@ -103,10 +114,11 @@ def generate_document(
         db.commit()
         db.refresh(draft)
 
+        logger.info(f"Draft saved successfully: draft_id={draft.id}")
+
         import json
 
         print("SECTIONS STRUCTURE:", draft_result["sections"])
-        # print("DOCUMENT INPUTS RECEIVED:", payload.document_inputs)
 
         for idx, section in enumerate(draft_result.get("sections", []), start=1):
 
@@ -157,7 +169,7 @@ def generate_document(
 
     except Exception as e:
         db.rollback()
-        print("GENERATE ERROR:", str(e))
+        logger.error(f"Error generating draft: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -630,11 +642,11 @@ def publish_to_notion(draft_id: int, db: Session = Depends(get_db)):
     company_name = company.company_name if company else "DocForge"
     industry = company.industry if company else "SaaS"
 
-    print("DOC TYPE:", document_type)
-    print("INDUSTRY:", industry)
-    print("COMPANY:", company_name)
+    logger.info(f"Publishing document: {draft.document_name}")
+    logger.info(f"Doc type: {document_type}, Industry: {industry}")
+    logger.info(f"Company: {company_name}")
 
-    print("DOCUMENT TYPE SENT TO NOTION:", document_type)
+    logger.info(f"DOCUMENT TYPE SENT TO NOTION: {document_type}")
 
     publish_document_to_notion(
         document_name=draft.document_name,
@@ -654,15 +666,20 @@ def rag_query(data: dict):
 
     question = data.get("question")
 
+    logger.info(f"/rag-query called: {question}")
+
     filters = {
         "doc_type": data.get("doc_type"),
         "industry": data.get("industry")
     }
 
     if not question:
+        logger.warning("RAG query missing question")
         raise HTTPException(status_code=400, detail="Question is required")
 
-    result = answer_question(question,filters)
+    result = answer_question(question, filters)
+
+    logger.info("RAG query processed successfully")
 
     return result
 
@@ -673,6 +690,8 @@ def rag_compare(data: dict):
     doc_b = data.get("doc_b")
     topic = data.get("topic", "")
 
+    logger.info(f"/rag-compare called: {doc_a} vs {doc_b}")
+
     if not doc_a or not doc_b:
         raise HTTPException(status_code=400, detail="doc_a and doc_b required")
 
@@ -682,6 +701,7 @@ def rag_compare(data: dict):
 def rag_summarize(data: dict):
 
     query = data.get("query")
+    logger.info(f"/rag-summarize called: {query}")
 
     filters = {
         "doc_type": data.get("doc_type"),
@@ -696,7 +716,11 @@ def rag_summarize(data: dict):
 @router.post("/rag-evaluate")
 def rag_evaluate():
 
+    logger.info("/rag-evaluate started")
+
     df = run_evaluation()
+
+    logger.info("Evaluation completed")
 
     return {
         "message": "Evaluation completed",
