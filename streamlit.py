@@ -539,7 +539,7 @@ with tab_rag:
                     result = response.json()
 
                     # 🔍 Refined Query
-                    st.markdown("### 🔍 Interpreted Query")
+                    st.markdown("### 🔍 Refined Query")
                     st.write(result.get("refined_query", question))
 
                     # 📌 Answer

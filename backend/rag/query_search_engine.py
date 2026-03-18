@@ -51,7 +51,7 @@ def answer_question(question, filters=None):
     refined_question = refine_query(question)
 
     # 🔍 Step 2: Search using refined query
-    chunks = retriever.search(refined_question, k=5, filters=filters)
+    chunks = retriever.search(refined_question, k=2, filters=filters)
 
     context = ""
     sources = []
@@ -70,6 +70,7 @@ Context:
 Question:
 {refined_question}
 
+Answer in exactly ONE short sentence.
 Answer ONLY based on the provided context.
 Be concise and directly answer the question.
 Do not add extra information.
@@ -82,12 +83,18 @@ If the answer is not present in the context, say:
         SystemMessage(content="You answer questions using company documents."),
         HumanMessage(content=prompt)
     ])
+    # 🔥 Trim answer
+    answer = response.content.strip().split("\n")[0]
 
     confidence = calculate_confidence(chunks)
 
+    #confidence filter
+    if confidence == "LOW":
+        answer = "Not Available"
+
     # 📦 Step 4: Return result
     return {
-        "answer": response.content,
+        "answer": answer,
         "sources": list(set(sources)),
         "chunks": chunks,
         "refined_query": refined_question,
