@@ -33,4 +33,5 @@ txt
 docs/
 
 uploads/
-app.pystreamlit.py
+app.py
+streamlit.py
