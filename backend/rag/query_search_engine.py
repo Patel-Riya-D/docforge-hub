@@ -70,11 +70,11 @@ def calculate_confidence(chunks):
 
     best_score = min(scores)
 
-    # 🔥 Convert distance → confidence %
+    #  Convert distance → confidence %
     confidence_score = 1 / (1 + best_score)   # normalize
     confidence_percent = round(confidence_score * 100)
 
-    # 🔥 Map to levels
+    #  Map to levels
     if best_score < 0.5:
         level = "HIGH"
     elif best_score < 1.0:
@@ -133,11 +133,11 @@ def answer_question(question, filters=None):
 
     logger.info(f"New query received: {question}")
 
-    # 🔥 Step 1: Refine query
+    #  Step 1: Refine query
     refined_question = refine_query(question)
 
-    # 🔍 Step 2: Search using refined query
-    # 🔑 Generate cache key
+    #  Step 2: Search using refined query
+    #  Generate cache key
     cache_key = generate_rag_cache_key(refined_question, filters)
 
     # ⚡ Try cache
@@ -154,7 +154,7 @@ def answer_question(question, filters=None):
     else:
         logger.info("Cache MISS")
     
-    # 🔍 Step 3: Retrieve
+    # Step 3: Retrieve
     chunks = retriever.search(refined_question, k=3, filters=filters)
 
     logger.info(f"Retrieved {len(chunks)} chunks")
@@ -166,7 +166,7 @@ def answer_question(question, filters=None):
         context += f"\n{c['text']}\n"
         sources.append(f"{c['doc_title']} → {c['section']}")
 
-    # 🧠 Step 3: Generate answer
+    #  Step 3: Generate answer
     prompt = f"""
 Answer the question using the context below.
 
@@ -194,7 +194,7 @@ If the answer is not present in the context, say:
         logger.error(f"LLM error: {str(e)}")
         raise
 
-    # 🔥 Trim answer
+    #  Trim answer
     answer = response.content.strip().split("\n")[0]
 
     confidence_data = calculate_confidence(chunks)
@@ -205,7 +205,7 @@ If the answer is not present in the context, say:
 
     logger.info(f"Answer generated: {answer}")
     logger.info(f"Confidence: {confidence_data['level']}")
-    # 📦 Step 4: Return result
+    #  Step 4: Return result
     result = {
         "answer": answer,
         "sources": list(set(sources)),
@@ -216,7 +216,7 @@ If the answer is not present in the context, say:
         "cache_hit": False
     }
 
-    # 💾 Store full response in Redis
+    #  Store full response in Redis
     set_rag_cache(cache_key, result)
 
     end_time = time.time()

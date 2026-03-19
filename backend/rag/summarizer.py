@@ -21,7 +21,7 @@ def summarize_document(query, filters=None):
 
     """
 
-    # 🔍 Retrieve relevant chunks
+    #  Retrieve relevant chunks
     chunks = retriever.search(query, k=8, filters=filters)
 
     context = "\n".join([c["text"] for c in chunks])

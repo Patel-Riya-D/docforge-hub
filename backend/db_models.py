@@ -13,7 +13,7 @@ class Draft(Base):
     document_name = Column(String(255))
     department = Column(String(100))
 
-    # 🔹 New metadata fields
+    #  New metadata fields
     document_type = Column(String(100))
     industry = Column(String(100))
     tags = Column(JSON)

@@ -1,3 +1,32 @@
+"""
+ui.py
+
+Frontend UI module for DocForge Hub built using Streamlit.
+
+This module provides an interactive interface for:
+- Document generation (multi-step wizard)
+- Draft review, editing, and approval
+- Exporting documents (DOCX)
+- Publishing to Notion
+- Viewing draft library
+- RAG-based knowledge search (CiteRAG Lab)
+
+Key Features:
+- Multi-step form wizard with validation
+- Dynamic form rendering using schema merger
+- AI-powered question generation for missing inputs
+- Section-level editing, approval, and regeneration
+- Integration with backend APIs (FastAPI)
+- RAG tools: search, compare, summarize, evaluation
+
+Tabs:
+1. Generate Draft → Create new documents
+2. Draft Library → Manage saved drafts
+3. CiteRAG Lab → Knowledge retrieval & analysis
+
+This module acts as the user interaction layer of DocForge Hub,
+connecting UI with backend AI services.
+"""
 import os
 import streamlit as st
 import requests
@@ -55,6 +84,19 @@ if "questions_initialized" not in st.session_state:
 
 # -------------------- HELPER FUNCTIONS --------------------
 def format_date(date_string):
+    """
+    Format ISO date string into human-readable format.
+
+    Args:
+        date_string (str): ISO formatted date string.
+
+    Returns:
+        str: Formatted date string.
+
+    Notes:
+        - Handles timezone conversion
+        - Returns original string if parsing fails
+    """
     try:
         date_obj = datetime.fromisoformat(date_string.replace('Z', '+00:00'))
         return date_obj.strftime("%B %d, %Y at %I:%M %p")
@@ -62,6 +104,26 @@ def format_date(date_string):
         return date_string
 
 def render_field(label, field, key):
+    """
+    Render a dynamic form field based on its type.
+
+    Args:
+        label (str): Field label.
+        field (dict): Field configuration (type, options, etc.).
+        key (str): Unique Streamlit key.
+
+    Returns:
+        Any: User input value.
+
+    Supported Types:
+        - text
+        - textarea
+        - number
+        - boolean
+        - date
+        - dropdown
+        - multiselect
+    """
     field_type = field["type"]
     if field_type == "text": 
         return st.text_input(label, key=key, placeholder=f"Enter {label.lower()}...")
@@ -81,7 +143,23 @@ def render_field(label, field, key):
         return st.text_input(label, key=key, placeholder=f"Enter {label.lower()}...")
 
 def render_company_step():
-    """Render the company profile step with a card layout"""
+    """
+    Render company profile input step.
+
+    Collects:
+        - Company details (name, industry, region, etc.)
+        - Leadership info (CEO, CTO)
+        - Background information
+
+    Behavior:
+        - Displays form in card layout
+        - Updates session state with inputs
+
+    Notes:
+        - Mandatory fields are validated later
+        - Used as first step in document generation wizard
+    """
+
     with st.container(border=True):
         col1, col2 = st.columns([1, 11])
         with col1:
@@ -125,7 +203,28 @@ def render_company_step():
     st.session_state.formatted_company_name = company_name.title() if company_name else ""
 
 def render_document_step(step_idx, group, doc_name):
-    """Render a document group step (base or doc) with label enhancement"""
+    """
+    Render a document input group step.
+
+    Features:
+        - Dynamic field rendering
+        - AI label enhancement for better UX
+        - Validation for required fields
+
+    Args:
+        step_idx (int): Step index.
+        group (dict): Input group schema.
+        doc_name (str): Document name.
+
+    Returns:
+        tuple:
+            - user_inputs (dict)
+            - validation_errors (list)
+
+    Notes:
+        - Uses enhance_label() for improved questions
+        - Supports multiple field types
+    """
     with st.container(border=True):
         col1, col2 = st.columns([1, 11])
         with col1:
@@ -158,8 +257,30 @@ def render_document_step(step_idx, group, doc_name):
 
 # -------------------- DRAFT REVIEW RENDERING FUNCTION --------------------
 def render_draft_review(draft_detail, prefix=""):
-    """Render the draft review and approval interface for a given draft detail.
-    The prefix is used to make all widget keys unique (e.g., 'gen' or 'lib')."""
+    """
+    Render draft review and approval interface.
+
+    Features:
+        - Section-by-section preview
+        - Edit, approve, and regenerate sections
+        - Progress tracking (approved vs pending)
+        - Full document preview
+        - Export (DOCX)
+        - Publish to Notion
+
+    Args:
+        draft_detail (dict): Draft data from backend.
+        prefix (str): Prefix for unique Streamlit keys.
+
+    Behavior:
+        - Displays content blocks (paragraphs, tables, diagrams)
+        - Allows user interaction for refinement
+        - Enables final export only after all sections are approved
+
+    Notes:
+        - Core review workflow of the system
+        - Supports diagram rendering and tables
+    """
     st.divider()
     
     # ----- Section Review & Approval -----
@@ -437,6 +558,32 @@ with st.sidebar:
         st.info(f"Selected: {document_filename}")
 
 # -------------------- MAIN CONTENT --------------------
+"""
+Main Application Flow:
+
+1. Sidebar:
+    - Select department and document template
+
+2. Generate Draft Tab:
+    - Multi-step wizard:
+        Step 1 → Company profile
+        Step 2 → Document inputs (merged schema)
+        Step 3 → AI clarification questions
+        Step 4 → Generate draft via backend
+
+3. Draft Review:
+    - Section editing, approval, regeneration
+    - Export and publish
+
+4. Draft Library:
+    - View, delete, manage drafts
+
+5. CiteRAG Lab:
+    - Search → Ask questions
+    - Compare → Compare documents
+    - Summarize → Generate summaries
+    - Evaluate → Run RAG metrics
+"""
 st.header("⚡ DocForge Hub")
 st.caption("Intelligent document generation platform powered by AI")
 

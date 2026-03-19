@@ -211,6 +211,7 @@ CiteRAG Lab is an advanced Retrieval-Augmented Generation (RAG) module built wit
 
 - 🛠️ **Multi-Tool Support**
   - 🔎 Search → Ask questions over documents
+  - 🧠 Query Refiner → Improves user queries 
   - 📘 Compare → Compare two documents
   - 📝 Summarize → Generate concise summaries
 
