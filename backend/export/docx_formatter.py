@@ -123,10 +123,29 @@ def build_docx(draft: dict) -> bytes:
             elif block_type == "diagram":
 
                 image_path = block.get("render_path")
+                image_url = block.get("diagram_url")
 
-                if image_path and os.path.exists(image_path):
-                    doc.add_picture(image_path, width=Inches(5))
-                    doc.add_paragraph("")
+                try:
+                    if image_path and os.path.exists(image_path):
+                        doc.add_picture(image_path, width=Inches(5))
+
+                    elif image_url:
+                        import requests
+                        response = requests.get(image_url)
+                        if response.status_code == 200:
+                            img = io.BytesIO(response.content)
+                            doc.add_picture(img, width=Inches(5))
+                        else:
+                            doc.add_paragraph("[Diagram not available]")
+
+                    else:
+                        doc.add_paragraph("[Diagram missing]")
+
+                except Exception as e:
+                    print("IMAGE ERROR:", e)
+                    doc.add_paragraph("[Diagram failed to load]")
+
+                doc.add_paragraph("")
 
 
     # ── Save ───────────────────────────────────

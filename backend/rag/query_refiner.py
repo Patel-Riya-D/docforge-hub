@@ -1,3 +1,17 @@
+"""
+Query Refiner Module
+
+This module enhances user queries using an LLM.
+
+Responsibilities:
+- Rewrite user query to be more specific and retrieval-friendly
+- Improve semantic search performance
+- Remove ambiguity in user input
+
+Used by:
+- RAG pipeline before retrieval
+"""
+
 from backend.generation.llm_provider import get_llm
 from langchain_core.messages import SystemMessage, HumanMessage
 

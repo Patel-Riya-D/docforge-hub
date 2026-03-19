@@ -320,7 +320,15 @@ def export_draft(draft_id: int, file_type: str, db: Session = Depends(get_db)):
 
     if file_type == "docx":
         print("SECTIONS SENT TO DOCX:", draft_dict["sections"])
-        docx_bytes = build_docx(draft_dict)
+        try:
+            docx_bytes = build_docx(draft_dict)
+
+        except Exception as e:
+            print("DOCX ERROR:", str(e))
+            raise HTTPException(
+                status_code=500,
+                detail=f"DOCX generation failed: {str(e)}"
+            )
 
         return StreamingResponse(
             io.BytesIO(docx_bytes),

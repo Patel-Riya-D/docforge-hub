@@ -1,4 +1,4 @@
-# 📘 DocForge Hub
+# 📘 Phase 1 - DocForge Hub
 
 AI-powered Enterprise Document Automation Platform
 
@@ -179,6 +179,176 @@ Azure OpenAI (LLM)
 ## ER Diagram
 
 ![ER Diagram](https://github.com/Patel-Riya-D/docforge-hub/blob/feature/project-setup/wireframe/phase1.drawio.png)
+
+---
+
+
+## 🔎 Phase 2 - CiteRAG Lab (RAG Sandbox)
+
+CiteRAG Lab is an advanced Retrieval-Augmented Generation (RAG) module built within DocForge Hub. It enables intelligent querying over company documents stored in Notion, providing grounded answers with citations, confidence scoring, and evaluation.
+
+---
+
+### 🚀 Key Features
+
+- 🔍 **Semantic Search (RAG Pipeline)**
+  - Retrieves relevant document chunks using FAISS vector search
+  - Generates answers grounded strictly in retrieved context
+
+- 🧠 **Query Refinement**
+  - Improves user queries using LLM for better retrieval accuracy
+
+- 📚 **Citations**
+  - Provides traceable sources in the format:
+    ```
+    Document Title → Section
+    ```
+
+- 🎯 **Metadata Filtering**
+  - Filter results by:
+    - Document Type
+    - Industry
+
+- ⚡ **Redis Caching**
+  - Caches RAG responses to improve performance and reduce LLM calls
+
+- 📊 **Confidence Scoring**
+  - Assigns reliability level (HIGH / MEDIUM / LOW)
+  - Based on vector similarity scores
+
+- 🛠️ **Multi-Tool Support**
+  - 🔎 Search → Ask questions over documents
+  - 📘 Compare → Compare two documents
+  - 📝 Summarize → Generate concise summaries
+
+- 📈 **Evaluation (RAGAS)**
+RAGAS is used for standardized evaluation, complemented by custom confidence scoring based on vector similarity to improve interpretability.
+  - Measures:
+    - Faithfulness
+    - Answer Relevancy
+
+---
+
+### 🧠 System Architecture
+
+```
+User Query
+        │
+        ▼
+Query Refinement (LLM)
+        │
+        ▼
+Redis Cache Check
+        │
+        ▼
+FAISS Vector Search
+        │
+        ▼
+Metadata Filtering
+        │
+        ▼
+Context Construction
+        │
+        ▼
+Answer Generation (LLM)
+        │
+        ▼
+Citations + Confidence Score
+        │
+        ▼
+Response to UI
+
+```
+
+---
+
+### 🛠️ Tech Stack
+
+- **Backend:** FastAPI  
+- **Frontend:** Streamlit  
+- **Vector DB:** FAISS  
+- **LLM:** Azure OpenAI  
+- **Cache:** Redis  
+- **Data Source:** Notion API  
+
+---
+
+### 📊 Example Output
+
+- **Refined Query:**  
+  _"What are the official working hours for remote employees?"_
+
+- **Answer:**  
+  _Remote employees must follow core working hours from Monday to Friday, 10:00 AM to 4:00 PM._
+
+- **Confidence:**  
+  MEDIUM ⚠️ (Partial match)
+
+- **Sources:**  
+  - Remote Work Policy → Work Hours & Availability  
+  - Remote Work Policy → Remote Work Agreement  
+
+---
+
+### 🧩 Highlights
+
+- End-to-end RAG pipeline with real-world enterprise use case  
+- Combines black-box (RAGAS) and white-box (confidence scoring) evaluation  
+- Optimized for performance using Redis caching  
+- Designed for explainability with citations and retrieved context  
+
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## ▶ Run Backend
 

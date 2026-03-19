@@ -6,8 +6,8 @@ import pandas as pd
 from backend.generation.question_label_enhancer import enhance_label
 from datetime import datetime, date
 import json
-
-API_BASE_URL = "http://127.0.0.1:8000"
+import os
+API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000")
 
 # ---------------- UI CONFIG ----------------
 st.set_page_config(
@@ -843,7 +843,19 @@ if st.session_state.selected_draft_id:
             col1, col2, col3 = st.columns([1, 1, 3])
             if all_approved:
                 with col1:
-                    st.link_button("📥 Download DOCX", f"{API_BASE_URL}/documents/export/{st.session_state.selected_draft_id}/docx", use_container_width=True)
+                    docx_url = f"{API_BASE_URL}/documents/export/{st.session_state.selected_draft_id}/docx"
+
+                    response = requests.get(docx_url)
+
+                    if response.status_code == 200:
+                        st.download_button(
+                            "📥 Download DOCX",
+                            data=response.content,
+                            file_name="document.docx",
+                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                        )
+                    else:
+                        st.error(f"❌ Download failed: {response.text}")
             
             # ----- Full Document Preview -----
             if all_approved:

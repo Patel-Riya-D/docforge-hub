@@ -1,3 +1,28 @@
+"""
+RAG Query Search Engine
+
+This module implements the core Retrieval-Augmented Generation (RAG) pipeline.
+
+Responsibilities:
+- Accept user query and optional metadata filters
+- Refine query using LLM for better retrieval
+- Perform semantic search using FAISS retriever
+- Generate grounded answer using retrieved context
+- Attach citations (document title + section)
+- Compute confidence score based on similarity
+- Use Redis caching to optimize repeated queries
+
+Key Features:
+- Query refinement for improved retrieval accuracy
+- Context-aware answer generation with anti-hallucination prompt
+- Metadata filtering (doc_type, industry)
+- Redis-based caching for performance optimization
+- Confidence scoring (HIGH / MEDIUM / LOW)
+
+Used by:
+- FastAPI endpoint: /documents/rag-query
+"""
+
 from backend.rag.retriever import Retriever
 from backend.generation.llm_provider import get_llm
 from langchain_core.messages import SystemMessage, HumanMessage
@@ -16,6 +41,27 @@ retriever = Retriever()
 llm = get_llm()
 
 def calculate_confidence(chunks):
+    """
+    Determine confidence level of retrieved results based on similarity scores.
+
+    Strategy:
+    - Uses FAISS distance scores (lower = better match)
+    - Selects best (minimum) score among retrieved chunks
+    - Maps score to confidence levels:
+        HIGH   → strong semantic match
+        MEDIUM → partial match
+        LOW    → weak or irrelevant match
+
+    Args:
+        chunks (list[dict]): Retrieved chunks with 'score' field
+
+    Returns:
+        str: One of ["HIGH", "MEDIUM", "LOW"]
+
+    Notes:
+    - Designed to give conservative confidence estimates
+    - Used to control answer reliability in UI
+    """
 
     if not chunks:
         return "LOW"
@@ -38,23 +84,44 @@ def calculate_confidence(chunks):
 
 def answer_question(question, filters=None):
     """
-    Perform Retrieval-Augmented Generation (RAG) to answer a user query.
+    Execute end-to-end RAG pipeline for answering user queries.
 
-    This function:
-    1. Refines the user query using an LLM for better retrieval.
-    2. Retrieves relevant document chunks using vector search.
-    3. Generates a grounded answer using retrieved context.
-    4. Returns answer along with sources and retrieved chunks.
+    Workflow:
+    1. Refines the user query using an LLM to improve semantic retrieval.
+    2. Generates a Redis cache key based on refined query + filters.
+    3. Checks Redis cache:
+        - If HIT → returns cached response
+        - If MISS → performs retrieval
+    4. Retrieves top-k relevant chunks from FAISS vector store.
+    5. Constructs context from retrieved chunks.
+    6. Generates grounded answer using LLM with strict prompt.
+    7. Computes confidence score based on similarity scores.
+    8. Stores full response in Redis for future reuse.
 
     Args:
-        question (str): User input question.
+        question (str): User input query.
         filters (dict, optional): Metadata filters such as:
             {
                 "doc_type": str or None,
                 "industry": str or None
             }
-    """
 
+    Returns:
+        dict:
+            {
+                "answer": str,
+                "sources": list[str],
+                "chunks": list[dict],
+                "refined_query": str,
+                "confidence": str,
+                "cache_hit": bool
+            }
+
+    Notes:
+    - Ensures answers are grounded strictly in retrieved context.
+    - Prevents hallucination via prompt constraints.
+    - Low confidence responses may be overridden.
+    """
     start_time = time.time()
 
     logger.info(f"New query received: {question}")

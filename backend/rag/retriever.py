@@ -1,3 +1,24 @@
+"""
+Semantic Retriever using FAISS
+
+This module handles vector-based retrieval of document chunks.
+
+Responsibilities:
+- Load FAISS index and metadata
+- Convert user query into embedding vector
+- Perform nearest neighbor search
+- Apply metadata filters (doc_type, industry)
+- Return top-k relevant chunks with similarity scores
+
+Key Features:
+- Fast vector search using FAISS
+- Metadata-based filtering for targeted retrieval
+- Score-based ranking (lower distance = better match)
+
+Used by:
+- RAG pipeline (query_search_engine)
+"""
+
 import faiss
 import pickle
 import numpy as np
@@ -19,27 +40,25 @@ class Retriever:
         self.embedding_model = get_embedding_model()
 
     def search(self, query, k=5, filters=None):
-
         """
-        Perform vector-based semantic search on indexed document chunks.
+        Perform semantic search over indexed document chunks.
 
-        This function:
-        1. Converts the user query into an embedding vector.
-        2. Searches the FAISS index to find top-k similar chunks.
-        3. Applies optional metadata filters (doc_type, industry).
-        4. Attaches similarity score (distance) to each result.
+        Workflow:
+        1. Convert query into embedding vector using embedding model.
+        2. Search FAISS index to retrieve top-k nearest neighbors.
+        3. Attach similarity score (distance) to each result.
+        4. Apply optional metadata filters:
+            - doc_type
+            - industry
+        5. Return filtered and ranked results.
 
         Args:
-            query (str): User query or search text.
-            k (int, optional): Number of top results to return. Default is 5.
-            filters (dict, optional): Metadata filters such as:
-                {
-                    "doc_type": str or None,
-                    "industry": str or None
-                }
+            query (str): User query
+            k (int): Number of top results to return
+            filters (dict, optional): Metadata filters
 
         Returns:
-            list[dict]: List of retrieved chunks with metadata and score:
+            list[dict]:
                 [
                     {
                         "doc_title": str,
@@ -48,9 +67,13 @@ class Retriever:
                         "doc_type": str,
                         "industry": str,
                         "page_id": str,
-                        "score": float   # FAISS distance (lower is better)
+                        "score": float
                     }
                 ]
+
+        Notes:
+        - Lower score indicates higher similarity
+        - Filtering is applied post-retrieval
         """
 
         logger.info(f"Search query: {query}")
