@@ -32,8 +32,8 @@ backend/rag/test_ingestion.py
 txt
 docs/
 
-uploads/
-
 app.py
 streamlit.py
-logs/uploads/
+logs/
+
+uploads/
