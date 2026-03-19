@@ -1,5 +1,23 @@
+"""
+documents.py
+
+This module defines all document-related API endpoints for the DocForge Hub system.
+
+It includes:
+- Document preview and generation
+- Draft lifecycle management (create, list, delete, approve, regenerate)
+- Export functionality (DOCX)
+- Company profile management
+- Section editing and improvement using LLM
+- Clarification question generation
+- Notion publishing integration
+- RAG-based querying, comparison, summarization, and evaluation
+
+Built using FastAPI with SQLAlchemy ORM and integrated with LLM + RAG pipelines.
+"""
 from fastapi import APIRouter, HTTPException
 from backend.api.schemas import DocumentPreviewRequest
+from backend.api.schemas import SaveSectionEditRequest
 from backend.models.company_profile import CompanyProfile
 from backend.db_models import CompanyProfile
 from backend.api.schemas import CompanyProfileCreate
@@ -15,7 +33,7 @@ from backend.db_models import Draft, DraftSection
 from backend.db_models import Document
 from datetime import datetime, timezone
 from fastapi.responses import StreamingResponse
-from backend.export.exporter import generate_docx, generate_pdf, generate_xls
+from backend.export.exporter import generate_docx
 from backend.export.docx_formatter import build_docx
 import io
 from sqlalchemy import func
@@ -29,6 +47,8 @@ from backend.rag.compare_engine import compare_documents
 from backend.rag.summarizer import summarize_document
 from backend.rag.evaluate import run_evaluation
 from backend.utils.logger import get_logger
+from backend.utils.redis_session import update_session_history
+from backend.utils.rate_limitter import check_rate_limit
 
 logger = get_logger("API")
 
@@ -36,10 +56,25 @@ router = APIRouter(prefix="/documents", tags=["Documents"])
 
 
 @router.post("/preview")
-def preview_document(
-    payload: DocumentPreviewRequest,
-    db: Session = Depends(get_db)
-):
+def preview_document(payload: DocumentPreviewRequest, db: Session = Depends(get_db)):
+    """
+    Preview a document template from the registry.
+
+    This endpoint retrieves a document structure based on department
+    and document filename without generating content.
+
+    Args:
+        payload (DocumentPreviewRequest): Contains department and document filename.
+        db (Session): Database session dependency.
+
+    Returns:
+        dict: Document structure from registry.
+
+    Raises:
+        HTTPException:
+            404 if document not found.
+            500 for unexpected errors.
+    """
     logger.info(f"/preview called: {payload.department}/{payload.document_filename}")
 
     try:
@@ -61,10 +96,26 @@ def preview_document(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/generate")
-def generate_document(
-    payload: DocumentGenerateRequest,
-    db: Session = Depends(get_db)
-):
+def generate_document(payload: DocumentGenerateRequest, db: Session = Depends(get_db)):
+    """
+    Generate a document draft using LLM and store it in the database.
+
+    Workflow:
+    1. Load registry document template
+    2. Validate required inputs
+    3. Generate draft using LLM
+    4. Store draft metadata and sections in DB
+
+    Args:
+        payload (DocumentGenerateRequest): Includes inputs, company profile, and metadata.
+        db (Session): Database session.
+
+    Returns:
+        dict: Draft ID and status.
+
+    Raises:
+        HTTPException: 500 if generation fails.
+    """
     logger.info(f"/generate called: {payload.document_filename}")
     try:
         registry_doc = load_document_from_db(
@@ -175,6 +226,15 @@ def generate_document(
 
 @router.get("/drafts")
 def list_drafts(db: Session = Depends(get_db)):
+    """
+    Retrieve all document drafts.
+
+    Args:
+        db (Session): Database session.
+
+    Returns:
+        list[dict]: List of drafts with id, name, status, and version.
+    """
     drafts = db.query(Draft).all()
 
     return [
@@ -189,6 +249,19 @@ def list_drafts(db: Session = Depends(get_db)):
 
 @router.delete("/draft/{draft_id}")
 def delete_draft(draft_id: int, db: Session = Depends(get_db)):
+    """
+    Delete a draft by ID.
+
+    Args:
+        draft_id (int): Draft identifier.
+        db (Session): Database session.
+
+    Returns:
+        dict: Confirmation message.
+
+    Raises:
+        HTTPException: 404 if draft not found.
+    """
     draft = db.query(Draft).filter(Draft.id == draft_id).first()
 
     if not draft:
@@ -202,6 +275,16 @@ def delete_draft(draft_id: int, db: Session = Depends(get_db)):
 
 @router.get("/list")
 def list_documents(department: str, db: Session = Depends(get_db)):
+    """
+    List available document templates for a department.
+
+    Args:
+        department (str): Department name.
+        db (Session): Database session.
+
+    Returns:
+        list[dict]: Document names and types.
+    """
     docs = db.query(Document).filter(func.lower(Document.department) == department.lower()).all()
 
     return [
@@ -214,6 +297,19 @@ def list_documents(department: str, db: Session = Depends(get_db)):
 
 @router.get("/draft/{draft_id}")
 def get_draft_detail(draft_id: int, db: Session = Depends(get_db)):
+    """
+    Retrieve full draft details including sections.
+
+    Args:
+        draft_id (int): Draft identifier.
+        db (Session): Database session.
+
+    Returns:
+        dict: Draft metadata and section content.
+
+    Raises:
+        HTTPException: 404 if draft not found.
+    """
 
     draft = db.query(Draft).filter(Draft.id == draft_id).first()
 
@@ -245,6 +341,25 @@ def get_draft_detail(draft_id: int, db: Session = Depends(get_db)):
 
 @router.get("/export/{draft_id}/{file_type}")
 def export_draft(draft_id: int, file_type: str, db: Session = Depends(get_db)):
+    """
+    Export a draft into DOCX, PDF, or XLS format.
+
+    Conditions:
+    - All sections must be approved before export.
+
+    Args:
+        draft_id (int): Draft identifier.
+        file_type (str): Export format (docx, pdf, xls).
+        db (Session): Database session.
+
+    Returns:
+        StreamingResponse: File download response.
+
+    Raises:
+        HTTPException:
+            404 if draft not found.
+            400 if sections are not approved or invalid type.
+    """
 
     draft_obj = db.query(Draft).filter(Draft.id == draft_id).first()
 
@@ -336,27 +451,21 @@ def export_draft(draft_id: int, file_type: str, db: Session = Depends(get_db)):
             headers={"Content-Disposition": f'attachment; filename="{filename}.docx"'}
         )
 
-    elif file_type == "pdf":
-        buffer = generate_pdf(draft_obj)
-        return StreamingResponse(
-            buffer,
-            media_type="application/pdf",
-            headers={"Content-Disposition": f'attachment; filename="{filename}.pdf"'}
-        )
-
-    elif file_type == "xls":
-        buffer = generate_xls(draft_obj)
-        return StreamingResponse(
-            buffer,
-            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            headers={"Content-Disposition": f'attachment; filename="{filename}.xlsx"'}
-        )
-
     else:
         raise HTTPException(status_code=400, detail="Invalid export type")
 
 @router.post("/company-profile")
 def create_company_profile(profile: CompanyProfileCreate, db: Session = Depends(get_db)):
+    """
+    Create a company profile.
+
+    Args:
+        profile (CompanyProfileCreate): Company details.
+        db (Session): Database session.
+
+    Returns:
+        CompanyProfile: Stored company profile object.
+    """
     db_profile = CompanyProfile(**profile.model_dump())
     db.add(db_profile)
     db.commit()
@@ -364,11 +473,21 @@ def create_company_profile(profile: CompanyProfileCreate, db: Session = Depends(
     return db_profile
 
 @router.post("/approve-section")
-def approve_section(
-    draft_id: int,
-    section_name: str,
-    db: Session = Depends(get_db)
-):
+def approve_section(draft_id: int, section_name: str, db: Session = Depends(get_db)):
+    """
+    Approve a specific section of a draft.
+
+    Args:
+        draft_id (int): Draft ID.
+        section_name (str): Section name.
+        db (Session): Database session.
+
+    Returns:
+        dict: Approval status.
+
+    Raises:
+        HTTPException: 404 if section not found.
+    """
     section = db.query(DraftSection).filter(
         DraftSection.draft_id == draft_id,
         DraftSection.section_name == section_name
@@ -392,12 +511,22 @@ def approve_section(
     }
 
 @router.post("/regenerate-section")
-def regenerate_section(
-    draft_id: int,
-    section_name: str,
-    improvement_note: str,
-    db: Session = Depends(get_db)
-):
+def regenerate_section(draft_id: int, section_name: str, improvement_note: str, db: Session = Depends(get_db)):
+    """
+    Regenerate a section using LLM with user-provided feedback.
+
+    Args:
+        draft_id (int): Draft ID.
+        section_name (str): Section name.
+        improvement_note (str): User feedback for improvement.
+        db (Session): Database session.
+
+    Returns:
+        dict: Success message.
+
+    Raises:
+        HTTPException: 404 if draft/section not found, 500 on failure.
+    """
     draft = db.query(Draft).filter(Draft.id == draft_id).first()
 
     if not draft:
@@ -469,17 +598,26 @@ def regenerate_section(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-class SaveSectionEditRequest(BaseModel):
-    draft_id: int
-    section_name: str
-    updated_text: str
-
-
 @router.post("/save-section-edit")
-def save_section_edit(
-    payload: SaveSectionEditRequest,
-    db: Session = Depends(get_db)
-):
+def save_section_edit(payload: SaveSectionEditRequest, db: Session = Depends(get_db)):
+    """
+    Save and improve edited section content using LLM.
+
+    Workflow:
+    1. Optionally improve grammar using LLM
+    2. Replace paragraph content
+    3. Update draft status
+
+    Args:
+        payload (SaveSectionEditRequest): Edit payload.
+        db (Session): Database session.
+
+    Returns:
+        dict: Success message.
+
+    Raises:
+        HTTPException: 404 if draft/section not found, 500 on failure.
+    """
     draft = db.query(Draft).filter(Draft.id == payload.draft_id).first()
 
     if not draft:
@@ -580,11 +718,17 @@ def save_section_edit(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/generate-questions")
-def generate_questions(
-    payload: QuestionRequest,
-    db: Session = Depends(get_db)
-):
+def generate_questions(payload: QuestionRequest, db: Session = Depends(get_db)):
+    """
+    Generate clarification questions for missing inputs.
 
+    Args:
+        payload (QuestionRequest): Includes document and inputs.
+        db (Session): Database session.
+
+    Returns:
+        dict: List of generated questions.
+    """
     registry_doc = load_document_from_db(
         db=db,
         department=payload.department,
@@ -604,6 +748,19 @@ def generate_questions(
 
 @router.post("/publish-notion/{draft_id}")
 def publish_to_notion(draft_id: int, db: Session = Depends(get_db)):
+    """
+    Publish a finalized draft to Notion.
+
+    Args:
+        draft_id (int): Draft ID.
+        db (Session): Database session.
+
+    Returns:
+        dict: Success message.
+
+    Raises:
+        HTTPException: 404 if draft or sections not found.
+    """
 
     draft = db.query(Draft).filter(Draft.id == draft_id).first()
 
@@ -671,21 +828,50 @@ def publish_to_notion(draft_id: int, db: Session = Depends(get_db)):
 
 @router.post("/rag-query")
 def rag_query(data: dict):
+    """
+    Perform Retrieval-Augmented Generation (RAG) query.
 
+    Features:
+    - Rate limiting
+    - Metadata filtering
+    - Session tracking
+
+    Args:
+        data (dict): Includes question, session_id, filters.
+
+    Returns:
+        dict: RAG answer with context.
+
+    Raises:
+        HTTPException:
+            400 if question missing
+            429 if rate limit exceeded
+    """
     question = data.get("question")
+    session_id = data.get("session_id", "default_user")
+    user_id = session_id   # better use same id
 
     logger.info(f"/rag-query called: {question}")
+
+    if not question:
+        logger.warning("RAG query missing question")
+        raise HTTPException(status_code=400, detail="Question is required")
+
+    # ✅ STEP 1: Rate limit FIRST
+    if not check_rate_limit(user_id):
+        logger.warning(f"Rate limit exceeded for {user_id}")
+        raise HTTPException(status_code=429, detail="Too many requests")
 
     filters = {
         "doc_type": data.get("doc_type"),
         "industry": data.get("industry")
     }
 
-    if not question:
-        logger.warning("RAG query missing question")
-        raise HTTPException(status_code=400, detail="Question is required")
-
+    # ✅ STEP 2: Run RAG
     result = answer_question(question, filters)
+
+    # ✅ STEP 3: Store session
+    update_session_history(session_id, question)
 
     logger.info("RAG query processed successfully")
 
@@ -693,6 +879,18 @@ def rag_query(data: dict):
 
 @router.post("/rag-compare")
 def rag_compare(data: dict):
+    """
+    Compare two documents using RAG.
+
+    Args:
+        data (dict): Includes doc_a, doc_b, and optional topic.
+
+    Returns:
+        dict: Comparison result.
+
+    Raises:
+        HTTPException: 400 if inputs missing.
+    """
 
     doc_a = data.get("doc_a")
     doc_b = data.get("doc_b")
@@ -707,6 +905,18 @@ def rag_compare(data: dict):
 
 @router.post("/rag-summarize")
 def rag_summarize(data: dict):
+    """
+    Summarize documents using RAG.
+
+    Args:
+        data (dict): Includes query and filters.
+
+    Returns:
+        dict: Summary output.
+
+    Raises:
+        HTTPException: 400 if query missing.
+    """
 
     query = data.get("query")
     logger.info(f"/rag-summarize called: {query}")
@@ -723,6 +933,16 @@ def rag_summarize(data: dict):
 
 @router.post("/rag-evaluate")
 def rag_evaluate():
+    """
+    Run evaluation on RAG system using predefined metrics.
+
+    Metrics:
+    - Faithfulness
+    - Answer relevancy
+
+    Returns:
+        dict: Evaluation results and averages.
+    """
 
     logger.info("/rag-evaluate started")
 

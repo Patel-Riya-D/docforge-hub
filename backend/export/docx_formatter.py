@@ -1,16 +1,82 @@
+"""
+docx_formatter.py
+
+This module is responsible for generating DOCX documents from structured
+draft data in the DocForge Hub system.
+
+It converts a JSON-like draft structure into a formatted Microsoft Word document,
+including:
+- Title page with metadata
+- Section headings
+- Paragraph content
+- Tables
+- Diagrams (local or URL-based images)
+
+The output is returned as a byte stream for download via API.
+"""
 import io
 import os
 import re
 from datetime import datetime
 from docx import Document
 from docx.shared import Pt, Inches, RGBColor, Cm
-from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.enum.table import WD_ALIGN_VERTICAL
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 
 
 def build_docx(draft: dict) -> bytes:
+    """
+    Generate a DOCX document from a structured draft dictionary.
+
+    This function converts a draft object into a formatted Word document.
+    It supports multiple content types including paragraphs, tables, and diagrams.
+
+    Workflow:
+    1. Create title page with document metadata
+    2. Iterate through sections
+    3. Render blocks (paragraphs, tables, diagrams)
+    4. Export document as byte stream
+
+    Supported Block Types:
+        - paragraph: Plain text content
+        - table: Structured tabular data
+        - diagram: Image (local file or URL)
+
+    Args:
+        draft (dict): Structured draft object containing:
+            - source_document (dict): Metadata (name, department, company, etc.)
+            - version (str): Document version
+            - sections (list): List of sections with blocks
+
+    Returns:
+        bytes: Binary DOCX file content for download or streaming.
+
+    Raises:
+        Exception: Handles internal rendering errors (e.g., image loading issues).
+
+    Example Draft Format:
+        {
+            "source_document": {
+                "document_name": "Security Policy",
+                "department": "IT",
+                "company_name": "ABC Corp"
+            },
+            "version": "v1.0",
+            "sections": [
+                {
+                    "name": "Introduction",
+                    "blocks": [
+                        {"type": "paragraph", "content": "This is intro"},
+                        {
+                            "type": "table",
+                            "headers": ["A", "B"],
+                            "rows": [["1", "2"]]
+                        }
+                    ]
+                }
+            ]
+        }
+    """
     from docx import Document
     from docx.shared import Pt
     from docx.enum.text import WD_ALIGN_PARAGRAPH

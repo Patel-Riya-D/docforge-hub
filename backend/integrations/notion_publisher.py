@@ -1,3 +1,28 @@
+"""
+notion_publisher.py
+
+This module handles publishing generated documents from DocForge Hub
+to Notion using the Notion API.
+
+It converts structured draft content into Notion-compatible blocks,
+including:
+- Headings (H1, H2)
+- Paragraphs
+- Bullet lists
+- Tables
+- Form-style fields
+- Images (external only)
+
+Key Features:
+- Structured block conversion for Notion API
+- Special handling for FORM documents
+- Table transformation into Notion table blocks
+- Chunked upload to comply with Notion API limits
+- Metadata storage (version, type, industry, tags, timestamps)
+
+This module enables seamless integration between DocForge Hub
+and Notion-based document workflows.
+"""
 from notion_client import Client
 import os
 from dotenv import load_dotenv
@@ -15,6 +40,25 @@ print("DATABASE ID:", NOTION_DATABASE_ID)
 notion = Client(auth=NOTION_TOKEN)
 
 def convert_table(headers, rows):
+    """
+    Convert structured table data into Notion table block format.
+
+    Args:
+        headers (list[str]): List of column headers.
+        rows (list[list]): Table rows.
+
+    Returns:
+        dict: Notion-compatible table block.
+
+    Behavior:
+        - Creates header row with column titles
+        - Converts each row into Notion table_row blocks
+        - Enables column headers
+
+    Notes:
+        - Used internally by publish_document_to_notion
+        - Ensures consistent table rendering in Notion
+    """
 
     table_rows = []
 
@@ -57,7 +101,58 @@ def publish_document_to_notion(
     created_at,
     template_id=None    
 ):
+    """
+    Publish a generated document to Notion.
 
+    This function:
+    - Converts structured draft sections into Notion blocks
+    - Creates a new page in the configured Notion database
+    - Uploads content in chunks to comply with API limits
+
+    Args:
+        document_name (str): Name of the document.
+        sections (list): List of sections with structured blocks.
+        version (int): Document version number.
+        document_type (str): Type of document (e.g., POLICY, FORM).
+        industry (str): Industry classification.
+        tags (list[str]): Tags for categorization.
+        created_by (str): Creator name.
+        created_at (str): ISO timestamp.
+        template_id (str, optional): Template reference (unused currently).
+
+    Returns:
+        None
+
+    Workflow:
+        1. Initialize Notion blocks with document title
+        2. Iterate through sections:
+            - Add headings and dividers
+            - Convert paragraphs, bullets, tables
+            - Handle FORM-specific rendering
+        3. Normalize timestamp to IST timezone
+        4. Create Notion page with metadata
+        5. Upload content in chunks (max 100 blocks per request)
+
+    Supported Block Types:
+        - paragraph → Notion paragraph
+        - bullet → bulleted list item
+        - table → Notion table block
+        - image → external image block
+        - diagram → skipped (Notion limitation)
+
+    Special Handling:
+        - FORM documents → rendered as structured fields
+        - Table of Contents → simplified (removes page column)
+        - Checkbox fields → converted to Notion to-do items
+
+    Notes:
+        - Notion does not support local images → diagrams skipped
+        - Uses environment variables for authentication
+        - Handles API limits via chunking
+
+    Raises:
+        Exception: If Notion API call fails (not explicitly handled here).
+    """
     blocks = []
 
     blocks.insert(0,{

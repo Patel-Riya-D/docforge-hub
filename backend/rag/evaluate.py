@@ -30,6 +30,15 @@ from langchain_openai import OpenAIEmbeddings
 from openai import OpenAI
 import os
 from dotenv import load_dotenv
+from datetime import datetime
+
+config = {
+    "top_k": 3,
+    "model": "azure-openai",
+    "embedding_model": "text-embedding-3-large",
+    "filters": None
+}
+
 load_dotenv()
 
 openai_client = OpenAI(
@@ -94,6 +103,7 @@ def run_evaluation():
     answers = []
     contexts = []
     ground_truths = []
+    results_data = []
 
     # ---------------- RUN RAG ----------------
     """
@@ -102,6 +112,7 @@ def run_evaluation():
     - Retrieve context
     - Store results for evaluation
     """
+
     for item in data:
 
         question = item["question"]
@@ -118,6 +129,12 @@ def run_evaluation():
         answers.append(answer)
         contexts.append(context_texts)
         ground_truths.append(gt)
+
+        results_data.append({
+            "question": question,
+            "answer": answer,
+            "contexts": context_texts
+        })
 
     # ---------------- CREATE DATASET ----------------
     dataset = Dataset.from_dict({
@@ -137,7 +154,20 @@ def run_evaluation():
     )
 
     print("\n📊 RAGAS RESULTS:")
-    return result.to_pandas()
+    eval_df = result.to_pandas()
+
+    # ✅ Save full reproducible output
+    final_output = {
+        "timestamp": str(datetime.now()),
+        "config": config,
+        "metrics": eval_df.to_dict(orient="records"),
+        "outputs": results_data
+    }
+
+    with open("backend/rag/eval_results.json", "w") as f:
+        json.dump(final_output, f, indent=2)
+
+    print("✅ Evaluation saved to eval_results.json")
 
 
 if __name__ == "__main__":

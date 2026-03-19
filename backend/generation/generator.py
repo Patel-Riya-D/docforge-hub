@@ -1,3 +1,31 @@
+"""
+generator.py
+
+Core document generation engine for DocForge Hub.
+
+This module is responsible for generating structured enterprise documents
+using LLMs (Azure OpenAI via LangChain). It transforms registry templates
+into fully populated drafts with validation, retries, and enhancements.
+
+Key Capabilities:
+- Section-wise document generation using LLM
+- Dynamic prompt construction with company + user inputs
+- Section-level validation (word limits, tone, placeholders, compliance)
+- Auto-retry mechanism for improving low-quality outputs
+- Diagram planning and rendering (flowcharts, lifecycle, hub diagrams)
+- Table detection and structured content enforcement
+- Full-document validation and regeneration loop
+- Support for multiple document types (POLICY, SOP, FORM, TEMPLATE, etc.)
+
+Output Format:
+Structured JSON draft with:
+- Metadata
+- Sections (blocks: paragraph, table, diagram)
+- Validation results
+- Approval status
+
+This module is the backbone of AI-powered document generation in DocForge Hub.
+"""
 import uuid
 from datetime import datetime, timezone
 import os
@@ -35,10 +63,17 @@ generated_diagram_signatures = set()
 
 def _should_generate_section(doc_type: str, section_name: str) -> bool:
     """
-    Returns False for sections that must be skipped for this doc type.
-    Currently gates:
-      - Table of Contents / Index  →  only for POLICY, SOP, REPORT, HANDBOOK, STRATEGY, PROPOSAL
-    All other sections always return True.
+    Determine whether a section should be generated based on document type.
+
+    Currently used to:
+    - Conditionally include Table of Contents / Index sections
+
+    Args:
+        doc_type (str): Type of document (e.g., POLICY, SOP).
+        section_name (str): Name of the section.
+
+    Returns:
+        bool: True if section should be generated, False otherwise.
     """
     section_lower = section_name.lower()
 
@@ -54,22 +89,31 @@ def _should_generate_section(doc_type: str, section_name: str) -> bool:
 # SECTION VALIDATOR
 # Checks the LLM output for common quality issues.
 
-def _validate_section_output(
-    content: str,
-    section_name: str,
-    doc_type: str
-) -> dict:
+def _validate_section_output(content: str, section_name: str, doc_type: str) -> dict:
     """
-    Validates a single generated section.
+    Validate generated section content for quality and compliance.
+
+    Checks include:
+    - Word count limits
+    - Repetitive boilerplate detection
+    - Instructional language misuse
+    - Placeholder detection
+    - Forbidden phrases
+    - Model preamble leakage
+    - Empty content
+
+    Args:
+        content (str): Generated section text.
+        section_name (str): Section name.
+        doc_type (str): Document type.
 
     Returns:
-        {
-            "valid": bool,
-            "issues": list[str],
-            "word_count": int,
-            "min_words": int,
-            "max_words": int
-        }
+        dict: Validation result containing:
+            - valid (bool)
+            - issues (list[str])
+            - word_count (int)
+            - min_words (int)
+            - max_words (int)
     """
     issues = []
     if not isinstance(content, str):
@@ -178,24 +222,28 @@ def _validate_section_output(
         "max_words": max_words
     }
 
-# def _quick_diagram_trigger(section_name: str, content: str) -> bool:
-
-#     # Only allow diagrams in controlled sections
-#     diagram_allowed_sections = [
-#         "levels of testing",
-#         "process flow",
-#         "workflow",
-#         "lifecycle",
-#         "execution flow",
-#         "approval process",
-#         "architecture overview"
-#     ]
-#     name = section_name.lower().strip()
-
-#     return section_name.lower() in diagram_allowed_sections
-
 
 def _render_flowchart(definition: dict, diagram_type: str = "flowchart") -> str:
+    """
+    Render a diagram using Graphviz based on a structured definition.
+
+    Supported diagram types:
+        - flowchart: Sequential processes
+        - lifecycle: Phases or stages
+        - hub: Central node with connections
+        - checklist: Vertical checklist layout
+
+    Args:
+        definition (dict): Contains nodes, edges, and optional center.
+        diagram_type (str): Type of diagram.
+
+    Returns:
+        str: File path to generated PNG image.
+
+    Notes:
+        - Images are saved in 'uploads/diagrams'
+        - Ensures consistent styling and layout
+    """
     try:
         dot = Digraph(format="png")
         
@@ -269,15 +317,23 @@ def _render_flowchart(definition: dict, diagram_type: str = "flowchart") -> str:
 
 def _plan_document_diagrams(registry_doc: dict, all_sections: list) -> dict:
     """
-    Analyzes the full document globally and decides which sections
-    should have diagrams and what type.
+    Decide which sections should include diagrams using LLM reasoning.
 
-    Returns a dict: { "section_name_lowercase": "diagram_type" }
-    e.g. {
-        "levels of testing": "lifecycle",
-        "execution strategy": "flowchart",
-        "incident response team": "hub"
-    }
+    The LLM analyzes:
+    - Document type
+    - Section names
+    - Enterprise writing patterns
+
+    Constraints:
+    - Maximum 3 diagrams per document
+    - Avoid non-visual sections (e.g., introduction, appendix)
+
+    Args:
+        registry_doc (dict): Document metadata.
+        all_sections (list): List of sections.
+
+    Returns:
+        dict: Mapping of section_name → diagram_type.
     """
 
     section_list = "\n".join(
@@ -351,7 +407,13 @@ If no sections need diagrams:
 
 def markdown_to_table(text):
     """
-    Convert markdown table to JSON table block.
+    Convert markdown table text into structured JSON table format.
+
+    Args:
+        text (str): Markdown table string.
+
+    Returns:
+        dict | None: Table block with headers and rows, or None if invalid.
     """
 
     if "|" not in text:
@@ -377,8 +439,6 @@ def markdown_to_table(text):
         "rows": table_rows
     }
 
-# SINGLE SECTION GENERATOR
-# Calls AzureOpenAI for one section and validates output.
 
 def _generate_single_section(
     section_name: str,
@@ -395,16 +455,34 @@ def _generate_single_section(
     previous_issues: list = None
 ) -> dict:
     """
-    Generates content for one section.
-    Validates the output and returns the full section result.
+    Generate content for a single document section using LLM.
+
+    Responsibilities:
+    - Build context-aware prompt (company, inputs, rules)
+    - Call LLM for generation
+    - Parse JSON output into structured blocks
+    - Detect and render diagrams if requested
+    - Enforce formatting rules (tables, paragraphs)
+    - Validate section output
+    - Apply retry improvements if needed
+
+    Args:
+        section_name (str): Section name.
+        mandatory (bool): Whether section is required.
+        registry_doc (dict): Document template metadata.
+        company_profile (dict): Company details.
+        document_inputs (dict): User-provided inputs.
+        user_notes (str): Additional instructions.
+        diagram_plan (dict): Planned diagrams for sections.
+        retry (bool): Whether this is a retry attempt.
+        previous_issues (list): Issues from previous attempt.
 
     Returns:
-        {
-            "name": str,
-            "mandatory": bool,
-            "content": str,
-            "section_validation": dict   ← NEW: per-section quality result
-        }
+        dict: Section result including:
+            - name
+            - mandatory
+            - blocks (paragraph/table/diagram)
+            - section_validation (quality metrics)
     """
 
     document_inputs_json = json.dumps(document_inputs or {}, indent=2, ensure_ascii=False)
@@ -1108,6 +1186,21 @@ def _generate_single_section(
 # SECTION REGENERATION (User-triggered from UI)
 
 def regenerate_section_llm(draft: dict, section: dict, issues: list) -> str:
+    """
+    Regenerate a section using LLM based on validation issues.
+
+    Args:
+        draft (dict): Full draft context.
+        section (dict): Section to improve.
+        issues (list): Validation issues to fix.
+
+    Returns:
+        list: Updated blocks (structured JSON format).
+
+    Notes:
+        - Uses a specialized regeneration prompt
+        - Falls back to paragraph if parsing fails
+    """
 
     template = load_prompt("regenerate_prompt")
 
@@ -1158,6 +1251,21 @@ def regenerate_section_llm(draft: dict, section: dict, issues: list) -> str:
     ]
 
 def _compress_sections(sections, max_words):
+    """
+    Compress document sections to fit within a total word limit.
+
+    Strategy:
+    - Distribute word budget across sections
+    - Trim paragraph content
+    - Preserve non-text blocks (tables, diagrams)
+
+    Args:
+        sections (list): List of section objects.
+        max_words (int): Maximum total words allowed.
+
+    Returns:
+        list: Updated sections with trimmed content.
+    """
     per_section_budget = max_words // len(sections)
 
     for s in sections:
@@ -1200,20 +1308,49 @@ def generate_draft(
     user_notes: str = None
 ) -> dict:
     """
-    Generates a full document draft section by section.
+    Generate a complete document draft using LLM.
 
-    Flow:
-      1. Build draft skeleton
-      2. Format company profile + user inputs
-      3. For each section:
-            a. TOC gate  → skip if not needed for this doc type
-            b. Generate  → call LLM
-            c. Validate  → check word count, placeholders, preamble, etc.
-            d. Auto-retry once if validation fails
-      4. Run full-draft AI validation with regeneration loop
-      5. Return final draft
+    End-to-End Workflow:
+    1. Initialize draft structure with metadata
+    2. Plan diagrams (if applicable)
+    3. Generate each section:
+        - Build prompt
+        - Generate via LLM
+        - Validate output
+        - Retry once if needed
+    4. Apply global word limit compression
+    5. Run full-document validation
+    6. Perform regeneration loop (max retries)
+    7. Return finalized draft
 
-    Returns: draft dict (same shape as before + section_validation per section)
+    Special Handling:
+    - FORM documents → structured fields only
+    - TEMPLATE documents → placeholder-based output
+    - POLICY/SOP → full narrative + diagrams
+
+    Args:
+        registry_doc (dict): Document template definition.
+        department (str): Department name.
+        document_filename (str): Source filename.
+        company_profile (CompanyProfile): Company metadata.
+        document_inputs (dict): User inputs.
+        user_notes (str): Additional instructions.
+
+    Returns:
+        dict: Complete draft containing:
+            - metadata
+            - sections (blocks)
+            - validation results
+            - approval status
+
+    Output Status:
+        - READY_FOR_APPROVAL → valid draft
+        - NEEDS_REVIEW → validation failed
+
+    Notes:
+        - Supports diagram generation
+        - Enforces enterprise writing standards
+        - Includes retry-based quality improvement
     """
 
     global generated_diagram_signatures

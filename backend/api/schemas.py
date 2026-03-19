@@ -59,3 +59,8 @@ class QuestionRequest(BaseModel):
     document_filename: str
     company_profile: Dict[str, Any]
     document_inputs: Dict[str, Any]
+
+class SaveSectionEditRequest(BaseModel):
+    draft_id: int
+    section_name: str
+    updated_text: str

@@ -1,9 +1,67 @@
 # section_rules.py
+"""
+section_rules.py
+
+This module defines rule-based constraints for generating document sections
+in the DocForge Hub system.
+
+It provides:
+- Document-type-specific rules (POLICY, SOP, REPORT, etc.)
+- Section-specific rules (scope, definitions, roles, etc.)
+- Word limits for sections
+- Conditional logic for special sections (TOC, acknowledgment, revision history)
+
+Purpose:
+To enforce consistency, compliance, and structure in LLM-generated documents
+by dynamically injecting strict rules into prompts.
+
+This module acts as a "control layer" between:
+    LLM generation ↔ enterprise document standards
+
+It ensures that generated documents follow:
+- Correct tone and format
+- Required structure (tables, steps, etc.)
+- Compliance and governance guidelines
+"""
 
 def get_section_rules(document_type: str, section_name: str) -> str:
     """
-    Returns strict, section-specific generation rules.
-    Combines document-type rules with section-name-specific rules.
+    Generate section-specific rules for document generation.
+
+    This function combines:
+    - Document-type rules (e.g., POLICY, SOP, REPORT)
+    - Section-level rules (e.g., Scope, Definitions, Procedure)
+
+    These rules are injected into LLM prompts to enforce
+    enterprise-level document standards.
+
+    Args:
+        document_type (str): Type of document (e.g., POLICY, SOP, FORM).
+        section_name (str): Name of the section.
+
+    Returns:
+        str: Formatted rule string (bullet-style) to guide LLM generation.
+
+    Behavior:
+        - Applies base rules based on document type
+        - Adds section-specific constraints dynamically
+        - Overrides rules completely for special sections like:
+            - Table of Contents
+            - Revision History
+            - Acknowledgment
+            - Cover Page
+        - Skips rules for certain document types (e.g., FORM, TEMPLATE)
+
+    Examples:
+        - POLICY → formal, legal tone
+        - SOP → step-by-step instructions
+        - REPORT → analytical structure
+        - FORM → structured fields only
+
+    Notes:
+        - Ensures structured outputs like tables when required
+        - Prevents incorrect tone or formatting
+        - Critical for maintaining enterprise compliance
     """
 
     rules = []
@@ -313,14 +371,55 @@ def get_section_rules(document_type: str, section_name: str) -> str:
 
 
 def requires_toc(document_type: str) -> bool:
-    """Helper to check if document type needs TOC."""
+    """
+    Determine whether a document type requires a Table of Contents.
+
+    Args:
+        document_type (str): Document type.
+
+    Returns:
+        bool: True if TOC is required, False otherwise.
+
+    Supported Types:
+        - POLICY
+        - SOP
+        - REPORT
+        - HANDBOOK
+        - STRATEGY
+        - PROPOSAL
+    """
+
     toc_types = {"POLICY", "SOP", "REPORT", "HANDBOOK", "STRATEGY", "PROPOSAL"}
     return document_type.upper() in toc_types
 
 
 def get_section_word_limit(document_type: str, section_name: str) -> tuple:
     """
-    Returns (min_words, max_words) for the section.
+    Get word count limits for a specific section.
+
+    This function defines minimum and maximum word limits
+    based on:
+    - Document type
+    - Section type
+
+    Args:
+        document_type (str): Type of document.
+        section_name (str): Section name.
+
+    Returns:
+        tuple: (min_words, max_words)
+
+    Rules:
+        - OFFER_LETTER → strict short limits (20–60 words)
+        - Short sections → 50–200 words
+        - Medium sections → depends on doc type
+        - Long sections → for REPORT, HANDBOOK, etc.
+        - Default → (80–180 words)
+
+    Notes:
+        - Helps control verbosity of LLM output
+        - Ensures consistency across documents
+        - Used in validation and generation stages
     """
 
     # OFFER LETTER STRICT LIMIT

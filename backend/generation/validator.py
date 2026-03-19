@@ -1,4 +1,28 @@
-# validator.py
+"""
+validator.py
+
+This module validates generated document drafts in the DocForge Hub system.
+
+It ensures that AI-generated content meets enterprise standards by combining:
+- LLM-based semantic validation (compliance, tone, completeness)
+- Rule-based hard validation checks (repetition, formatting issues)
+
+Key Features:
+- Full-document validation using LLM
+- Detection of compliance and structural issues
+- Fallback handling for invalid LLM responses
+- Additional hard-coded quality checks
+
+Validation Output:
+{
+    "status": "PASS" | "FAIL",
+    "issues": [list of problems],
+    "risk_score": float,
+    "confidence_score": float
+}
+
+This module acts as the final quality gate before document approval.
+"""
 import os
 from openai import AzureOpenAI
 from backend.prompts.loader import load_prompt
@@ -13,6 +37,41 @@ llm = get_llm()
 
 
 def validate_draft_llm(draft: dict):
+    """
+    Validate a generated draft using LLM-based evaluation.
+
+    This function analyzes the full document content by:
+    - Extracting paragraph text from all sections
+    - Constructing a structured validation prompt
+    - Calling LLM to evaluate compliance, quality, and completeness
+
+    Args:
+        draft (dict): Generated document draft containing:
+            - source_document metadata
+            - sections with blocks (paragraphs, tables, etc.)
+
+    Returns:
+        dict: Validation result containing:
+            - status (str): "PASS" or "FAIL"
+            - issues (list): Identified problems
+            - risk_score (float): Risk/compliance score
+            - confidence_score (float): Model confidence
+
+    Behavior:
+        - Uses predefined validation prompt template
+        - Enforces strict JSON-only response from LLM
+        - Handles parsing errors with fallback response
+
+    Fallback:
+        If LLM output is invalid JSON:
+        returns:
+        {
+            "status": "FAIL",
+            "issues": ["Validation model returned invalid JSON"],
+            "risk_score": 0,
+            "confidence_score": 0
+        }
+    """
 
     sections_text = ""
 
@@ -62,6 +121,29 @@ def validate_draft_llm(draft: dict):
         }
 
 def hard_validation_checks(draft):
+    """
+    Perform rule-based validation checks on generated drafts.
+
+    This function complements LLM validation by detecting:
+    - Repetition of enforcement language
+    - Excessive company name repetition
+    - Overuse of compliance frameworks (e.g., SOC 2, GDPR)
+
+    Args:
+        draft (dict): Generated document draft.
+
+    Returns:
+        list[str]: List of detected issues.
+
+    Checks Performed:
+        1. Enforcement phrase repetition
+        2. Company name overuse in sections
+        3. Compliance framework overuse
+
+    Notes:
+        - Ensures content readability and avoids redundancy
+        - Acts as a deterministic safety layer alongside LLM validation
+    """
     issues = []
 
     # Enforcement phrase repetition

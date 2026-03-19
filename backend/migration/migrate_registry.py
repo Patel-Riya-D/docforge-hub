@@ -1,3 +1,28 @@
+"""
+migration_registry.py
+
+This module synchronizes document registry JSON files with the database.
+
+It ensures that all document templates stored in the filesystem
+are accurately reflected in the database by:
+- Inserting new documents
+- Updating existing documents
+- Deleting obsolete documents
+
+Key Features:
+- Directory-based registry scanning
+- Case-insensitive document matching
+- Automatic insert/update/delete operations
+- Supports structured fields (sections, input groups)
+
+This module acts as a source-of-truth sync mechanism between:
+    JSON Registry → Database
+
+It is typically used during:
+- Initial data setup
+- Template updates
+- Deployment or migration processes
+"""
 import os
 import json
 from sqlalchemy.orm import Session
@@ -9,6 +34,63 @@ REGISTRY_PATH = "/home/riyap/DocForage/document_registry"
 
 
 def migrate_documents():
+    """
+    Synchronize document registry JSON files with the database.
+
+    This function performs a full sync between the filesystem-based
+    document registry and the database.
+
+    Workflow:
+    1. Traverse registry directory (organized by department)
+    2. Load all JSON document definitions
+    3. For each document:
+        - If exists → update fields
+        - If not exists → insert new record
+    4. Identify and delete documents that no longer exist in JSON
+    5. Commit all changes
+
+    Data Synced:
+        - document_name
+        - department
+        - internal_type
+        - risk_level
+        - approval_required
+        - versioning_strategy
+        - sections
+        - input_groups
+
+    Matching Logic:
+        - Case-insensitive match on (document_name, department)
+
+    Returns:
+        None
+
+    Side Effects:
+        - Inserts new records into database
+        - Updates existing records
+        - Deletes outdated records
+        - Prints logs for each operation
+
+    Notes:
+        - REGISTRY_PATH must point to valid directory structure
+        - Each department should contain JSON files
+        - JSON files must follow expected schema
+
+    Example Directory Structure:
+        document_registry/
+            HR/
+                policy.json
+                handbook.json
+            IT/
+                security_policy.json
+
+    Usage:
+        Run as script:
+            python migration_registry.py
+
+    Raises:
+        Exception: If file reading or database operations fail.
+    """
     db: Session = SessionLocal()
 
     print("Starting registry sync...")
@@ -88,4 +170,12 @@ def migrate_documents():
 
 
 if __name__ == "__main__":
+    """
+    Entry point for running the registry migration script.
+
+    Executes full synchronization of JSON registry with database.
+
+    Usage:
+        python migration_registry.py
+    """
     migrate_documents()

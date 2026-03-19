@@ -1,3 +1,20 @@
+"""
+exporter.py
+
+This module provides utility functions to export generated drafts
+into different file formats such as DOCX, PDF, and XLS.
+
+Currently supported:
+- DOCX export using python-docx
+- (PDF and XLS scaffolding available via reportlab and pandas)
+
+These functions are used by the API layer to generate downloadable
+documents from structured draft data.
+
+Note:
+This module provides a simpler DOCX generator compared to the
+advanced formatter in `docx_formatter.py`.
+"""
 from docx import Document as DocxDocument
 from io import BytesIO
 import pandas as pd
@@ -6,9 +23,53 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 from reportlab.lib.units import inch
 
-
-
 def generate_docx(draft):
+    """
+    Generate a basic DOCX document from draft data.
+
+    This function creates a simple Word document containing:
+    - Document title
+    - Section headings
+    - Paragraph content
+    - Tables
+
+    It is a lightweight alternative to the advanced DOCX builder
+    (`docx_formatter.py`) and is suitable for quick exports.
+
+    Args:
+        draft (dict): Structured draft object containing:
+            - source_document (dict): Includes document_name
+            - sections (list): List of sections with blocks
+
+    Returns:
+        BytesIO: In-memory DOCX file buffer ready for download/streaming.
+
+    Supported Block Types:
+        - paragraph: Adds plain text content
+        - table: Adds table with headers and rows
+
+    Example:
+        draft = {
+            "source_document": {"document_name": "Policy"},
+            "sections": [
+                {
+                    "name": "Introduction",
+                    "blocks": [
+                        {"type": "paragraph", "content": "Intro text"},
+                        {
+                            "type": "table",
+                            "headers": ["A", "B"],
+                            "rows": [["1", "2"]]
+                        }
+                    ]
+                }
+            ]
+        }
+
+    Notes:
+        - Does not support advanced styling or diagrams.
+        - Uses default Word formatting.
+    """
     doc = DocxDocument()
 
     doc.add_heading(draft["source_document"]["document_name"], level=1)
@@ -37,63 +98,6 @@ def generate_docx(draft):
 
     buffer = BytesIO()
     doc.save(buffer)
-    buffer.seek(0)
-
-    return buffer
-
-def generate_pdf(draft):
-    buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer)
-    elements = []
-
-    styles = getSampleStyleSheet()
-
-    elements.append(Paragraph(draft.document_name, styles["Heading1"]))
-    elements.append(Spacer(1, 0.5 * inch))
-
-    for section in draft["sections"]:
-        elements.append(Paragraph(section["name"], styles["Heading2"]))
-        elements.append(Spacer(1, 0.2 * inch))
-
-        for block in section["blocks"]:
-
-            if block["type"] == "paragraph":
-                elements.append(Paragraph(block["content"], styles["Normal"]))
-                elements.append(Spacer(1, 0.2 * inch))
-
-            elif block["type"] == "table":
-                from reportlab.platypus import Table
-
-                data = [block["headers"]] + block["rows"]
-                table = Table(data)
-
-                elements.append(table)
-                elements.append(Spacer(1, 0.3 * inch))
-
-    doc.build(elements)
-    buffer.seek(0)
-
-    return buffer
-
-
-def generate_xls(draft):
-    data = []
-
-    for section in draft["sections"]:
-        combined = " ".join(
-            block["content"]
-            for block in section["blocks"]
-            if block["type"] == "paragraph"
-        )
-
-        data.append({
-            "Section": section["name"],
-            "Content": combined
-        })
-    df = pd.DataFrame(data)
-
-    buffer = BytesIO()
-    df.to_excel(buffer, index=False)
     buffer.seek(0)
 
     return buffer

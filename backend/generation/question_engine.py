@@ -1,3 +1,28 @@
+"""
+question_engine.py
+
+This module generates intelligent clarification questions for missing
+document inputs in the DocForge Hub system.
+
+It uses LLM-based reasoning combined with rule-based filtering to:
+- Identify missing critical information
+- Avoid duplicate or redundant questions
+- Ensure document completeness before generation
+
+Key Features:
+- LLM-powered question generation
+- Semantic deduplication (similarity + keyword overlap)
+- Awareness of existing form fields and user inputs
+- Company profile exclusion logic
+- Domain-specific rules (e.g., leave forms)
+
+Output:
+A structured list of questions with keys and input types,
+ready to be rendered in UI forms.
+
+This module improves document quality by ensuring all required
+inputs are collected before draft generation.
+"""
 import json
 from difflib import SequenceMatcher
 from langchain_core.messages import SystemMessage, HumanMessage
@@ -7,10 +32,41 @@ llm = get_llm()
 
 
 def similarity(a: str, b: str) -> float:
+    """
+    Compute similarity ratio between two strings using SequenceMatcher.
+
+    Args:
+        a (str): First string.
+        b (str): Second string.
+
+    Returns:
+        float: Similarity score between 0 and 1.
+
+    Notes:
+        - Used for detecting near-duplicate questions
+        - Case-insensitive comparison
+    """
     return SequenceMatcher(None, a.lower(), b.lower()).ratio()
 
 
 def keyword_overlap_ratio(a: str, b: str) -> float:
+    """
+    Compute keyword overlap ratio between two strings.
+
+    This method removes common stop words and compares
+    meaningful keywords to detect semantic similarity.
+
+    Args:
+        a (str): First string.
+        b (str): Second string.
+
+    Returns:
+        float: Overlap ratio between 0 and 1.
+
+    Notes:
+        - Helps detect duplicates even with different wording
+        - Complements SequenceMatcher similarity
+    """
     stop_words = {
         "what", "who", "which", "how", "is", "are", "the", "a", "an",
         "for", "of", "to", "and", "or", "in", "on", "at", "be", "will",
@@ -27,6 +83,24 @@ def keyword_overlap_ratio(a: str, b: str) -> float:
 
 
 def is_duplicate(new_question: str, existing_questions: list) -> bool:
+    """
+    Determine whether a question is a duplicate of existing ones.
+
+    Uses:
+    - String similarity
+    - Keyword overlap ratio
+
+    Args:
+        new_question (str): New question to check.
+        existing_questions (list): List of existing questions.
+
+    Returns:
+        bool: True if duplicate, False otherwise.
+
+    Thresholds:
+        - Similarity > 0.75
+        - Keyword overlap > 0.75
+    """
     for existing in existing_questions:
         if similarity(new_question, existing) > 0.75:
             return True
@@ -35,9 +109,58 @@ def is_duplicate(new_question: str, existing_questions: list) -> bool:
     return False
 
 
-def generate_clarification_questions(registry_doc: dict,
-                                     company_profile: dict,
-                                     document_inputs: dict):
+def generate_clarification_questions(
+    registry_doc: dict,
+    company_profile: dict,
+    document_inputs: dict
+):
+    """
+    Generate clarification questions for missing document inputs using LLM.
+
+    This function ensures that all required information is collected before
+    document generation by identifying gaps in user-provided inputs.
+
+    Workflow:
+    1. Collect existing form questions and company profile fields
+    2. Identify already filled inputs
+    3. Build a structured prompt for LLM
+    4. Generate missing questions using LLM
+    5. Post-process results:
+        - Remove duplicates (semantic + keyword)
+        - Remove already answered fields
+        - Enforce unique keys
+        - Apply domain-specific rules (e.g., leave dates)
+    6. Limit total questions
+
+    Args:
+        registry_doc (dict): Document template including sections and input groups.
+        company_profile (dict): Company metadata (excluded from questions).
+        document_inputs (dict): User-provided inputs.
+
+    Returns:
+        list[dict]: List of clarification questions:
+            [
+                {
+                    "key": "snake_case_key",
+                    "question": "Question text?",
+                    "type": "text" | "textarea"
+                }
+            ]
+
+    Rules:
+        - Do NOT repeat existing form questions
+        - Do NOT ask about company profile fields
+        - Do NOT ask already answered inputs
+        - Generate only critical missing information
+        - Max 12 questions
+
+    Special Handling:
+        - Leave forms → enforce both start and end dates
+        - Deduplication across all document types
+
+    Fallback:
+        Returns empty list if generation fails.
+    """
 
     company_fields = [
         "company_name", "industry", "employee_count",
