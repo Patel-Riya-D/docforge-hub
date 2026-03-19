@@ -826,6 +826,7 @@ with tab_rag:
                         }
                     )
                     result = response.json()
+                    # st.write(result)
 
                     # 🔍 Refined Query
                     st.markdown("### 🔍 Refined Query")
@@ -837,7 +838,13 @@ with tab_rag:
 
                     # 📊 Confidence
                     st.markdown("### 📊 Confidence")
+
+                    confidence_score = result.get("confidence_score", 0)
                     confidence = result.get("confidence", "UNKNOWN")
+
+                    st.markdown(f"**Confidence Score:** {confidence_score}%")
+                    st.progress(confidence_score / 100)
+
                     if confidence == "HIGH":
                         st.success("Confidence: HIGH ✅ (Strong match with documents)")
                     elif confidence == "MEDIUM":

@@ -64,21 +64,28 @@ def calculate_confidence(chunks):
     """
 
     if not chunks:
-        return "LOW"
+        return {"level": "LOW", "score": 0}
 
     scores = [c.get("score", 1.5) for c in chunks]
 
     best_score = min(scores)
 
-    print("scores:", scores)
-    print("best_score:", best_score)
+    # 🔥 Convert distance → confidence %
+    confidence_score = 1 / (1 + best_score)   # normalize
+    confidence_percent = round(confidence_score * 100)
 
+    # 🔥 Map to levels
     if best_score < 0.5:
-        return "HIGH"
+        level = "HIGH"
     elif best_score < 1.0:
-        return "MEDIUM"
+        level = "MEDIUM"
     else:
-        return "LOW"
+        level = "LOW"
+
+    return {
+        "level": level,
+        "score": confidence_percent
+    }
     
 # =============== search tool + refine ===============
 
@@ -190,22 +197,22 @@ If the answer is not present in the context, say:
     # 🔥 Trim answer
     answer = response.content.strip().split("\n")[0]
 
-    confidence = calculate_confidence(chunks)
+    confidence_data = calculate_confidence(chunks)
 
     #confidence filter
-    if confidence == "LOW":
+    if confidence_data["level"] == "LOW":
         answer = "Not Available"
 
     logger.info(f"Answer generated: {answer}")
-    logger.info(f"Confidence: {confidence}")
-
+    logger.info(f"Confidence: {confidence_data['level']}")
     # 📦 Step 4: Return result
     result = {
         "answer": answer,
         "sources": list(set(sources)),
         "chunks": chunks,
         "refined_query": refined_question,
-        "confidence": confidence,
+        "confidence": confidence_data["level"],
+        "confidence_score": confidence_data["score"],
         "cache_hit": False
     }
 
