@@ -31,7 +31,6 @@ backend/rag/test_notion.py
 backend/rag/test_ingestion.py
 txt
 docs/
-ui.py
 
 uploads/
-app.py
+app.pystreamlit.py
