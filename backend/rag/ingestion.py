@@ -1,7 +1,51 @@
+"""
+Document Ingestion Module (Notion → RAG Pipeline)
+
+This module is responsible for extracting and preprocessing documents
+from Notion to prepare them for embedding and indexing.
+
+Responsibilities:
+- Fetch pages and blocks from Notion database
+- Extract structured metadata (title, section, doc_type, industry)
+- Split large text into smaller chunks
+- Convert raw content into structured chunk format
+
+Output:
+- List of chunks with metadata:
+    {
+        "doc_title": str,
+        "section": str,
+        "text": str,
+        "doc_type": str,
+        "industry": str,
+        "page_id": str
+    }
+
+Used by:
+- build_index.py for embedding and vector storage
+"""
 from backend.rag.notion_reader import fetch_all_pages, fetch_page_blocks
 
 
 def split_text(text, max_chars=500):
+    """
+    Split large text into smaller chunks for embedding.
+
+    This function ensures that text is divided into manageable sizes
+    while preserving word boundaries.
+
+    Args:
+        text (str): Input text to be split
+        max_chars (int): Maximum characters per chunk
+
+    Returns:
+        list[str]: List of text chunks
+
+    Notes:
+    - Prevents overly long inputs for embedding models
+    - Splitting is done based on words, not characters
+    - Ensures semantic coherence within chunks
+    """
 
     chunks = []
 
@@ -26,6 +70,32 @@ def split_text(text, max_chars=500):
 
 
 def ingest_documents():
+    """
+    Ingest and preprocess documents from Notion database.
+
+    Workflow:
+    1. Fetch all pages from Notion database
+    2. Extract metadata:
+        - document title
+        - document type
+        - industry
+        - page ID
+    3. Fetch all blocks for each page
+    4. Parse content:
+        - Identify sections using heading blocks
+        - Extract paragraph and bullet text
+    5. Split text into smaller chunks
+    6. Attach metadata to each chunk
+
+    Returns:
+        list[dict]:
+            List of processed chunks ready for embedding
+
+    Notes:
+    - Each chunk retains its source metadata for citation
+    - Sections are dynamically tracked using heading blocks
+    - Supports paragraph and bullet list content
+    """
 
     pages = fetch_all_pages()
 

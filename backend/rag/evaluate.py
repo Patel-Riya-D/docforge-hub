@@ -1,3 +1,26 @@
+"""
+RAG Evaluation Module using RAGAS
+
+This module evaluates the performance of the RAG pipeline using predefined datasets.
+
+Responsibilities:
+- Load evaluation dataset (questions + ground truth)
+- Run RAG pipeline to generate answers
+- Compare generated answers with ground truth
+- Compute evaluation metrics using RAGAS
+
+Metrics Used:
+- Faithfulness: Measures how grounded the answer is in retrieved context
+- Answer Relevancy: Measures how relevant the answer is to the question
+
+Key Features:
+- End-to-end evaluation of retrieval + generation
+- Uses real pipeline (not mocked responses)
+- Supports batch evaluation
+
+Used by:
+- API endpoint: /documents/rag-evaluate
+"""
 import json
 from datasets import Dataset
 from ragas import evaluate
@@ -20,8 +43,50 @@ embeddings = OpenAIEmbeddings(
 )
 
 def run_evaluation():
+    """
+    Execute RAG evaluation using RAGAS metrics.
+
+    Workflow:
+    1. Load evaluation dataset from JSON file
+        - Each entry contains:
+            question
+            ground_truth
+
+    2. For each question:
+        - Run RAG pipeline (answer_question)
+        - Collect:
+            - Generated answer
+            - Retrieved context chunks
+
+    3. Construct evaluation dataset:
+        - question
+        - answer
+        - contexts (list of retrieved texts)
+        - ground_truth
+
+    4. Run RAGAS evaluation:
+        - Compute faithfulness and answer relevancy
+
+    5. Return results as pandas DataFrame
+
+    Returns:
+        pandas.DataFrame:
+            Contains evaluation scores for each query and overall metrics
+
+    Notes:
+    - Uses actual RAG pipeline (not synthetic evaluation)
+    - Embeddings are required for RAGAS evaluation
+    - Helps assess both retrieval and generation quality
+    """
 
     # ---------------- LOAD DATASET ----------------
+    """
+    Load evaluation dataset containing:
+    - question: user query
+    - ground_truth: expected correct answer
+
+    Used to compare RAG output against known answers.
+    """
     with open("backend/rag/eval_dataset.json") as f:
         data = json.load(f)
 
@@ -31,6 +96,12 @@ def run_evaluation():
     ground_truths = []
 
     # ---------------- RUN RAG ----------------
+    """
+    Run full RAG pipeline for each question:
+    - Generate answer
+    - Retrieve context
+    - Store results for evaluation
+    """
     for item in data:
 
         question = item["question"]
