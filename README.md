@@ -176,13 +176,6 @@ Azure OpenAI (LLM)
 
 ---
 
-## ER Diagram
-
-![ER Diagram](https://github.com/Patel-Riya-D/docforge-hub/blob/feature/project-setup/wireframe/phase1.drawio.png)
-
----
-
-
 ## 🔎 Phase 2 - CiteRAG Lab (RAG Sandbox)
 
 CiteRAG Lab is an advanced Retrieval-Augmented Generation (RAG) module built within DocForge Hub. It enables intelligent querying over company documents stored in Notion, providing grounded answers with citations, confidence scoring, and evaluation.
