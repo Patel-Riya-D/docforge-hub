@@ -5,6 +5,20 @@ from langchain_core.messages import SystemMessage, HumanMessage
 retriever = Retriever()
 llm = get_llm()
 
+def filter_chunks_by_topic(chunks, topic):
+    if not topic:
+        return chunks
+
+    topic = topic.lower()
+
+    filtered = [
+        c for c in chunks
+        if topic in c["text"].lower()
+        or topic in c["section"].lower()
+    ]
+
+    return filtered if filtered else chunks  # fallback if nothing found
+
 
 def compare_documents(doc_a, doc_b, topic=""):
     """
@@ -22,8 +36,11 @@ def compare_documents(doc_a, doc_b, topic=""):
     """
 
     # Retrieve chunks for both documents
-    chunks_a = retriever.search(doc_a + " " + topic, k=4)
-    chunks_b = retriever.search(doc_b + " " + topic, k=4)
+    chunks_a = retriever.search(doc_a, k=6)
+    chunks_b = retriever.search(doc_b, k=6)
+
+    chunks_a = filter_chunks_by_topic(chunks_a, topic)
+    chunks_b = filter_chunks_by_topic(chunks_b, topic)
 
     context_a = "\n".join(
         [f"{c['doc_title']} → {c['section']}: {c['text']}" for c in chunks_a]
@@ -63,10 +80,10 @@ Document B: {doc_b}
 
 --------------------------------------
 
-1. Key Similarities (Concise Insights)
+1. Key Similarities
 - Focus on meaningful overlaps (not generic statements)
 
-2. Critical Differences (Structured)
+2. Critical Differences
 - ONLY include dimensions that are explicitly supported by the context
 - DO NOT force all dimensions
 - Use format:
@@ -77,6 +94,7 @@ Document B: {doc_b}
 
 3. Executive Summary (2-3 lines)
 Provide a high-level comparison highlighting the core difference in purpose.
+
 """
 
     response = llm.invoke([

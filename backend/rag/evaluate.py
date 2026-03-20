@@ -164,11 +164,10 @@ def run_evaluation():
         "outputs": results_data
     }
 
-    with open("backend/rag/eval_results.json", "w") as f:
-        json.dump(final_output, f, indent=2)
+    # Optional: log only
+    print("Evaluation completed")
 
-    print("✅ Evaluation saved to eval_results.json")
-
+    return eval_df
 
 if __name__ == "__main__":
     run_evaluation()

@@ -74,16 +74,7 @@ def calculate_confidence(chunks):
     confidence_score = 1 / (1 + best_score)   # normalize
     confidence_percent = round(confidence_score * 100)
 
-    # #  Map to levels
-    # if best_score < 0.5:
-    #     level = "HIGH"
-    # elif best_score < 1.0:
-    #     level = "MEDIUM"
-    # else:
-    #     level = "LOW"
-
     return {
-        # "level": level,
         "score": confidence_percent
     }
     
@@ -199,19 +190,14 @@ If the answer is not present in the context, say:
 
     confidence_data = calculate_confidence(chunks)
 
-    #confidence filter
-    # if confidence_data["level"] == "LOW":
-    #     answer = "Not Available"
 
     logger.info(f"Answer generated: {answer}")
-    # logger.info(f"Confidence: {confidence_data['level']}")
     #  Step 4: Return result
     result = {
         "answer": answer,
         "sources": list(set(sources)),
         "chunks": chunks,
         "refined_query": refined_question,
-        # "confidence": confidence_data["level"],
         "confidence_score": confidence_data["score"],
         "cache_hit": False
     }

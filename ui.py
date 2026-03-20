@@ -963,75 +963,92 @@ with tab_rag:
             key="rag_question"
         )
 
-        if question:
-            with st.spinner("Searching knowledge base..."):
-                try:
-                    response = requests.post(
-                        f"{API_BASE_URL}/documents/rag-query",
-                        json={
-                            "question": question,
-                            "doc_type": doc_type_filter,
-                            "industry": industry_filter
-                        }
-                    )
-                    result = response.json()
-                    # st.write(result)
+        ask_clicked = st.button("Ask", use_container_width=False)
 
-                    # 🔍 Refined Query
-                    st.markdown("### 🔍 Refined Query")
-                    st.write(result.get("refined_query", question))
+        if ask_clicked:
+            if not question:
+                st.warning("Please enter a question")
+            else:
+                with st.spinner("Searching knowledge base..."):
+                    try:
+                        response = requests.post(
+                            f"{API_BASE_URL}/documents/rag-query",
+                            json={
+                                "question": question,
+                                "doc_type": doc_type_filter,
+                                "industry": industry_filter
+                            }
+                        )
+                        result = response.json()
 
-                    # 📌 Answer
-                    st.markdown("### 📌 Answer")
-                    st.write(result.get("answer", "No answer found"))
+                        # 🔍 Refined Query
+                        st.markdown("### 🔍 Refined Query")
+                        st.write(result.get("refined_query", question))
 
-                    # 📊 Confidence
-                    st.markdown("### 📊 Confidence")
+                        # 📌 Answer
+                        st.markdown("### 📌 Answer")
+                        st.write(result.get("answer", "No answer found"))
 
-                    confidence_score = result.get("confidence_score", 0)
-                    # confidence = result.get("confidence", "UNKNOWN")
+                        # 📊 Confidence
+                        st.markdown("### 📊 Confidence")
 
-                    st.markdown(f"**Confidence Score:** {confidence_score}%")
-                    st.progress(confidence_score / 100)
+                        confidence_score = result.get("confidence_score", 0)
 
-                    # if confidence == "HIGH":
-                    #     st.success("Confidence: HIGH ✅ (Strong match with documents)")
-                    # elif confidence == "MEDIUM":
-                    #     st.warning("Confidence: MEDIUM ⚠️ (Partial match found)")
-                    # elif confidence == "LOW":
-                    #     st.error("Confidence: LOW ❌ (Weak or no reliable match)")
-                    # else:
-                    #     st.info("Confidence: UNKNOWN")
+                        st.markdown(f"**Confidence Score:** {confidence_score}%")
+                        st.progress(confidence_score / 100)
 
-                    # 📚 Sources
-                    st.markdown("### 📚 Sources")
-                    for source in result.get("sources", []):
-                        st.write(f"• {source}")
+                        # 📚 Sources
+                        st.markdown("### 📚 Sources")
+                        for source in result.get("sources", []):
+                            st.write(f"• {source}")
 
-                    # 🔎 Context
-                    st.markdown("### 🔎 Retrieved Context")
-                    for chunk in result.get("chunks", []):
-                        with st.expander(f"{chunk['doc_title']} → {chunk['section']}"):
-                            st.write(chunk["text"])
-                            st.caption(f"Score: {chunk.get('score', 0):.3f}")
-                except Exception as e:
-                    st.error(f"Query failed: {e}")
+                        # 🔎 Context
+                        st.markdown("### 🔎 Retrieved Context")
+                        for chunk in result.get("chunks", []):
+                            with st.expander(f"{chunk['doc_title']} → {chunk['section']}"):
+                                st.write(chunk["text"])
+                                st.caption(f"Score: {chunk.get('score', 0):.3f}")
+                    except Exception as e:
+                        st.error(f"Query failed: {e}")
 
     # ======================================================
-    # 📘 COMPARE TAB
+    # 📘 COMPARE TAB (UPDATED)
     # ======================================================
     with tool_tabs[1]:
         st.subheader("Compare Documents")
+
+        # 🔥 Fetch from Notion directly
+        try:
+            from backend.rag.notion_reader import get_all_document_titles
+
+            available_docs = get_all_document_titles()
+
+        except Exception as e:
+            available_docs = []
+            st.warning(f"⚠️ Unable to fetch documents from Notion: {e}")
+
+        # 📊 Show count
+        st.caption(f"📚 {len(available_docs)} documents available")
+
+        # ---------------- DROPDOWN ----------------
         col1, col2 = st.columns(2)
         with col1:
-            doc_a = st.text_input("Document A", key="compare_doc_a")
+            doc_a = st.selectbox("Document A", available_docs, key="compare_doc_a_dropdown")
         with col2:
-            doc_b = st.text_input("Document B", key="compare_doc_b")
+            doc_b = st.selectbox("Document B", available_docs, key="compare_doc_b_dropdown")
+
+
+        is_valid_search = True
+
+        # ---------------- TOPIC ----------------
         topic = st.text_input("Comparison Topic", key="compare_topic")
-        
-        if st.button("Compare", use_container_width=True):
+
+        # ---------------- COMPARE BUTTON ----------------
+        if st.button("Compare", use_container_width=False, disabled=not is_valid_search):
+
             if not doc_a or not doc_b:
-                st.warning("Please enter both document names")
+                st.warning("Please select both documents")
+
             else:
                 with st.spinner("Comparing documents..."):
                     try:
@@ -1043,12 +1060,16 @@ with tab_rag:
                                 "topic": topic
                             }
                         )
+
                         result = response.json()
+
                         st.markdown("### 📌 Comparison")
                         st.write(result.get("answer", ""))
+
                         st.markdown("### 📚 Sources")
                         for s in result.get("sources", []):
                             st.write(f"• {s}")
+
                     except Exception as e:
                         st.error(f"Comparison failed: {e}")
 
@@ -1061,7 +1082,7 @@ with tab_rag:
             "Enter document name or topic",
             key="summary_query"
         )
-        if st.button("Summarize", use_container_width=True):
+        if st.button("Summarize", use_container_width=False):
             if not summary_query:
                 st.warning("Please enter something to summarize")
             else:
@@ -1084,7 +1105,7 @@ with tab_rag:
 
     st.divider()
     st.subheader("📊 RAG Evaluation")
-    if st.button("Run Evaluation", use_container_width=True):
+    if st.button("Run Evaluation", use_container_width=False):
         with st.spinner("Running evaluation... ⏳"):
             response = requests.post(f"{API_BASE_URL}/documents/rag-evaluate")
         if response.status_code == 200:

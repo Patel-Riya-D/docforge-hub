@@ -22,6 +22,26 @@ DATABASE_ID = os.getenv("NOTION_DATABASE_ID")
 
 notion = Client(auth=NOTION_TOKEN)
 
+def get_all_document_titles():
+    """
+    Extract clean document titles from Notion pages
+    """
+    pages = fetch_all_pages()
+
+    titles = []
+
+    for page in pages:
+        props = page.get("properties", {})
+
+        title_data = props.get("Name", {}).get("title", [])
+
+        if title_data:
+            title = title_data[0].get("plain_text", "").strip()
+            if title:
+                titles.append(title)
+
+    return list(set(titles))
+
 
 def fetch_all_pages():
     """

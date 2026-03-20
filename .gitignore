@@ -40,3 +40,5 @@ logs/
 uploads/
 
 backend/rag/test.py
+
+backend/rag/eval_results.json

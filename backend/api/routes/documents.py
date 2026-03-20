@@ -901,6 +901,25 @@ def rag_compare(data: dict):
     if not doc_a or not doc_b:
         raise HTTPException(status_code=400, detail="doc_a and doc_b required")
 
+    # 🔥 STEP 1: Get available document names from retriever
+    from backend.rag.notion_reader import get_all_document_titles
+
+    available_docs = get_all_document_titles()
+
+    # 🔥 STEP 2: Strict validation
+    if doc_a not in available_docs:
+        return {
+            "answer": f"❌ Document A '{doc_a}' not found in knowledge base.\n\nAvailable documents:\n- " + "\n- ".join(available_docs),
+            "sources": []
+        }
+
+    if doc_b not in available_docs:
+        return {
+            "answer": f"❌ Document B '{doc_b}' not found in knowledge base.\n\nAvailable documents:\n- " + "\n- ".join(available_docs),
+            "sources": []
+        }
+
+    # 🔥 STEP 3: Only if valid → run comparison
     return compare_documents(doc_a, doc_b, topic)
 
 @router.post("/rag-summarize")
@@ -947,6 +966,12 @@ def rag_evaluate():
     logger.info("/rag-evaluate started")
 
     df = run_evaluation()
+
+    if df is None or df.empty:
+        raise HTTPException(
+            status_code=500,
+            detail="Evaluation failed: No data returned"
+        )
 
     logger.info("Evaluation completed")
 
