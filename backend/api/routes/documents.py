@@ -814,6 +814,7 @@ def publish_to_notion(draft_id: int, db: Session = Depends(get_db)):
     logger.info(f"DOCUMENT TYPE SENT TO NOTION: {document_type}")
 
     publish_document_to_notion(
+        draft=draft,
         document_name=draft.document_name,
         sections=sections_data,
         version=int(draft.version),
@@ -823,6 +824,8 @@ def publish_to_notion(draft_id: int, db: Session = Depends(get_db)):
         created_by=company_name,
         created_at=str(draft.created_at)
     )
+    db.commit()
+    db.refresh(draft)
 
     return {"message": "Published to Notion successfully"}
 

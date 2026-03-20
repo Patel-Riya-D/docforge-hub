@@ -26,6 +26,8 @@ class Draft(Base):
 
     sections = relationship("DraftSection", back_populates="draft", cascade="all, delete")
 
+    notion_page_id = Column(String, nullable=True)
+
 
 class DraftSection(Base):
     __tablename__ = "draft_sections"

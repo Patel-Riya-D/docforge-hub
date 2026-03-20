@@ -91,6 +91,7 @@ def convert_table(headers, rows):
 
 
 def publish_document_to_notion(
+    draft,
     document_name,
     sections,
     version,
@@ -341,40 +342,59 @@ def publish_document_to_notion(
         except:
             created_at = datetime.now(IST).isoformat()
 
-    page = notion.pages.create(
-        parent={"database_id": NOTION_DATABASE_ID},
-        properties={
-            "Name": {
-                "title": [
-                    {"text": {"content": document_name}}
-                ]
-            },
-            "Version": {
-                "number": version
-            },
-            "Document Type": {
-                "select": {"name": document_type}
-            },
-            "Industry": {
-                "select": {"name": industry}
-            },
-            "Tags": {
-                "multi_select": [{"name": tag} for tag in tags]
-            },
-            "Created By": {
-                "rich_text": [
-                    {"text": {"content": created_by}}
-                ]
-            },
-            "Created At": {
-                "date": {
-                    "start": created_at
+    # 🔥 CHECK if page already exists
+    if draft.notion_page_id and draft.notion_page_id.strip():
+        page_id = draft.notion_page_id
+        print("🔄 Updating existing page:", page_id)
+
+        # 🧹 Delete old content
+        existing_blocks = notion.blocks.children.list(block_id=page_id)
+
+        while existing_blocks.get("results"):
+            for block in existing_blocks["results"]:
+                try:
+                    notion.blocks.delete(block["id"])
+                except Exception as e:
+                    print("Delete error:", e)
+
+            # fetch next batch (pagination)
+            if existing_blocks.get("has_more"):
+                existing_blocks = notion.blocks.children.list(
+                    block_id=page_id,
+                    start_cursor=existing_blocks["next_cursor"]
+                )
+            else:
+                break
+
+        for block in existing_blocks.get("results", []):
+            notion.blocks.delete(block["id"])
+
+    else:
+        print("🆕 Creating new page")
+
+        page = notion.pages.create(
+            parent={"database_id": NOTION_DATABASE_ID},
+            properties={
+                "Name": {
+                    "title": [{"text": {"content": document_name}}]
+                },
+                "Version": {"number": version},
+                "Document Type": {"select": {"name": document_type}},
+                "Industry": {"select": {"name": industry}},
+                "Tags": {"multi_select": [{"name": tag} for tag in tags]},
+                "Created By": {
+                    "rich_text": [{"text": {"content": created_by}}]
+                },
+                "Created At": {
+                    "date": {"start": created_at}
                 }
             }
-        }
-    )
+        )
 
-    page_id = page["id"]
+        page_id = page["id"]
+
+        # 💾 SAVE page_id in draft object
+        draft.notion_page_id = page_id
 
     MAX_BLOCKS = 100
 
