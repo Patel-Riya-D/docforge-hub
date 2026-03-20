@@ -27,19 +27,23 @@ def summarize_document(query, filters=None):
     context = "\n".join([c["text"] for c in chunks])
 
     prompt = f"""
+You are an enterprise document summarization assistant.
+
 Summarize the following company document content.
 
 Rules:
-- ONLY summarize using the provided context.
-- DO NOT add external information.
-- DO NOT infer missing details.
-- Keep it concise
+- ONLY summarize using the provided context
+- DO NOT add external information
+- DO NOT infer missing details
+- DO NOT hallucinate
+- Keep it concise and structured
 - Use bullet points
-- Focus on key policies / important details
-- Do NOT add new information
+- Focus on key policies, processes, and important details
 
 Content:
 {context}
+
+Summary:
 """
 
     response = llm.invoke([

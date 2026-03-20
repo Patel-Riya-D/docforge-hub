@@ -63,8 +63,8 @@ def calculate_confidence(chunks):
     - Used to control answer reliability in UI
     """
 
-    if not chunks:
-        return {"level": "LOW", "score": 0}
+    # if not chunks:
+    #     return {"level": "LOW", "score": 0}
 
     scores = [c.get("score", 1.5) for c in chunks]
 
@@ -74,16 +74,16 @@ def calculate_confidence(chunks):
     confidence_score = 1 / (1 + best_score)   # normalize
     confidence_percent = round(confidence_score * 100)
 
-    #  Map to levels
-    if best_score < 0.5:
-        level = "HIGH"
-    elif best_score < 1.0:
-        level = "MEDIUM"
-    else:
-        level = "LOW"
+    # #  Map to levels
+    # if best_score < 0.5:
+    #     level = "HIGH"
+    # elif best_score < 1.0:
+    #     level = "MEDIUM"
+    # else:
+    #     level = "LOW"
 
     return {
-        "level": level,
+        # "level": level,
         "score": confidence_percent
     }
     
@@ -138,7 +138,7 @@ def answer_question(question, filters=None):
 
     #  Step 2: Search using refined query
     #  Generate cache key
-    cache_key = generate_rag_cache_key(refined_question, filters)
+    cache_key = generate_rag_cache_key(question, filters)
 
     # ⚡ Try cache
     # ⚡ Step 2: Try full RAG cache
@@ -200,18 +200,18 @@ If the answer is not present in the context, say:
     confidence_data = calculate_confidence(chunks)
 
     #confidence filter
-    if confidence_data["level"] == "LOW":
-        answer = "Not Available"
+    # if confidence_data["level"] == "LOW":
+    #     answer = "Not Available"
 
     logger.info(f"Answer generated: {answer}")
-    logger.info(f"Confidence: {confidence_data['level']}")
+    # logger.info(f"Confidence: {confidence_data['level']}")
     #  Step 4: Return result
     result = {
         "answer": answer,
         "sources": list(set(sources)),
         "chunks": chunks,
         "refined_query": refined_question,
-        "confidence": confidence_data["level"],
+        # "confidence": confidence_data["level"],
         "confidence_score": confidence_data["score"],
         "cache_hit": False
     }

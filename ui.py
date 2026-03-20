@@ -989,19 +989,19 @@ with tab_rag:
                     st.markdown("### 📊 Confidence")
 
                     confidence_score = result.get("confidence_score", 0)
-                    confidence = result.get("confidence", "UNKNOWN")
+                    # confidence = result.get("confidence", "UNKNOWN")
 
                     st.markdown(f"**Confidence Score:** {confidence_score}%")
                     st.progress(confidence_score / 100)
 
-                    if confidence == "HIGH":
-                        st.success("Confidence: HIGH ✅ (Strong match with documents)")
-                    elif confidence == "MEDIUM":
-                        st.warning("Confidence: MEDIUM ⚠️ (Partial match found)")
-                    elif confidence == "LOW":
-                        st.error("Confidence: LOW ❌ (Weak or no reliable match)")
-                    else:
-                        st.info("Confidence: UNKNOWN")
+                    # if confidence == "HIGH":
+                    #     st.success("Confidence: HIGH ✅ (Strong match with documents)")
+                    # elif confidence == "MEDIUM":
+                    #     st.warning("Confidence: MEDIUM ⚠️ (Partial match found)")
+                    # elif confidence == "LOW":
+                    #     st.error("Confidence: LOW ❌ (Weak or no reliable match)")
+                    # else:
+                    #     st.info("Confidence: UNKNOWN")
 
                     # 📚 Sources
                     st.markdown("### 📚 Sources")

@@ -33,6 +33,8 @@ index_lock = Lock()
 # Interval (in seconds) between indexing runs
 INDEX_INTERVAL = 600  # 10 minutes
 
+is_indexer_running = False
+
 
 def start_auto_indexing():
     """
@@ -56,6 +58,14 @@ def start_auto_indexing():
         - Safe for concurrent API usage
         - Ensures near real-time synchronization with Notion
     """
+    global is_indexer_running
+
+    # 🚨 Prevent duplicate threads
+    if is_indexer_running:
+        logger.warning("⚠️ Indexer already running, skipping...")
+        return
+
+    is_indexer_running = True
 
     logger.info("🚀 Background indexer started")
 

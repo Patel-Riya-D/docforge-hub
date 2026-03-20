@@ -34,9 +34,9 @@ def compare_documents(doc_a, doc_b, topic=""):
     )
 
     prompt = f"""
-You are an enterprise document comparison assistant.
+You are a senior enterprise policy analyst.
 
-Compare the following two documents:
+Your task is to compare two documents using ONLY the provided context.
 
 Document A: {doc_a}
 Document B: {doc_b}
@@ -49,11 +49,34 @@ Context A:
 Context B:
 {context_b}
 
-Instructions:
-- Compare similarities and differences
-- Use only the provided context
-- Be clear and structured
-- If information is missing, say so
+STRICT RULES:
+- Use ONLY the given context
+- Do NOT assume or hallucinate
+- If information for a dimension is missing in BOTH documents, DO NOT include that dimension
+- If information is present in one document but missing in the other, write "Not specified" for the missing side
+- Be precise, analytical, and professional
+
+OUTPUT FORMAT:
+
+Document A: {doc_a}
+Document B: {doc_b}
+
+--------------------------------------
+
+1. Key Similarities (Concise Insights)
+- Focus on meaningful overlaps (not generic statements)
+
+2. Critical Differences (Structured)
+- ONLY include dimensions that are explicitly supported by the context
+- DO NOT force all dimensions
+- Use format:
+
+- [Dimension]: 
+  A → ... 
+  B → ...
+
+3. Executive Summary (2-3 lines)
+Provide a high-level comparison highlighting the core difference in purpose.
 """
 
     response = llm.invoke([
