@@ -905,7 +905,16 @@ with tab_lib:
                                         with col2:
                                             if st.button("🗑️ Delete", key=f"d_{draft['id']}", use_container_width=True):
                                                 with st.spinner("Deleting..."):
-                                                    requests.delete(f"{API_BASE_URL}/documents/draft/{draft['id']}")
+                                                    response = requests.delete(f"{API_BASE_URL}/documents/draft/{draft['id']}")
+
+                                                    if response.status_code == 200:
+                                                        st.success("Deleted successfully")
+                                                 
+                                                        if st.session_state.selected_draft_id == draft["id"]:
+                                                            st.session_state.selected_draft_id = None
+                                                        st.rerun()
+                                                    else:
+                                                        st.error("Delete failed")
                                                 st.rerun()
                 else:
                     st.info("No matching documents found")
