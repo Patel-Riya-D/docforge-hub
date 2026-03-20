@@ -121,8 +121,7 @@ class Retriever:
 
         results = sorted(
             results,
-            key=lambda x: x.get("last_updated", ""),
-            reverse=True
+            key=lambda x: x["score"]  # lower = better
         )
 
         return results

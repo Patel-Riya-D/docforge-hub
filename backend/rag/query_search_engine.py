@@ -146,7 +146,7 @@ def answer_question(question, filters=None):
         logger.info("Cache MISS")
     
     # Step 3: Retrieve
-    chunks = retriever.search(refined_question, k=3, filters=filters)
+    chunks = retriever.search(refined_question, k=5, filters=filters)
 
     logger.info(f"Retrieved {len(chunks)} chunks")
 
