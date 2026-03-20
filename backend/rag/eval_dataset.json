@@ -21,7 +21,7 @@
   },
   {
     "question": "What benefits do employees receive?",
-    "ground_truth": "Employees receive benefits such as leave, compensation, and other company-provided benefits."
+    "ground_truth": "Employees are entitled to paid leave, health insurance, and compensation benefits as per company policy."
   },
   {
     "question": "Are employees eligible for health insurance?",
@@ -30,13 +30,5 @@
   {
     "question": "What leave benefits are provided to employees?",
     "ground_truth": "Employees are entitled to leave benefits as part of their employment package."
-  },
-  {
-    "question": "Does the company provide remote work options?",
-    "ground_truth": "Not Available"
-  },
-  {
-    "question": "What is the company’s stock policy?",
-    "ground_truth": "Not Available"
   }
 ]

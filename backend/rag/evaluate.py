@@ -24,7 +24,7 @@ Used by:
 import json
 from datasets import Dataset
 from ragas import evaluate
-from ragas.metrics import faithfulness, answer_relevancy
+from ragas.metrics import faithfulness, answer_relevancy,context_precision,context_recall
 from backend.rag.query_search_engine import answer_question
 from langchain_openai import OpenAIEmbeddings
 from openai import OpenAI
@@ -118,12 +118,24 @@ def run_evaluation():
         question = item["question"]
         gt = item["ground_truth"]
 
+        if not gt or gt.lower() == "not available":
+            print(f"⚠️ Skipping invalid ground truth for: {question}")
+            continue
+
         result = answer_question(question)
 
-        answer = result["answer"]
-        retrieved_chunks = result["chunks"]
+        if not result or "chunks" not in result:
+            print(f"⚠️ No chunks retrieved for: {question}")
+            continue
 
-        context_texts = [c["text"] for c in retrieved_chunks]
+        answer = result.get("answer", "")
+        retrieved_chunks = result.get("chunks", [])
+
+        context_texts = [c.get("text", "") for c in retrieved_chunks if c.get("text")]
+
+        if not context_texts:
+            print(f"⚠️ Empty context for: {question}")
+            continue
 
         questions.append(question)
         answers.append(answer)
@@ -136,6 +148,9 @@ def run_evaluation():
             "contexts": context_texts
         })
 
+    if not questions:
+        raise ValueError("❌ No valid evaluation data generated")
+
     # ---------------- CREATE DATASET ----------------
     dataset = Dataset.from_dict({
         "question": questions,
@@ -145,7 +160,11 @@ def run_evaluation():
     })
 
     metrics = [
-        faithfulness, answer_relevancy]
+        faithfulness, 
+        answer_relevancy,
+        context_precision,
+        context_recall
+    ]
 
     result = evaluate(
         dataset=dataset,
@@ -156,15 +175,6 @@ def run_evaluation():
     print("\n📊 RAGAS RESULTS:")
     eval_df = result.to_pandas()
 
-    # ✅ Save full reproducible output
-    final_output = {
-        "timestamp": str(datetime.now()),
-        "config": config,
-        "metrics": eval_df.to_dict(orient="records"),
-        "outputs": results_data
-    }
-
-    # Optional: log only
     print("Evaluation completed")
 
     return eval_df

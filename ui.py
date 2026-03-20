@@ -1113,9 +1113,13 @@ with tab_rag:
             st.subheader("📋 Detailed Results")
             st.dataframe(result["data"])
             st.subheader("📈 Average Scores")
-            col1, col2 = st.columns(2)
+
+            col1, col2, col3, col4 = st.columns(4)
+
             col1.metric("Faithfulness", f"{result['avg_faithfulness']:.3f}")
-            col2.metric("Answer Relevancy", f"{result['avg_relevancy']:.3f}")
+            col2.metric("Relevancy", f"{result['avg_relevancy']:.3f}")
+            col3.metric("Context Precision", f"{result['avg_context_precision']:.3f}")
+            col4.metric("Context Recall", f"{result['avg_context_recall']:.3f}")
         else:
             st.error("Evaluation failed")
             st.write(response.text)

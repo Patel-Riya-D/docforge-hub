@@ -979,5 +979,7 @@ def rag_evaluate():
         "message": "Evaluation completed",
         "data": df.to_dict(orient="records"),
         "avg_faithfulness": float(df["faithfulness"].mean()),
-        "avg_relevancy": float(df["answer_relevancy"].mean())
+        "avg_relevancy": float(df["answer_relevancy"].mean()),
+        "avg_context_precision": float(df["context_precision"].mean()),
+        "avg_context_recall": float(df["context_recall"].mean())
     }
