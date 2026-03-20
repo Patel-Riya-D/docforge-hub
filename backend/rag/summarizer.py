@@ -30,6 +30,9 @@ def summarize_document(query, filters=None):
 Summarize the following company document content.
 
 Rules:
+- ONLY summarize using the provided context.
+- DO NOT add external information.
+- DO NOT infer missing details.
 - Keep it concise
 - Use bullet points
 - Focus on key policies / important details

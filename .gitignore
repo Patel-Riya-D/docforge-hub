@@ -38,3 +38,5 @@ logs/
 
 
 uploads/
+
+backend/rag/test.py

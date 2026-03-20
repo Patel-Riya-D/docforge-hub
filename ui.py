@@ -26,7 +26,34 @@ Tabs:
 
 This module acts as the user interaction layer of DocForge Hub,
 connecting UI with backend AI services.
+
+Main Application Flow:
+
+1. Sidebar:
+    - Select department and document template
+
+2. Generate Draft Tab:
+    - Multi-step wizard:
+        Step 1 → Company profile
+        Step 2 → Document inputs (merged schema)
+        Step 3 → AI clarification questions
+        Step 4 → Generate draft via backend
+
+3. Draft Review:
+    - Section editing, approval, regeneration
+    - Export and publish
+
+4. Draft Library:
+    - View, delete, manage drafts
+
+5. CiteRAG Lab:
+    - Search → Ask questions
+    - Compare → Compare documents
+    - Summarize → Generate summaries
+    - Evaluate → Run RAG metrics
+    
 """
+
 import os
 import streamlit as st
 import requests
@@ -558,32 +585,7 @@ with st.sidebar:
         st.info(f"Selected: {document_filename}")
 
 # -------------------- MAIN CONTENT --------------------
-"""
-Main Application Flow:
 
-1. Sidebar:
-    - Select department and document template
-
-2. Generate Draft Tab:
-    - Multi-step wizard:
-        Step 1 → Company profile
-        Step 2 → Document inputs (merged schema)
-        Step 3 → AI clarification questions
-        Step 4 → Generate draft via backend
-
-3. Draft Review:
-    - Section editing, approval, regeneration
-    - Export and publish
-
-4. Draft Library:
-    - View, delete, manage drafts
-
-5. CiteRAG Lab:
-    - Search → Ask questions
-    - Compare → Compare documents
-    - Summarize → Generate summaries
-    - Evaluate → Run RAG metrics
-"""
 st.header("⚡ DocForge Hub")
 st.caption("Intelligent document generation platform powered by AI")
 

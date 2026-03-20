@@ -24,7 +24,7 @@ import pickle
 import numpy as np
 from backend.rag.embeddings import get_embedding_model
 from backend.utils.logger import get_logger
-
+from backend.rag.background_indexer import index_lock
 logger = get_logger("RETRIEVER")
 
 
@@ -83,7 +83,9 @@ class Retriever:
 
         query_vector = np.array([query_embedding]).astype("float32")
 
-        distances, indices = self.index.search(query_vector, k)
+        with index_lock:
+            distances, indices = self.index.search(query_vector, k)
+            
         logger.info("FAISS search completed")
 
         results = []
@@ -115,5 +117,12 @@ class Retriever:
                 break
         
         logger.info(f"Results returned: {len(results)}")
+
+
+        results = sorted(
+            results,
+            key=lambda x: x.get("last_updated", ""),
+            reverse=True
+        )
 
         return results

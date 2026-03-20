@@ -71,30 +71,38 @@ def split_text(text, max_chars=500):
 
 def ingest_documents():
     """
-    Ingest and preprocess documents from Notion database.
+    Ingest documents from Notion and convert them into structured text chunks.
 
-    Workflow:
-    1. Fetch all pages from Notion database
-    2. Extract metadata:
+    This function:
+    1. Fetches all pages from the Notion database.
+    2. Extracts metadata such as:
         - document title
         - document type
         - industry
-        - page ID
-    3. Fetch all blocks for each page
-    4. Parse content:
-        - Identify sections using heading blocks
-        - Extract paragraph and bullet text
-    5. Split text into smaller chunks
-    6. Attach metadata to each chunk
+        - last updated timestamp
+    3. Retrieves page content blocks (headings, paragraphs, bullet points).
+    4. Splits long text into smaller chunks for embedding.
+    5. Assigns section names based on headings.
+    6. Returns a list of structured chunks for vector indexing.
 
     Returns:
-        list[dict]:
-            List of processed chunks ready for embedding
+        list[dict]: List of document chunks with metadata:
+            [
+                {
+                    "doc_title": str,
+                    "section": str,
+                    "text": str,
+                    "doc_type": str,
+                    "industry": str,
+                    "page_id": str,
+                    "last_updated": str
+                }
+            ]
 
     Notes:
-    - Each chunk retains its source metadata for citation
-    - Sections are dynamically tracked using heading blocks
-    - Supports paragraph and bullet list content
+        - Supports incremental indexing using `last_updated` field
+        - Ensures chunks are optimized for embedding size limits
+        - Maintains metadata for filtering and citation generation
     """
 
     pages = fetch_all_pages()
@@ -147,7 +155,8 @@ def ingest_documents():
                         "text": chunk_text,
                         "doc_type": doc_type,
                         "industry": industry,
-                        "page_id": page_id
+                        "page_id": page_id,
+                        "last_updated": page.get("last_edited_time") or "1970-01-01T00:00:00"
                     }
 
                     all_chunks.append(chunk)
@@ -172,7 +181,8 @@ def ingest_documents():
                         "text": chunk_text,
                         "doc_type": doc_type,
                         "industry": industry,
-                        "page_id": page_id
+                        "page_id": page_id,
+                        "last_updated": page.get("last_edited_time") or "1970-01-01T00:00:00"
                     }
 
                     all_chunks.append(chunk)
