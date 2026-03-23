@@ -24,6 +24,13 @@ def summarize_document(query, filters=None):
     #  Retrieve relevant chunks
     chunks = retriever.search(query, k=8, filters=filters)
 
+    # 🔥 ADD THIS CHECK
+    if not chunks:
+        return {
+            "summary": "❌ No relevant document found in knowledge base.",
+            "chunks": []
+        }
+
     context = "\n".join([c["text"] for c in chunks])
 
     prompt = f"""

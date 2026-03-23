@@ -51,8 +51,7 @@ def compare_documents(doc_a, doc_b, topic=""):
     )
 
     prompt = f"""
-You are a senior enterprise policy analyst.
-
+You are a senior enterprise document analyst.
 Your task is to compare two documents using ONLY the provided context.
 
 Document A: {doc_a}
@@ -62,40 +61,40 @@ Topic: {topic if topic else "General comparison"}
 
 Context A:
 {context_a}
-
 Context B:
 {context_b}
 
+-------------------------------------------
+
 STRICT RULES:
 - Use ONLY the given context
-- Do NOT assume or hallucinate
-- If information for a dimension is missing in BOTH documents, DO NOT include that dimension
-- If information is present in one document but missing in the other, write "Not specified" for the missing side
-- Be precise, analytical, and professional
+- Do NOT hallucinate or invent facts
+- If BOTH documents lack information for a dimension → SKIP that dimension
+- If ONE document lacks explicit mention:
+  → Infer its focus based on available content
+  → Do NOT write "Not specified"
+  → Instead explain how its focus differs
+- Prefer semantic comparison over literal matching
+- Focus on business purpose, structure, and functional differences
 
 OUTPUT FORMAT:
-
 Document A: {doc_a}
 Document B: {doc_b}
-
 --------------------------------------
 
 1. Key Similarities
-- Focus on meaningful overlaps (not generic statements)
-
+- Focus on meaningful overlaps (avoid generic statements)
 2. Critical Differences
-- ONLY include dimensions that are explicitly supported by the context
-- DO NOT force all dimensions
+- ONLY include dimensions supported by context
 - Use format:
-
-- [Dimension]: 
-  A → ... 
+- [Dimension]:
+  A → ...
   B → ...
-
 3. Executive Summary (2-3 lines)
-Provide a high-level comparison highlighting the core difference in purpose.
+Highlight the core difference in purpose and usage.
 
 """
+
 
     response = llm.invoke([
         SystemMessage(content="You compare enterprise documents."),

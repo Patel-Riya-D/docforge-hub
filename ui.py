@@ -1126,13 +1126,22 @@ with tab_rag:
     # ======================================================
     with tool_tabs[2]:
         st.subheader("Summarize Document")
-        summary_query = st.text_input(
-            "Enter document name or topic",
+        from backend.rag.notion_reader import get_all_document_titles
+
+        try:
+            available_docs = get_all_document_titles()
+        except:
+            available_docs = []
+
+        summary_query = st.selectbox(
+            "Select document to summarize",
+            available_docs,
             key="summary_query"
         )
+
         if st.button("Summarize", use_container_width=False):
             if not summary_query:
-                st.warning("Please enter something to summarize")
+                st.warning("Please select a document")
             else:
                 with st.spinner("Generating summary..."):
                     try:
