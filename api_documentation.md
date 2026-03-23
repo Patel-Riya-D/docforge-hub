@@ -429,7 +429,129 @@ POST /documents/publish-notion/1
   "message": "Published to Notion successfully"
 }
 ```
+---
+## 1️⃣4️⃣ RAG Query
 
+Ask questions using Retrieval-Augmented Generation.
+
+**Endpoint**
+
+```
+POST /documents/rag-query
+```
+**Request Body**
+```json
+{
+  "question": "What is the incident response process?",
+  "session_id": "user_123",
+  "doc_type": "policy",
+  "industry": "technology"
+}
+```
+
+**Response**
+```json
+{
+  "answer": "The incident response process includes...",
+  "sources": [
+    {
+      "document": "Incident Policy",
+      "content": "..."
+    }
+  ]
+}
+```
+---
+
+## 1️⃣5️⃣ RAG Compare
+
+Compare two documents using AI.
+
+**Endpoint**
+
+```
+POST /documents/rag-compare
+
+```
+**Example**
+```
+POST /documents/rag-compare
+```
+
+**Request Body**
+```json
+{
+  "doc_a": "Security Policy",
+  "doc_b": "Incident Policy",
+  "topic": "Access Control"
+}
+```
+
+**Response**
+```json
+{
+  "answer": "Comparison between documents...",
+  "sources": []
+}
+```
+---
+
+## 1️⃣6️⃣ RAG Summarize
+
+Generate a summary using RAG.
+
+**Endpoint**
+```
+POST /documents/rag-summarize
+```
+**Example**
+```
+POST /documents/rag-summarize
+```
+**Request Body**
+```json
+{
+  "query": "Summarize compliance policies",
+  "doc_type": "policy",
+  "industry": "finance"
+}
+```
+**Response**
+```json
+{
+  "summary": "The compliance policies include..."
+}
+```
+---
+
+## 1️⃣7️⃣ RAG Evaluate
+
+Evaluate RAG system performance.
+
+**Endpoint**
+```
+POST/documents/rag-evaluate
+```
+**Example**
+```
+POST /documents/rag-evaluate
+```
+**Response**
+```json
+{
+  "message": "Evaluation completed",
+  "data": [
+    {
+      "faithfulness": 0.92,
+      "answer_relevancy": 0.88
+    }
+  ],
+  "avg_faithfulness": 0.91,
+  "avg_relevancy": 0.87,
+  "avg_context_precision": 0.89,
+  "avg_context_recall": 0.85
+}
+```
 ---
 
 # 📘 Interactive API Docs

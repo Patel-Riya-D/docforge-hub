@@ -6,6 +6,9 @@ from backend.utils.rag_cache import (
     get_rag_cache,
     set_rag_cache
 )
+from backend.utils.logger import get_logger
+
+logger = get_logger("COMPARE")
 
 retriever = Retriever()
 llm = get_llm()
@@ -24,6 +27,10 @@ def filter_chunks_by_topic(chunks, topic):
 
     return filtered if filtered else chunks  # fallback if nothing found
 
+from backend.utils.logger import get_logger
+
+logger = get_logger("COMPARE")
+
 
 def compare_documents(doc_a, doc_b, topic=""):
     """
@@ -40,32 +47,52 @@ def compare_documents(doc_a, doc_b, topic=""):
         topic (str, optional): Specific comparison focus (e.g., "attendance").
     """
 
-    cache_key = generate_compare_cache_key(doc_a, doc_b, topic)
+    try:
+        # ---------------- CACHE ----------------
+        cache_key = generate_compare_cache_key(doc_a, doc_b, topic)
 
-    cached = get_rag_cache(cache_key)
-    if cached:
-        print("✅ CACHE HIT (COMPARE)")
-        return cached
+        cached = get_rag_cache(cache_key)
+        if cached:
+            logger.info("✅ CACHE HIT (COMPARE)")
+            return cached
 
-    # Retrieve chunks for both documents
-    query_a = f"{doc_a} {topic}" if topic else doc_a
-    query_b = f"{doc_b} {topic}" if topic else doc_b
+        # ---------------- RETRIEVAL ----------------
+        query_a = f"{doc_a} {topic}" if topic else doc_a
+        query_b = f"{doc_b} {topic}" if topic else doc_b
 
-    chunks_a = retriever.search(query_a, k=6)
-    chunks_b = retriever.search(query_b, k=6)
+        try:
+            chunks_a = retriever.search(query_a, k=6)
+            chunks_b = retriever.search(query_b, k=6)
+        except Exception as e:
+            logger.error(f"Retriever error: {e}")
+            return {
+                "answer": "Failed to retrieve document content.",
+                "chunks_a": [],
+                "chunks_b": []
+            }
 
-    chunks_a = filter_chunks_by_topic(chunks_a, topic)
-    chunks_b = filter_chunks_by_topic(chunks_b, topic)
+        # ---------------- FILTER ----------------
+        try:
+            chunks_a = filter_chunks_by_topic(chunks_a, topic)
+            chunks_b = filter_chunks_by_topic(chunks_b, topic)
+        except Exception as e:
+            logger.warning(f"Filtering error: {e}")
 
-    context_a = "\n".join(
-        [f"{c['doc_title']} → {c['section']}: {c['text']}" for c in chunks_a]
-    )
+        # ---------------- CONTEXT ----------------
+        try:
+            context_a = "\n".join(
+                [f"{c['doc_title']} → {c['section']}: {c['text']}" for c in chunks_a]
+            )
 
-    context_b = "\n".join(
-        [f"{c['doc_title']} → {c['section']}: {c['text']}" for c in chunks_b]
-    )
+            context_b = "\n".join(
+                [f"{c['doc_title']} → {c['section']}: {c['text']}" for c in chunks_b]
+            )
+        except Exception as e:
+            logger.error(f"Context building error: {e}")
+            context_a, context_b = "", ""
 
-    prompt = f"""
+        # ---------------- PROMPT ----------------
+        prompt = f"""
 You are a senior enterprise document analyst.
 Your task is to compare two documents using ONLY the provided context.
 
@@ -109,17 +136,44 @@ Highlight the core difference in purpose and usage.
 
 """
 
-    response = llm.invoke([
-        SystemMessage(content="You compare enterprise documents."),
-        HumanMessage(content=prompt)
-    ])
 
-    result = {
-        "answer": response.content,
-        "chunks_a": chunks_a,
-        "chunks_b": chunks_b
-    }
+        # ---------------- LLM CALL ----------------
+        try:
+            response = llm.invoke([
+                SystemMessage(content="You compare enterprise documents."),
+                HumanMessage(content=prompt)
+            ])
 
-    set_rag_cache(cache_key, result)
+            answer = response.content.strip() if response else "No response generated."
 
-    return result
+        except Exception as e:
+            logger.error(f"LLM error: {e}")
+            return {
+                "answer": "Comparison could not be generated due to LLM error.",
+                "chunks_a": chunks_a,
+                "chunks_b": chunks_b
+            }
+
+        # ---------------- RESULT ----------------
+        result = {
+            "answer": answer,
+            "chunks_a": chunks_a,
+            "chunks_b": chunks_b
+        }
+
+        # ---------------- CACHE SAVE ----------------
+        try:
+            set_rag_cache(cache_key, result)
+        except Exception as e:
+            logger.warning(f"Cache set failed: {e}")
+
+        return result
+
+    except Exception as e:
+        logger.error(f"Unexpected error in compare_documents: {e}")
+
+        return {
+            "answer": "Unexpected error occurred during comparison.",
+            "chunks_a": [],
+            "chunks_b": []
+        }

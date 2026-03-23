@@ -6,6 +6,9 @@ from backend.utils.rag_cache import (
     get_rag_cache,
     set_rag_cache
 )
+from backend.utils.logger import get_logger
+
+logger = get_logger("COMPARE")
 
 retriever = Retriever()
 llm = get_llm()
@@ -25,26 +28,42 @@ def summarize_document(query, filters=None):
         filters (dict, optional): Metadata filters.
 
     """
-    cache_key = generate_summary_cache_key(query, filters)
 
-    cached = get_rag_cache(cache_key)
-    if cached:
-        print("✅ CACHE HIT (SUMMARY)")
-        return cached
+    try:
+        # ---------------- CACHE ----------------
+        cache_key = generate_summary_cache_key(query, filters)
 
-    #  Retrieve relevant chunks
-    chunks = retriever.search(query, k=8, filters=filters)
+        cached = get_rag_cache(cache_key)
+        if cached:
+            logger.info("✅ CACHE HIT (SUMMARY)")
+            return cached
 
-    # 🔥 ADD THIS CHECK
-    if not chunks:
-        return {
-            "summary": "❌ No relevant document found in knowledge base.",
-            "chunks": []
-        }
+        # ---------------- RETRIEVER ----------------
+        try:
+            chunks = retriever.search(query, k=8, filters=filters)
+        except Exception as e:
+            logger.error(f"Retriever error: {e}")
+            return {
+                "summary": "Failed to retrieve document content.",
+                "chunks": []
+            }
 
-    context = "\n".join([c["text"] for c in chunks])
+        # ---------------- EMPTY CHECK ----------------
+        if not chunks:
+            return {
+                "summary": "❌ No relevant document found in knowledge base.",
+                "chunks": []
+            }
 
-    prompt = f"""
+        # ---------------- CONTEXT ----------------
+        try:
+            context = "\n".join([c["text"] for c in chunks])
+        except Exception as e:
+            logger.error(f"Context build error: {e}")
+            context = ""
+
+        # ---------------- PROMPT ----------------
+        prompt = f"""
 You are an enterprise document summarization assistant.
 
 Summarize the following company document content.
@@ -63,17 +82,39 @@ Content:
 
 Summary:
 """
+        # ---------------- LLM ----------------
+        try:
+            response = llm.invoke([
+                SystemMessage(content="You summarize enterprise documents."),
+                HumanMessage(content=prompt)
+            ])
 
-    response = llm.invoke([
-        SystemMessage(content="You summarize enterprise documents."),
-        HumanMessage(content=prompt)
-    ])
+            summary = response.content.strip() if response else "No summary generated."
 
-    result =  {
-        "summary": response.content,
-        "chunks": chunks
-    }
+        except Exception as e:
+            logger.error(f"LLM error: {e}")
+            return {
+                "summary": "Summary generation failed due to LLM error.",
+                "chunks": chunks
+            }
 
-    set_rag_cache(cache_key, result)
+        result = {
+            "summary": summary,
+            "chunks": chunks
+        }
 
-    return result 
+        # ---------------- CACHE SAVE ----------------
+        try:
+            set_rag_cache(cache_key, result)
+        except Exception as e:
+            logger.warning(f"Cache set failed: {e}")
+
+        return result
+
+    except Exception as e:
+        logger.error(f"Unexpected error in summarize_document: {e}")
+
+        return {
+            "summary": "Unexpected error occurred during summarization.",
+            "chunks": []
+        }

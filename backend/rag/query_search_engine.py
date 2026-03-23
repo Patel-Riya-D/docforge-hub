@@ -63,9 +63,6 @@ def calculate_confidence(chunks):
     - Used to control answer reliability in UI
     """
 
-    # if not chunks:
-    #     return {"level": "LOW", "score": 0}
-
     scores = [c.get("score", 1.5) for c in chunks]
 
     best_score = min(scores)
