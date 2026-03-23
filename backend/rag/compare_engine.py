@@ -1,6 +1,11 @@
 from backend.rag.retriever import Retriever
 from backend.generation.llm_provider import get_llm
 from langchain_core.messages import SystemMessage, HumanMessage
+from backend.utils.rag_cache import (
+    generate_compare_cache_key,
+    get_rag_cache,
+    set_rag_cache
+)
 
 retriever = Retriever()
 llm = get_llm()
@@ -35,9 +40,19 @@ def compare_documents(doc_a, doc_b, topic=""):
         topic (str, optional): Specific comparison focus (e.g., "attendance").
     """
 
+    cache_key = generate_compare_cache_key(doc_a, doc_b, topic)
+
+    cached = get_rag_cache(cache_key)
+    if cached:
+        print("✅ CACHE HIT (COMPARE)")
+        return cached
+
     # Retrieve chunks for both documents
-    chunks_a = retriever.search(doc_a, k=6)
-    chunks_b = retriever.search(doc_b, k=6)
+    query_a = f"{doc_a} {topic}" if topic else doc_a
+    query_b = f"{doc_b} {topic}" if topic else doc_b
+
+    chunks_a = retriever.search(query_a, k=6)
+    chunks_b = retriever.search(query_b, k=6)
 
     chunks_a = filter_chunks_by_topic(chunks_a, topic)
     chunks_b = filter_chunks_by_topic(chunks_b, topic)
@@ -77,10 +92,9 @@ STRICT RULES:
 - Prefer semantic comparison over literal matching
 - Focus on business purpose, structure, and functional differences
 
-OUTPUT FORMAT:
-Document A: {doc_a}
-Document B: {doc_b}
 --------------------------------------
+
+Output Format:
 
 1. Key Similarities
 - Focus on meaningful overlaps (avoid generic statements)
@@ -95,14 +109,17 @@ Highlight the core difference in purpose and usage.
 
 """
 
-
     response = llm.invoke([
         SystemMessage(content="You compare enterprise documents."),
         HumanMessage(content=prompt)
     ])
 
-    return {
+    result = {
         "answer": response.content,
         "chunks_a": chunks_a,
         "chunks_b": chunks_b
     }
+
+    set_rag_cache(cache_key, result)
+
+    return result

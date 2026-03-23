@@ -1116,6 +1116,15 @@ with tab_rag:
                         result = response.json()
 
                         st.markdown("### 📌 Comparison")
+
+                        st.markdown(f"**Document A:** {doc_a}")
+                        st.markdown(f"**Document B:** {doc_b}")
+
+                        display_topic = topic if topic else "-"
+                        st.markdown(f"**Comparision Topic:** {display_topic}")
+
+                        st.divider()
+
                         st.write(result.get("answer", ""))
 
                     except Exception as e:

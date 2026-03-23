@@ -32,7 +32,8 @@ def refine_query(question):
         str: Refined query.
     """
 
-    prompt = f"""
+    try:
+        prompt = f"""
 You are a query refinement assistant for enterprise document search.
 
 Rewrite the user question to make it clearer, more specific, 
@@ -51,9 +52,21 @@ User Question:
 Refined Question:
 """
 
-    response = llm.invoke([
-        SystemMessage(content="You improve search queries."),
-        HumanMessage(content=prompt)
-    ])
+        response = llm.invoke([
+            SystemMessage(content="You improve search queries."),
+            HumanMessage(content=prompt)
+        ])
 
-    return response.content.strip()
+        refined = response.content.strip()
+
+        # ✅ Safety check (very important)
+        if not refined:
+            return question
+
+        return refined
+
+    except Exception as e:
+        print(f"❌ Query refinement failed: {e}")
+
+        # ✅ Fallback → original query
+        return question

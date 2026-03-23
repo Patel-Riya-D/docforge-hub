@@ -899,7 +899,7 @@ def rag_compare(data: dict):
     doc_b = data.get("doc_b")
     topic = data.get("topic", "")
 
-    logger.info(f"/rag-compare called: {doc_a} vs {doc_b}")
+    logger.info(f"/rag-compare called: {doc_a} vs {doc_b} | Topic: {topic}")
 
     if not doc_a or not doc_b:
         raise HTTPException(status_code=400, detail="doc_a and doc_b required")

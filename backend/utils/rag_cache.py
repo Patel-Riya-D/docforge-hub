@@ -93,3 +93,22 @@ def set_rag_cache(key: str, value: dict, ttl=3600):
         logger.info(f"Cache SET: {key}")
     except Exception as e:
         logger.error(f"Cache write error: {e}")
+
+def generate_compare_cache_key(doc_a, doc_b, topic):
+    key_data = {
+        "doc_a": doc_a.lower().strip(),
+        "doc_b": doc_b.lower().strip(),
+        "topic": topic.lower().strip() if topic else ""
+    }
+
+    key_str = json.dumps(key_data, sort_keys=True)
+    return "compare:" + hashlib.md5(key_str.encode()).hexdigest()
+
+def generate_summary_cache_key(query, filters=None):
+    key_data = {
+        "query": query.lower().strip(),
+        "filters": filters or {}
+    }
+
+    key_str = json.dumps(key_data, sort_keys=True)
+    return "summary:" + hashlib.md5(key_str.encode()).hexdigest()

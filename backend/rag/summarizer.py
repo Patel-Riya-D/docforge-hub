@@ -1,6 +1,11 @@
 from backend.rag.retriever import Retriever
 from backend.generation.llm_provider import get_llm
 from langchain_core.messages import SystemMessage, HumanMessage
+from backend.utils.rag_cache import (
+    generate_summary_cache_key,
+    get_rag_cache,
+    set_rag_cache
+)
 
 retriever = Retriever()
 llm = get_llm()
@@ -20,6 +25,12 @@ def summarize_document(query, filters=None):
         filters (dict, optional): Metadata filters.
 
     """
+    cache_key = generate_summary_cache_key(query, filters)
+
+    cached = get_rag_cache(cache_key)
+    if cached:
+        print("✅ CACHE HIT (SUMMARY)")
+        return cached
 
     #  Retrieve relevant chunks
     chunks = retriever.search(query, k=8, filters=filters)
@@ -58,7 +69,11 @@ Summary:
         HumanMessage(content=prompt)
     ])
 
-    return {
+    result =  {
         "summary": response.content,
         "chunks": chunks
     }
+
+    set_rag_cache(cache_key, result)
+
+    return result 
