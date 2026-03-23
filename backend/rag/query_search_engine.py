@@ -129,7 +129,7 @@ def answer_question(question, filters=None):
 
     #  Step 2: Search using refined query
     #  Generate cache key
-    cache_key = generate_rag_cache_key(question, filters)
+    cache_key = generate_rag_cache_key(refined_question, filters)
 
     # ⚡ Try cache
     # ⚡ Step 2: Try full RAG cache

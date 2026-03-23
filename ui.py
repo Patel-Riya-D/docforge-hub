@@ -152,22 +152,66 @@ def render_field(label, field, key):
         - multiselect
     """
     field_type = field["type"]
-    if field_type == "text": 
-        return st.text_input(label, key=key, placeholder=f"Enter {label.lower()}...")
-    elif field_type == "textarea": 
-        return st.text_area(label, key=key, height=80, placeholder=f"Enter {label.lower()}...")
-    elif field_type == "number": 
-        return st.number_input(label, key=key, min_value=0)
-    elif field_type == "boolean": 
-        return st.checkbox(label, key=key)
-    elif field_type == "date": 
-        return st.date_input(label, key=key)
-    elif field_type == "dropdown": 
-        return st.selectbox(label, field.get("options", []), key=key)
-    elif field_type == "multiselect": 
-        return st.multiselect(label, field.get("options", []), key=key)
-    else: 
-        return st.text_input(label, key=key, placeholder=f"Enter {label.lower()}...")
+    existing_value = st.session_state.get(key, None)
+
+    if field_type == "text":
+        return st.text_input(
+            label,
+            key=key,
+            value=existing_value if existing_value else ""
+        )
+
+    elif field_type == "textarea":
+        return st.text_area(
+            label,
+            key=key,
+            value=existing_value if existing_value else "",
+            height=100
+        )
+
+    elif field_type == "number":
+        return st.number_input(
+            label,
+            key=key,
+            value=existing_value if existing_value else 0
+        )
+
+    elif field_type == "boolean":
+        return st.checkbox(
+            label,
+            key=key,
+            value=existing_value if existing_value else False
+        )
+
+    elif field_type == "date":
+        return st.date_input(
+            label,
+            key=key,
+            value=existing_value if existing_value else None
+        )
+
+    elif field_type == "dropdown":
+        return st.selectbox(
+            label,
+            field.get("options", []),
+            key=key,
+            index=field.get("options", []).index(existing_value) if existing_value in field.get("options", []) else 0
+        )
+
+    elif field_type == "multiselect":
+        return st.multiselect(
+            label,
+            field.get("options", []),
+            key=key,
+            default=existing_value if existing_value else []
+        )
+
+    else:
+        return st.text_input(
+            label,
+            key=key,
+            value=existing_value if existing_value else ""
+        )
 
 def render_company_step():
     """
@@ -262,24 +306,34 @@ def render_document_step(step_idx, group, doc_name):
             st.caption(group.get('description', ''))
     
     fields = group["fields"]
-    cols = st.columns(2)
     user_inputs = {}
     validation_errors = []
+
     for idx, field in enumerate(fields):
         key = field["key"]
         raw_label = field["label"]
-        # Apply label enhancer (original logic)
+
+        # Label enhancement
         cache_key = f"enhanced_{doc_name}_{raw_label}"
         if cache_key not in st.session_state:
             st.session_state[cache_key] = enhance_label(raw_label, doc_name)
+
         label = st.session_state[cache_key]
-        if field.get("required"): 
+
+        if field.get("required"):
             label = f"{label} *"
-        with cols[idx % 2]:
-            value = render_field(label, field, f"step_{step_idx}_{key}")
-            user_inputs[key] = value
-            if field.get("required") and not value:
-                validation_errors.append(f"{field['label']} is required.")
+
+        # ✅ SINGLE COLUMN (no cols)
+        value = render_field(label, field, f"step_{step_idx}_{key}")
+
+        user_inputs[key] = value
+
+        if field.get("required") and not value:
+            validation_errors.append(f"{field['label']} is required.")
+
+        # ✅ Optional spacing (clean UI)
+        st.divider()
+
     return user_inputs, validation_errors
 
 # -------------------- DRAFT REVIEW RENDERING FUNCTION --------------------
@@ -625,15 +679,8 @@ with tab_gen:
                 
                 # --- MERGE DOCUMENT GROUPS INTO LARGER STEPS ---
                 all_doc_groups = base_groups + doc_groups
-                merged_steps = []          # list of lists of (original_index, group)
-                step_size = 3               # combine 3 groups per step – adjust as needed
-                for i in range(0, len(all_doc_groups), step_size):
-                    step_groups = []
-                    for j in range(i, min(i+step_size, len(all_doc_groups))):
-                        step_groups.append((j, all_doc_groups[j]))
-                    merged_steps.append(step_groups)
-                doc_step_count = len(merged_steps)
-                total_steps = 1 + doc_step_count + 1   # company + merged doc steps + AI questions
+                doc_step_count = 2  # Section 1 (static) + Section 2 (AI)
+                total_steps = 1 + doc_step_count   # company + merged doc steps + AI questions
                 current_step = st.session_state.current_step
                 
                 # UI: Progress bar with descriptive text
@@ -641,7 +688,7 @@ with tab_gen:
                 st.progress((current_step + 1) / total_steps, text=progress_text)
                 
                 # UI: Step indicators using columns with status icons
-                step_names = ["🏢 Company"] + [f"📄 Section {i+1}" for i in range(doc_step_count)] + ["❓ Questions"]
+                step_names = ["🏢 Company"] + [f"📄 Section {i+1}" for i in range(doc_step_count)]
                 cols = st.columns(total_steps)
                 for i, col in enumerate(cols):
                     with col:
@@ -659,74 +706,67 @@ with tab_gen:
                 if current_step == 0:
                     # Company profile step
                     render_company_step()
-                elif current_step <= doc_step_count:
-                    # Document step (index current_step - 1 in merged_steps)
-                    step_groups = merged_steps[current_step - 1]
-                    for (orig_idx, group) in step_groups:
+                elif current_step == 1:
+                    # ✅ SECTION 1 → ALL STATIC QUESTIONS
+
+                    for idx, group in enumerate(all_doc_groups):
                         if 'icon' not in group:
                             group['icon'] = "📄"
                         if 'description' not in group:
                             group['description'] = f"{doc_config['document_name']} details"
-                        user_inputs, errs = render_document_step(orig_idx, group, doc_config['document_name'])
+
+                        user_inputs, errs = render_document_step(idx, group, doc_config['document_name'])
                         validation_errors.extend(errs)
-                        # Save inputs to session state
+
                         for key, value in user_inputs.items():
-                            st.session_state.form_data[f"{orig_idx}_{key}"] = value
-                else:
-                    # Last step: AI Questions
-                    st.subheader("Additional Governance Information")
-                    # UI: Add a hint about answering questions
-                    st.info("Please answer the following questions to complete the draft.")
-                    
-                    # Generate AI questions if not already done
+                            st.session_state.form_data[f"{idx}_{key}"] = value
+
+                    # ✅ ADD THIS: Inject AI questions into LAST section only
+                elif current_step == 2:
+                    st.subheader("🤖 AI Generated Questions")
+                    st.info("Answer AI-generated questions based on your inputs.")
+
+                    # Generate questions once
                     if not st.session_state.pending_questions and not st.session_state.questions_generated:
-                        # Collect all document inputs so far
+
                         all_inputs = {}
                         for step in range(len(all_doc_groups)):
                             for field in all_doc_groups[step]["fields"]:
                                 key = f"step_{step}_{field['key']}"
                                 if key in st.session_state:
                                     all_inputs[field['key']] = st.session_state[key]
-                        # Prepare safe inputs for API
-                        safe_inputs = {}
-                        for key, value in all_inputs.items():
-                            if hasattr(value, "isoformat"):
-                                safe_inputs[key] = value.isoformat()
-                            else:
-                                safe_inputs[key] = value
-                        # Call generate-questions
-                        with st.spinner("Generating follow-up questions..."):
+
+                        safe_inputs = {
+                            k: v.isoformat() if hasattr(v, "isoformat") else v
+                            for k, v in all_inputs.items()
+                        }
+
+                        with st.spinner("Generating AI questions..."):
                             questions_response = requests.post(
                                 f"{API_BASE_URL}/documents/generate-questions",
                                 json={
                                     "department": department.lower(),
                                     "document_filename": document_filename,
-                                    "company_profile": {
-                                        "company_name": st.session_state.company_profile.get("company_name", ""),
-                                        "industry": st.session_state.company_profile.get("industry", ""),
-                                        "employee_count": st.session_state.company_profile.get("employee_count", 0),
-                                        "regions": [st.session_state.company_profile.get("region", "")],
-                                        "compliance_frameworks": [st.session_state.company_profile.get("compliance", "")],
-                                        "default_jurisdiction": st.session_state.company_profile.get("jurisdiction", "")
-                                    },
+                                    "company_profile": st.session_state.company_profile,
                                     "document_inputs": safe_inputs
                                 }
                             )
+
                         if questions_response.status_code == 200:
                             st.session_state.pending_questions = questions_response.json().get("questions", [])
                             st.session_state.questions_generated = True
-                    
-                    # Display AI questions in a container
-                    with st.container(border=True):
-                        for q in st.session_state.pending_questions:
-                            key = q["key"]
-                            question_text = q["question"]
-                            q_type = q.get("type", "text")
-                            unique_key = f"aiq_{department}_{document_filename}_{key}"
-                            if q_type == "textarea":
-                                st.text_area(question_text, key=unique_key)
-                            else:
-                                st.text_input(question_text, key=unique_key)
+
+                    # Render AI questions
+                    for i, q in enumerate(st.session_state.pending_questions):
+                        key = q["key"]
+                        question_text = q["question"]
+
+                        unique_key = f"aiq_{i}_{key}"
+
+                        if q.get("type") == "textarea":
+                            st.text_area(question_text, key=unique_key)
+                        else:
+                            st.text_input(question_text, key=unique_key)
                 
                 # Navigation buttons
                 st.divider()
@@ -766,13 +806,17 @@ with tab_gen:
                     # Validate AI questions
                     question_answers = {}
                     unanswered = []
-                    for q in st.session_state.pending_questions:
+
+                    for i, q in enumerate(st.session_state.pending_questions):
                         key = q["key"]
-                        unique_key = f"aiq_{department}_{document_filename}_{key}"
+                        unique_key = f"aiq_{i}_{key}"   # ✅ must MATCH render key
+
                         value = st.session_state.get(unique_key, "")
                         question_answers[key] = value
+
                         if not value:
                             unanswered.append(q["question"])
+
                     if unanswered:
                         st.error("❌ Please answer the following questions:")
                         for q in unanswered:
@@ -812,7 +856,6 @@ with tab_gen:
                                 st.success("✅ Draft Generated Successfully!")
                                 st.balloons()
                                 st.session_state.selected_draft_id = result["draft_id"]
-                                st.session_state.current_step = 0
                                 # Clear any previous edit states for new draft
                                 st.rerun()  # Rerun to fetch and display the draft
                             elif result.get("status") == "questions_required":
@@ -1074,10 +1117,6 @@ with tab_rag:
 
                         st.markdown("### 📌 Comparison")
                         st.write(result.get("answer", ""))
-
-                        st.markdown("### 📚 Sources")
-                        for s in result.get("sources", []):
-                            st.write(f"• {s}")
 
                     except Exception as e:
                         st.error(f"Comparison failed: {e}")

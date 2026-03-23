@@ -102,14 +102,8 @@ Provide a high-level comparison highlighting the core difference in purpose.
         HumanMessage(content=prompt)
     ])
 
-    sources = list(set(
-        [f"{c['doc_title']} → {c['section']}" for c in chunks_a] +
-        [f"{c['doc_title']} → {c['section']}" for c in chunks_b]
-    ))
-
     return {
         "answer": response.content,
-        "sources": sources,
         "chunks_a": chunks_a,
         "chunks_b": chunks_b
     }
