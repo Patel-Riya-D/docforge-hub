@@ -32,7 +32,7 @@ from backend.utils.logger import get_logger
 logger = get_logger("COMPARE")
 
 
-def compare_documents(doc_a, doc_b, topic=""):
+def compare_documents(doc_a, doc_b, topic="",version=None):
     """
     Compare two documents based on retrieved content.
 
@@ -49,7 +49,7 @@ def compare_documents(doc_a, doc_b, topic=""):
 
     try:
         # ---------------- CACHE ----------------
-        cache_key = generate_compare_cache_key(doc_a, doc_b, topic)
+        cache_key = generate_compare_cache_key(doc_a, doc_b, topic, version)
 
         cached = get_rag_cache(cache_key)
         if cached:
@@ -60,9 +60,11 @@ def compare_documents(doc_a, doc_b, topic=""):
         query_a = f"{doc_a} {topic}" if topic else doc_a
         query_b = f"{doc_b} {topic}" if topic else doc_b
 
+        filters = {"version": version} if version else None
+
         try:
-            chunks_a = retriever.search(query_a, k=6)
-            chunks_b = retriever.search(query_b, k=6)
+            chunks_a = retriever.search(query_a, k=6, filters=filters)
+            chunks_b = retriever.search(query_b, k=6, filters=filters)
         except Exception as e:
             logger.error(f"Retriever error: {e}")
             return {

@@ -867,7 +867,8 @@ def rag_query(data: dict):
 
     filters = {
         "doc_type": data.get("doc_type"),
-        "industry": data.get("industry")
+        "industry": data.get("industry"),
+        "version": data.get("version")
     }
 
     # ✅ STEP 2: Run RAG
@@ -898,6 +899,7 @@ def rag_compare(data: dict):
     doc_a = data.get("doc_a")
     doc_b = data.get("doc_b")
     topic = data.get("topic", "")
+    version = data.get("version")
 
     logger.info(f"/rag-compare called: {doc_a} vs {doc_b} | Topic: {topic}")
 
@@ -923,7 +925,7 @@ def rag_compare(data: dict):
         }
 
     # 🔥 STEP 3: Only if valid → run comparison
-    return compare_documents(doc_a, doc_b, topic)
+    return compare_documents(doc_a, doc_b, topic,version)
 
 @router.post("/rag-summarize")
 def rag_summarize(data: dict):
@@ -945,7 +947,8 @@ def rag_summarize(data: dict):
 
     filters = {
         "doc_type": data.get("doc_type"),
-        "industry": data.get("industry")
+        "industry": data.get("industry"),
+        "version": data.get("version")
     }
 
     if not query:

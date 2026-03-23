@@ -22,6 +22,20 @@ DATABASE_ID = os.getenv("NOTION_DATABASE_ID")
 
 notion = Client(auth=NOTION_TOKEN)
 
+def get_all_versions():
+    pages = fetch_all_pages()
+
+    versions = set()
+
+    for page in pages:
+        version_field = page["properties"].get("Version", {})
+        version = version_field.get("number")
+
+        if version is not None:
+            versions.add(int(version))
+
+    return sorted(list(versions))
+
 def get_all_document_titles():
     """
     Extract clean document titles from Notion pages

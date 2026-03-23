@@ -94,11 +94,12 @@ def set_rag_cache(key: str, value: dict, ttl=3600):
     except Exception as e:
         logger.error(f"Cache write error: {e}")
 
-def generate_compare_cache_key(doc_a, doc_b, topic):
+def generate_compare_cache_key(doc_a, doc_b, topic, version=None):
     key_data = {
         "doc_a": doc_a.lower().strip(),
         "doc_b": doc_b.lower().strip(),
-        "topic": topic.lower().strip() if topic else ""
+        "topic": topic.lower().strip() if topic else "",
+        "version": version
     }
 
     key_str = json.dumps(key_data, sort_keys=True)

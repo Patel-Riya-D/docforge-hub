@@ -122,6 +122,9 @@ def ingest_documents():
         industry_field = page["properties"].get("Industry", {}).get("select")
         industry = industry_field["name"] if industry_field else "Unknown"
 
+        version_field = page["properties"].get("Version", {})
+        version = version_field.get("number", None)
+
         blocks = fetch_page_blocks(page_id)
 
         current_section = None
@@ -155,6 +158,7 @@ def ingest_documents():
                         "text": chunk_text,
                         "doc_type": doc_type,
                         "industry": industry,
+                        "version": version,
                         "page_id": page_id,
                         "last_updated": page.get("last_edited_time") or "1970-01-01T00:00:00"
                     }
@@ -181,6 +185,7 @@ def ingest_documents():
                         "text": chunk_text,
                         "doc_type": doc_type,
                         "industry": industry,
+                        "version": version,
                         "page_id": page_id,
                         "last_updated": page.get("last_edited_time") or "1970-01-01T00:00:00"
                     }

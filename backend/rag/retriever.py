@@ -96,6 +96,10 @@ class Retriever:
 
             score = float(distances[0][i])
 
+            print("---- DEBUG VERSION ----")
+            print("Chunk:", chunk.get("version"))
+            print("Filter:", filters.get("version"))
+
             # Apply metadata filters
             if filters:
 
@@ -104,6 +108,23 @@ class Retriever:
 
                 if filters.get("industry") and chunk["industry"] != filters["industry"]:
                     continue
+
+                # ✅ VERSION FILTER FIX
+                if filters.get("version"):
+
+                    filter_version = str(filters["version"]).lower()
+                    chunk_version = chunk.get("version")
+
+                    # 🔥 CASE 1: latest → DO NOT filter (let FAISS return best)
+                    if filter_version == "latest":
+                        pass
+
+                    # 🔥 CASE 2: specific version
+                    else:
+                        if str(chunk_version) != str(filters["version"]):
+                            continue
+                
+            print("FINAL RESULTS AFTER FILTER:", len(results))
             
             #attach score to chunk
             chunk_with_score = {

@@ -637,6 +637,11 @@ with st.sidebar:
     
     if document_filename:
         st.info(f"Selected: {document_filename}")
+    
+    st.caption(
+        "💡 Tip: Select **Latest** for the most recent version. "
+        "Choose **All** to search across all versions if unsure."
+    )
 
 # -------------------- MAIN CONTENT --------------------
 
@@ -986,12 +991,14 @@ with tab_rag:
     # UI: Group filters in a container with border
     with st.container(border=True):
         st.markdown("### Filters")
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns(3)
+
         with col1:
             doc_type = st.selectbox(
                 "Document Type",
                 ["All", "Policy", "Runbook", "Handbook", "Template", "SOP", "FORM"]
             )
+
         with col2:
             industry = st.radio(
                 "Industry",
@@ -999,8 +1006,30 @@ with tab_rag:
                 horizontal=True
             )
 
+        with col3:
+            from backend.rag.notion_reader import get_all_versions
+
+            try:
+                versions = get_all_versions()
+            except:
+                versions = []
+
+            version_options = ["Latest", "All"] + [str(v) for v in versions]
+
+            selected_version = st.selectbox(
+                "Version",
+                version_options,
+                key="version_filter"
+            )
+
     doc_type_filter = None if doc_type == "All" else doc_type
     industry_filter = None if industry == "All" else industry
+    if selected_version == "All":
+        version_filter = None
+    elif selected_version == "Latest":
+        version_filter = "latest"
+    else:
+        version_filter = int(selected_version)
 
     # UI: Tool tabs with better spacing
     tool_tabs = st.tabs(["🔎 Search", "📘 Compare", "📝 Summarize"])
@@ -1028,10 +1057,20 @@ with tab_rag:
                             json={
                                 "question": question,
                                 "doc_type": doc_type_filter,
-                                "industry": industry_filter
+                                "industry": industry_filter,
+                                "version": version_filter
                             }
                         )
-                        result = response.json()
+                        if response.status_code != 200:
+                            st.error(f"❌ API Error: {response.text}")
+                            st.stop()
+
+                        try:
+                            result = response.json()
+                        except Exception:
+                            st.error("❌ Invalid response from backend")
+                            st.text(response.text)
+                            st.stop()
 
                         # 🔍 Refined Query
                         st.markdown("### 🔍 Refined Query")
@@ -1109,11 +1148,21 @@ with tab_rag:
                             json={
                                 "doc_a": doc_a,
                                 "doc_b": doc_b,
-                                "topic": topic
+                                "topic": topic,
+                                "version": version_filter
                             }
                         )
 
-                        result = response.json()
+                        if response.status_code != 200:
+                            st.error(f"❌ API Error: {response.text}")
+                            st.stop()
+
+                        try:
+                            result = response.json()
+                        except Exception:
+                            st.error("❌ Invalid response from backend")
+                            st.text(response.text)
+                            st.stop()
 
                         st.markdown("### 📌 Comparison")
 
@@ -1160,10 +1209,20 @@ with tab_rag:
                             json={
                                 "query": summary_query,
                                 "doc_type": doc_type_filter,
-                                "industry": industry_filter
+                                "industry": industry_filter,
+                                "version": version_filter
                             }
                         )
-                        result = response.json()
+                        if response.status_code != 200:
+                            st.error(f"❌ API Error: {response.text}")
+                            st.stop()
+
+                        try:
+                            result = response.json()
+                        except Exception:
+                            st.error("❌ Invalid response from backend")
+                            st.text(response.text)
+                            st.stop()
                         st.markdown("### 📝 Summary")
                         st.write(result.get("summary", ""))
                     except Exception as e:

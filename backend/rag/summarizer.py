@@ -8,7 +8,7 @@ from backend.utils.rag_cache import (
 )
 from backend.utils.logger import get_logger
 
-logger = get_logger("COMPARE")
+logger = get_logger("SUMMARY")
 
 retriever = Retriever()
 llm = get_llm()
@@ -47,7 +47,7 @@ def summarize_document(query, filters=None):
                 "summary": "Failed to retrieve document content.",
                 "chunks": []
             }
-
+        
         # ---------------- EMPTY CHECK ----------------
         if not chunks:
             return {
@@ -55,6 +55,41 @@ def summarize_document(query, filters=None):
                 "chunks": []
             }
 
+        # ---------------- HANDLE LATEST VERSION ----------------
+        if filters and filters.get("version") == "latest":
+
+            # Find max version from chunks
+            versions = [int(c.get("version", 0)) for c in chunks if c.get("version")]
+
+            if not versions:
+                return {
+                    "summary": "❌ No version information found.",
+                    "chunks": []
+                }
+
+            latest_version = max(versions)
+
+            chunks = [
+                c for c in chunks if int(c.get("version", 0)) == latest_version
+            ]
+        # ---------------- STRICT VERSION CHECK ----------------
+        if filters and filters.get("version") and filters["version"] not in ["All", "latest"]:
+
+            requested_version = str(filters["version"])
+
+            # Check if any chunk matches requested version
+            valid_chunks = [
+                c for c in chunks if str(c.get("version")) == requested_version
+            ]
+
+            if not valid_chunks:
+                return {
+                    "summary": f"❌ No document found for version {requested_version}.",
+                    "chunks": []
+                }
+
+            # Use only valid version chunks
+            chunks = valid_chunks
         # ---------------- CONTEXT ----------------
         try:
             context = "\n".join([c["text"] for c in chunks])

@@ -40,6 +40,15 @@ logger = get_logger("RAG")
 retriever = Retriever()
 llm = get_llm()
 
+def is_no_answer(answer):
+    phrases = [
+        "i could not find",
+        "not available",
+        "no information",
+        "cannot find"
+    ]
+    return any(p in answer.lower() for p in phrases)
+
 def calculate_confidence(chunks):
     """
     Determine confidence level of retrieved results based on similarity scores.
@@ -63,12 +72,25 @@ def calculate_confidence(chunks):
     - Used to control answer reliability in UI
     """
 
+    # ✅ STEP 1 — handle empty chunks
+    if not chunks:
+        return {
+            "score": 0
+        }
+
+    # ✅ STEP 2 — safe score extraction
     scores = [c.get("score", 1.5) for c in chunks]
+
+    # ✅ STEP 3 — handle empty scores (extra safety)
+    if not scores:
+        return {
+            "score": 0
+        }
 
     best_score = min(scores)
 
-    #  Convert distance → confidence %
-    confidence_score = 1 / (1 + best_score)   # normalize
+    # Convert distance → confidence %
+    confidence_score = 1 / (1 + best_score)
     confidence_percent = round(confidence_score * 100)
 
     return {
@@ -145,12 +167,39 @@ def answer_question(question, filters=None):
     # Step 3: Retrieve
     chunks = retriever.search(refined_question, k=5, filters=filters)
 
+    # ✅ NEW: FILTER LOW QUALITY CHUNKS
+    SIMILARITY_THRESHOLD = 0.7   # tune 0.6–0.8
+
+    filtered_chunks = [
+        c for c in chunks
+        if c.get("score", 999) < SIMILARITY_THRESHOLD   # FAISS: lower = better
+    ]
+
+    # 🚨 CRITICAL FIX
+    if not filtered_chunks:
+        return {
+            "answer": "No relevant documents found for your query.",
+            "sources": [],
+            "chunks": [],
+            "confidence_score": 0,
+            "cache_hit": False
+        }
+
+    # ✅ HANDLE EMPTY RESULTS (ADD HERE)
+    if not chunks:
+        return {
+            "answer": "❌ No relevant information found for selected filters. Try removing version filter.",
+            "sources": [],
+            "chunks": [],
+            "confidence_score": 0
+        }
+
     logger.info(f"Retrieved {len(chunks)} chunks")
 
     context = ""
     sources = []
 
-    for c in chunks:
+    for c in filtered_chunks:
         context += f"\n{c['text']}\n"
         sources.append(f"{c['doc_title']} → {c['section']}")
 
@@ -185,14 +234,24 @@ If the answer is not present in the context, say:
     #  Trim answer
     answer = response.content.strip().split("\n")[0]
 
-    confidence_data = calculate_confidence(chunks)
+    # 🚨 CRITICAL FIX
+    if is_no_answer(answer):
+        return {
+            "answer": answer,
+            "sources": [],
+            "chunks": [],
+            "confidence_score": 0,
+            "cache_hit": False
+        }
+
+    confidence_data = calculate_confidence(filtered_chunks)
 
 
     logger.info(f"Answer generated: {answer}")
     #  Step 4: Return result
     result = {
         "answer": answer,
-        "sources": list(set(sources)),
+        "sources": list(set(sources)) if confidence_data["score"] > 0 else [],
         "chunks": chunks,
         "refined_query": refined_question,
         "confidence_score": confidence_data["score"],
