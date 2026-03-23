@@ -220,37 +220,60 @@ RAGAS is used for standardized evaluation, complemented by custom confidence sco
   - Measures:
     - Faithfulness
     - Answer Relevancy
+    - Context Precision
+    - Context Recall
 
 ---
 
 ### 🧠 System Architecture
 
 ```
-User Query
-        │
-        ▼
+User Query (UI)
+      │
+      ▼
+API Endpoint (/rag-query)
+      │
+      ▼
 Query Refinement (LLM)
-        │
-        ▼
+      │
+      ▼
+Cache Key Generation
+      │
+      ▼
 Redis Cache Check
-        │
-        ▼
-FAISS Vector Search
-        │
-        ▼
-Metadata Filtering
-        │
-        ▼
+   ┌───────────────┐
+   │ Cache HIT     │────────────> Return Response
+   └───────────────┘
+      │
+      ▼
+Cache MISS 
+      │
+      ▼
+FAISS Vector Search (with metadata filters)
+      │
+      ▼
+Top-K Relevant Chunks Retrieved
+      │
+      ▼
 Context Construction
-        │
-        ▼
+(combine chunks)
+      │
+      ▼
 Answer Generation (LLM)
-        │
-        ▼
-Citations + Confidence Score
-        │
-        ▼
-Response to UI
+(grounded prompt)
+      │
+      ▼
+Confidence Score Calculation
+      │
+      ▼
+Citations Extraction
+(doc title + section)
+      │
+      ▼
+Store in Redis Cache
+      │
+      ▼
+Return Response to UI
 
 ```
 
@@ -276,7 +299,7 @@ Response to UI
   _Remote employees must follow core working hours from Monday to Friday, 10:00 AM to 4:00 PM._
 
 - **Confidence:**  
-  MEDIUM ⚠️ (Partial match)
+  Confidence score: 63%
 
 - **Sources:**  
   - Remote Work Policy → Work Hours & Availability  
