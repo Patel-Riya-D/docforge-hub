@@ -33,21 +33,27 @@ class Retriever:
     def get_document_chunks(self, doc_title, filters=None):
         results = []
 
-        for m in self.metadata:
-            # Match document name
-            if doc_title.lower() in m.get("doc_title", "").lower():
+        doc_title_clean = doc_title.lower().strip()
 
-                # Optional filters
+        for m in self.metadata:
+            metadata_title = m.get("doc_title", "").lower().strip()
+
+            # 🔥 ROBUST MATCHING
+            if (
+                doc_title_clean in metadata_title
+                or metadata_title in doc_title_clean
+            ):
+
                 if filters:
-                    # doc_type filter
                     if filters.get("doc_type") and m.get("doc_type") != filters["doc_type"]:
                         continue
 
-                    # industry filter
                     if filters.get("industry") and m.get("industry") != filters["industry"]:
                         continue
 
                 results.append(m)
+
+        print("🔥 MATCHED CHUNKS:", len(results))
 
         return results
 
