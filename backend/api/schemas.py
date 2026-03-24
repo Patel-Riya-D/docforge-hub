@@ -64,3 +64,4 @@ class SaveSectionEditRequest(BaseModel):
     draft_id: int
     section_name: str
     updated_text: str
+    
