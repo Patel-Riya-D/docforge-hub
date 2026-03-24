@@ -639,10 +639,8 @@ with st.sidebar:
         st.info(f"Selected: {document_filename}")
     
     st.caption(
-        "💡 Tip: Select **Latest** for the most recent version. "
-        "Choose **All** to search across all versions if unsure."
+        "💡 Default is Latest (recommended). Select a specific version only if needed."
     )
-
 # -------------------- MAIN CONTENT --------------------
 
 st.header("⚡ DocForge Hub")
@@ -1014,7 +1012,7 @@ with tab_rag:
             except:
                 versions = []
 
-            version_options = ["Latest", "All"] + [str(v) for v in versions]
+            version_options = ["Latest"] + [str(v) for v in versions]
 
             selected_version = st.selectbox(
                 "Version",
@@ -1024,9 +1022,7 @@ with tab_rag:
 
     doc_type_filter = None if doc_type == "All" else doc_type
     industry_filter = None if industry == "All" else industry
-    if selected_version == "All":
-        version_filter = None
-    elif selected_version == "Latest":
+    if selected_version == "Latest":
         version_filter = "latest"
     else:
         version_filter = int(selected_version)

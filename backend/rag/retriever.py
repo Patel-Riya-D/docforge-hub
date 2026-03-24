@@ -30,6 +30,27 @@ logger = get_logger("RETRIEVER")
 
 class Retriever:
 
+    def get_document_chunks(self, doc_title, filters=None):
+        results = []
+
+        for m in self.metadata:
+            # Match document name
+            if doc_title.lower() in m.get("doc_title", "").lower():
+
+                # Optional filters
+                if filters:
+                    # doc_type filter
+                    if filters.get("doc_type") and m.get("doc_type") != filters["doc_type"]:
+                        continue
+
+                    # industry filter
+                    if filters.get("industry") and m.get("industry") != filters["industry"]:
+                        continue
+
+                results.append(m)
+
+        return results
+
     def __init__(self):
 
         self.index = faiss.read_index("backend/rag/index/index.faiss")
@@ -90,15 +111,22 @@ class Retriever:
 
         results = []
 
+        # ✅ compute latest version per document (ONLY ONCE)
+        doc_versions = {}
+
+        if filters and filters.get("version") == "latest":
+            for m in self.metadata:
+                name = m.get("doc_title")
+                version = int(m.get("version", 0))
+
+                if name not in doc_versions or version > doc_versions[name]:
+                    doc_versions[name] = version
+
         for i, idx in enumerate(indices[0]):
 
             chunk = self.metadata[idx]
 
             score = float(distances[0][i])
-
-            print("---- DEBUG VERSION ----")
-            print("Chunk:", chunk.get("version"))
-            print("Filter:", filters.get("version"))
 
             # Apply metadata filters
             if filters:
@@ -113,19 +141,19 @@ class Retriever:
                 if filters.get("version"):
 
                     filter_version = str(filters["version"]).lower()
-                    chunk_version = chunk.get("version")
+                    chunk_version = int(chunk.get("version", 0))
 
-                    # 🔥 CASE 1: latest → DO NOT filter (let FAISS return best)
+                    #  CASE 1: latest
                     if filter_version == "latest":
-                        pass
+                        chunk_doc = chunk.get("doc_title")
 
-                    # 🔥 CASE 2: specific version
-                    else:
-                        if str(chunk_version) != str(filters["version"]):
+                        if chunk_version != doc_versions.get(chunk_doc):
                             continue
-                
-            print("FINAL RESULTS AFTER FILTER:", len(results))
-            
+
+                    #  CASE 2: specific version
+                    else:
+                        if chunk_version != int(filters["version"]):
+                            continue
             #attach score to chunk
             chunk_with_score = {
                 **chunk,

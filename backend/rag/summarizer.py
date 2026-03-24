@@ -40,13 +40,31 @@ def summarize_document(query, filters=None):
 
         # ---------------- RETRIEVER ----------------
         try:
-            chunks = retriever.search(query, k=8, filters=filters)
+            # 🔥 NEW: fetch all chunks for selected document
+            chunks = retriever.get_document_chunks(query, filters=filters)
         except Exception as e:
             logger.error(f"Retriever error: {e}")
             return {
                 "summary": "Failed to retrieve document content.",
                 "chunks": []
             }
+        print("🔥 TOTAL CHUNKS BEFORE FILTER:", len(chunks))
+        
+        # ---------------- VERSION FILTER ----------------
+        if filters and filters.get("version") == "latest":
+
+            versions = [
+                int(c.get("version", 0))
+                for c in chunks if c.get("version")
+            ]
+
+            if versions:
+                latest_version = max(versions)
+
+                chunks = [
+                    c for c in chunks
+                    if int(c.get("version", 0)) == latest_version
+                ]
         
         # ---------------- EMPTY CHECK ----------------
         if not chunks:
@@ -54,24 +72,6 @@ def summarize_document(query, filters=None):
                 "summary": "❌ No relevant document found in knowledge base.",
                 "chunks": []
             }
-
-        # ---------------- HANDLE LATEST VERSION ----------------
-        if filters and filters.get("version") == "latest":
-
-            # Find max version from chunks
-            versions = [int(c.get("version", 0)) for c in chunks if c.get("version")]
-
-            if not versions:
-                return {
-                    "summary": "❌ No version information found.",
-                    "chunks": []
-                }
-
-            latest_version = max(versions)
-
-            chunks = [
-                c for c in chunks if int(c.get("version", 0)) == latest_version
-            ]
         # ---------------- STRICT VERSION CHECK ----------------
         if filters and filters.get("version") and filters["version"] not in ["All", "latest"]:
 

@@ -168,22 +168,16 @@ def answer_question(question, filters=None):
     chunks = retriever.search(refined_question, k=5, filters=filters)
 
     # ✅ NEW: FILTER LOW QUALITY CHUNKS
-    SIMILARITY_THRESHOLD = 0.7   # tune 0.6–0.8
+    SIMILARITY_THRESHOLD = 2.0   # tune 0.6–0.8
 
     filtered_chunks = [
         c for c in chunks
         if c.get("score", 999) < SIMILARITY_THRESHOLD   # FAISS: lower = better
     ]
 
-    # 🚨 CRITICAL FIX
     if not filtered_chunks:
-        return {
-            "answer": "No relevant documents found for your query.",
-            "sources": [],
-            "chunks": [],
-            "confidence_score": 0,
-            "cache_hit": False
-        }
+        logger.warning("⚠️ No chunks passed threshold → using raw chunks")
+        filtered_chunks = chunks
 
     # ✅ HANDLE EMPTY RESULTS (ADD HERE)
     if not chunks:
