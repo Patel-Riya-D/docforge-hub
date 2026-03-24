@@ -1293,7 +1293,8 @@ with tab_statecase:
                     "assistant",
                     {
                         "answer": result["answer"],
-                        "sources": result.get("sources", [])
+                        "sources": result.get("sources", []),
+                        "confidence": result.get("confidence", 0)
                     }
                 ))
 
@@ -1313,6 +1314,16 @@ with tab_statecase:
         else:
             # ✅ show answer
             st.markdown(f"🤖 Assistant: {msg['answer']}")
+
+             # 🔥 ADD THIS BLOCK
+            confidence = msg.get("confidence", 0)
+
+            if confidence > 70:
+                st.success(f"🟢 Confidence: {confidence}%")
+            elif confidence > 40:
+                st.warning(f"🟡 Confidence: {confidence}%")
+            else:
+                st.error(f"🔴 Confidence: {confidence}%")
 
             # 🔥 ADD THIS BLOCK (THIS IS MISSING)
             sources = msg.get("sources", [])
@@ -1349,7 +1360,7 @@ with tab_statecase:
     st.divider()
     st.subheader("📋 My Tickets")
 
-    if st.button("Refresh Tickets", key="refresh_tickets"):
+    if st.button("🔄 Refresh Tickets"):
 
         try:
             url = f"https://api.notion.com/v1/databases/{os.getenv('NOTION_TICKET_DATABASE_ID')}/query"
@@ -1370,9 +1381,26 @@ with tab_statecase:
                 for item in data:
                     props = item["properties"]
 
-                    title = props["Title"]["title"][0]["text"]["content"] if props["Title"]["title"] else "No title"
-                    status = props["Status"]["select"]["name"] if props["Status"]["select"] else "N/A"
-                    priority = props["Priority"]["select"]["name"] if props["Priority"]["select"] else "N/A"
+                    # Title
+                    title = "No title"
+                    if props.get("Title") and props["Title"].get("title"):
+                        title_data = props["Title"]["title"]
+                        if len(title_data) > 0:
+                            title = title_data[0]["plain_text"]
+
+                    # 🚫 SKIP EMPTY ROWS
+                    if title == "No title":
+                        continue
+
+                    # Status
+                    status = "N/A"
+                    if props.get("Status") and props["Status"].get("select"):
+                        status = props["Status"]["select"]["name"]
+
+                    # Priority
+                    priority = "N/A"
+                    if props.get("Priority") and props["Priority"].get("select"):
+                        priority = props["Priority"]["select"]["name"]
 
                     with st.container(border=True):
                         st.write(f"📌 **{title}**")
@@ -1383,7 +1411,6 @@ with tab_statecase:
 
         except Exception as e:
             st.error(f"Error fetching tickets: {e}")
-
 # -------------------- FOOTER --------------------
 st.divider()
 col1, col2, col3 = st.columns(3)

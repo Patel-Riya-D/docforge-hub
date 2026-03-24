@@ -52,15 +52,15 @@ def retrieve_node(state: StateCaseState):
 # ---------------- NODE 2: DECISION ----------------
 def decision_node(state: StateCaseState):
     confidence = state.get("confidence", 0)
+    chunks = state.get("retrieved_chunks", [])
 
-    # 🔥 Rule: low confidence → escalate
-    if confidence < 50:
+    # 🔥 IMPROVED LOGIC
+    if confidence < 40 or len(chunks) < 2:
         state["should_escalate"] = True
     else:
         state["should_escalate"] = False
 
     return state
-
 
 # ---------------- NODE 3: ANSWER ----------------
 
@@ -73,7 +73,8 @@ def escalate_node(state: StateCaseState):
     from backend.statecase.ticketing import create_ticket
 
     if not state.get("ticket_created"):
-        create_ticket(
+
+        result = create_ticket(
             question=state["question"],
             context=state["retrieved_chunks"],
             filters={
@@ -81,11 +82,21 @@ def escalate_node(state: StateCaseState):
                 "industry": state.get("industry"),
                 "version": state.get("version")
             },
-            confidence=state.get("confidence")
+            confidence=state.get("confidence"),
+            history=state.get("history"),
+            sources=state.get("sources")
         )
-        state["ticket_created"] = True
 
-    state["answer"] = "⚠️ I couldn't find a reliable answer. A ticket has been created."
+        # 🔥 HANDLE RESULT PROPERLY
+        if result:
+            state["answer"] = "⚠️ I couldn't find a reliable answer. A ticket has been created."
+            state["ticket_created"] = True
+        else:
+            state["answer"] = "❌ Failed to create ticket. Please try again."
+
+    # 🔥 CLEAR SOURCES + CHUNKS
+    state["sources"] = []
+    state["retrieved_chunks"] = []
 
     return state
 

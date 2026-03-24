@@ -15,7 +15,15 @@ def generate_ticket_hash(question: str) -> str:
     return hashlib.md5(question.lower().encode()).hexdigest()
 
 
-def format_context(question, filters, chunks, confidence):
+def format_context(question, filters, chunks, confidence, history, sources):
+
+    history_text = "\n".join([
+        f"{h['role']}: {h['message']}"
+        for h in history[-5:]
+    ]) if history else "No history"
+
+    sources_text = "\n".join(sources) if sources else "No sources"
+
     chunk_text = "\n\n".join([
         f"{c.get('doc_title')} → {c.get('text')[:200]}"
         for c in chunks[:3]
@@ -25,6 +33,9 @@ def format_context(question, filters, chunks, confidence):
 Question:
 {question}
 
+Conversation:
+{history_text}
+
 Filters:
 Doc Type: {filters.get("doc_type")}
 Industry: {filters.get("industry")}
@@ -32,6 +43,9 @@ Version: {filters.get("version")}
 
 Confidence:
 {confidence}
+
+Sources:
+{sources_text}
 
 Retrieved Evidence:
 {chunk_text}
@@ -72,7 +86,7 @@ def ticket_exists(ticket_id):
         logger.error(f"Ticket exists check failed: {e}")
         return False
 
-def create_ticket(question, context, filters, confidence):
+def create_ticket(question, context, filters, confidence, history=None, sources=None):
     """
     Create a ticket in Notion with full context.
     """
@@ -85,7 +99,14 @@ def create_ticket(question, context, filters, confidence):
             logger.info("⚠️ Ticket already exists, skipping creation")
             return True
 
-        context_text = format_context(question, filters, context, confidence)
+        context_text = format_context(
+            question,
+            filters,
+            context,
+            confidence,
+            history,
+            sources
+        )
 
         url = "https://api.notion.com/v1/pages"
 
@@ -133,6 +154,7 @@ def create_ticket(question, context, filters, confidence):
         }
 
         response = requests.post(url, headers=headers, json=data)
+        print("NOTION RESPONSE:", response.status_code, response.text)
 
         if response.status_code == 200:
             logger.info("✅ Ticket created in Notion")
@@ -140,6 +162,7 @@ def create_ticket(question, context, filters, confidence):
         else:
             logger.error(f"❌ Notion error: {response.text}")
             return False
+
 
     except Exception as e:
         logger.error(f"Ticket creation failed: {e}")
