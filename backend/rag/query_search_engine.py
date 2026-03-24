@@ -149,10 +149,11 @@ def answer_question(question, filters=None):
     #  Step 2: Search using refined query
     #  Generate cache key
     cache_key = generate_rag_cache_key(question, filters)
+    cached = None   # 🚨 ADD THIS LINE
 
     # ⚡ Try cache
     # ⚡ Step 2: Try full RAG cache
-    cached = get_rag_cache(cache_key)
+    # cached = get_rag_cache(cache_key)
 
     if cached:
         if isinstance(cached, dict):
@@ -183,9 +184,9 @@ def answer_question(question, filters=None):
     if not chunks:
         return {
             "answer": "❌ No relevant information found for selected filters. Try removing version filter.",
-            "sources": [],
             "chunks": [],
-            "confidence_score": 0
+            "confidence_score": 0,
+            "sources": []
         }
 
     logger.info(f"Retrieved {len(chunks)} chunks")
@@ -232,7 +233,7 @@ If the answer is not present in the context, say:
     if is_no_answer(answer):
         return {
             "answer": answer,
-            "sources": [],
+            "sources": sources,
             "chunks": [],
             "confidence_score": 0,
             "cache_hit": False
@@ -240,12 +241,18 @@ If the answer is not present in the context, say:
 
     confidence_data = calculate_confidence(filtered_chunks)
 
+    # ✅ Build clean sources
+    sources = list(set([
+        f"{c.get('doc_title', 'Unknown')} → {c.get('section', 'N/A')}"
+        for c in filtered_chunks[:3]
+    ]))
+
 
     logger.info(f"Answer generated: {answer}")
     #  Step 4: Return result
     result = {
         "answer": answer,
-        "sources": list(set(sources)) if confidence_data["score"] > 0 else [],
+        "sources": sources,
         "chunks": chunks,
         "refined_query": refined_question,
         "confidence_score": confidence_data["score"],

@@ -646,10 +646,11 @@ with st.sidebar:
 st.header("⚡ DocForge Hub")
 st.caption("Intelligent document generation platform powered by AI")
 
-tabs = st.tabs(["✨ Generate Draft", "📚 Draft Library", "🔎 CiteRag Lab"])
+tabs = st.tabs(["✨ Generate Draft", "📚 Draft Library", "🔎 CiteRag Lab", "🤖 StateCase Assistant"])
 tab_gen = tabs[0]
 tab_lib = tabs[1]
 tab_rag = tabs[2]
+tab_statecase = tabs[3]
 
 # ==================== GENERATE DRAFT TAB ====================
 with tab_gen:
@@ -1244,6 +1245,144 @@ with tab_rag:
         else:
             st.error("Evaluation failed")
             st.write(response.text)
+
+# ==================== STATECASE ASSISTANT TAB ====================
+with tab_statecase:
+
+    st.subheader("🤖 StateCase Assistant")
+    st.caption("Conversational AI with memory + ticketing")
+
+    # ---------------- SESSION ----------------
+    if "session_id" not in st.session_state:
+        st.session_state.session_id = "user1"
+
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history = []
+
+    # ---------------- INPUT ----------------
+    user_input = st.text_input("Ask anything...", key="statecase_input")
+
+    col1, col2 = st.columns([1, 5])
+
+    with col1:
+        send_clicked = st.button("Send", use_container_width=True)
+
+    # ---------------- API CALL ----------------
+    if send_clicked and user_input:
+
+        with st.spinner("Thinking... 🤔"):
+
+            try:
+                response = requests.post(
+                    f"{API_BASE_URL}/documents/statecase-chat",
+                    json={
+                        "session_id": st.session_state.session_id,
+                        "question": user_input,
+                        "doc_type": doc_type_filter,
+                        "industry": industry_filter,
+                        "version": version_filter
+                    }
+                )
+                
+                result = response.json()
+                st.write("DEBUG API RESPONSE:", result)
+
+                # save chat
+                st.session_state.chat_history.append(("user", user_input))
+                st.session_state.chat_history.append((
+                    "assistant",
+                    {
+                        "answer": result["answer"],
+                        "sources": result.get("sources", [])
+                    }
+                ))
+
+                st.rerun()
+
+            except Exception as e:
+                st.error(f"Error: {e}")
+
+    # ---------------- CHAT DISPLAY ----------------
+    st.divider()
+
+    for role, msg in st.session_state.chat_history:
+
+        if role == "user":
+            st.markdown(f"🧑 You: {msg}")
+
+        else:
+            # ✅ show answer
+            st.markdown(f"🤖 Assistant: {msg['answer']}")
+
+            # 🔥 ADD THIS BLOCK (THIS IS MISSING)
+            sources = msg.get("sources", [])
+
+            if sources:
+                st.markdown("📚 **Sources:**")
+                for s in msg["sources"]:
+                    st.write(f"- {s}")
+
+    # ---------------- STATUS ----------------
+    if st.session_state.chat_history:
+        last_response = st.session_state.chat_history[-1][1]
+
+        # ✅ handle dict or string
+        if isinstance(last_response, dict):
+            text = last_response.get("answer", "")
+        else:
+            text = last_response
+
+        if "more details" in text.lower():
+            st.info("ℹ️ Assistant needs more details")
+
+        if "ticket has been created" in text.lower():
+            st.warning("📌 Ticket created in Notion")
+
+    # ---------------- CLEAR CHAT ----------------
+    if st.button("🗑 Clear Chat"):
+        st.session_state.chat_history = []
+        st.rerun()
+
+    # ======================================================
+    # 📋 MY TICKETS
+    # ======================================================
+    st.divider()
+    st.subheader("📋 My Tickets")
+
+    if st.button("Refresh Tickets", key="refresh_tickets"):
+
+        try:
+            url = f"https://api.notion.com/v1/databases/{os.getenv('NOTION_TICKET_DATABASE_ID')}/query"
+
+            headers = {
+                "Authorization": f"Bearer {os.getenv('NOTION_TOKEN')}",
+                "Notion-Version": "2022-06-28"
+            }
+
+            response = requests.post(url, headers=headers)
+
+            if response.status_code == 200:
+                data = response.json().get("results", [])
+
+                if not data:
+                    st.info("No tickets found")
+
+                for item in data:
+                    props = item["properties"]
+
+                    title = props["Title"]["title"][0]["text"]["content"] if props["Title"]["title"] else "No title"
+                    status = props["Status"]["select"]["name"] if props["Status"]["select"] else "N/A"
+                    priority = props["Priority"]["select"]["name"] if props["Priority"]["select"] else "N/A"
+
+                    with st.container(border=True):
+                        st.write(f"📌 **{title}**")
+                        st.write(f"Status: {status} | Priority: {priority}")
+
+            else:
+                st.error("Failed to fetch tickets")
+
+        except Exception as e:
+            st.error(f"Error fetching tickets: {e}")
 
 # -------------------- FOOTER --------------------
 st.divider()

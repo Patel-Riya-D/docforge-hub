@@ -49,10 +49,16 @@ from backend.rag.evaluate import run_evaluation
 from backend.utils.logger import get_logger
 from backend.utils.redis_session import update_session_history
 from backend.utils.rate_limitter import check_rate_limit
+from backend.statecase.graph import build_graph
+from backend.statecase.models import StateCaseState
+from backend.statecase.memory import memory_store
 
 logger = get_logger("API")
 
 router = APIRouter(prefix="/documents", tags=["Documents"])
+
+# build graph once (global)
+statecase_graph = build_graph()
 
 
 @router.post("/preview")
@@ -988,4 +994,56 @@ def rag_evaluate():
         "avg_relevancy": float(df["answer_relevancy"].mean()),
         "avg_context_precision": float(df["context_precision"].mean()),
         "avg_context_recall": float(df["context_recall"].mean())
+    }
+
+
+@router.post("/statecase-chat")
+def statecase_chat(data: dict):
+    """
+    Stateful assistant endpoint using LangGraph.
+    """
+
+    question = data.get("question")
+    session_id = data.get("session_id", "default")
+
+    if not question:
+        raise HTTPException(status_code=400, detail="Question is required")
+
+    session_id = data.get("session_id", "default")
+
+    #  Get memory
+    history = memory_store.get_history(session_id)
+
+    #  Initialize state
+    state: StateCaseState = {
+        "question": question,
+        "industry": data.get("industry"),
+        "doc_type": data.get("doc_type"),
+        "version": data.get("version"),
+        "history": history,
+        "retrieved_chunks": [],
+        "answer": None,
+        "confidence": 0,
+        "needs_clarification": False,
+        "should_escalate": False,
+        "ticket_created": False,
+        "needs_clarification": False,
+        "clarification_question": None
+    }
+
+    # Run LangGraph
+    result = statecase_graph.invoke(state)
+
+    #  Save conversation
+    memory_store.add_message(session_id, "user", question)
+    memory_store.add_message(session_id, "assistant", result.get("answer"))
+
+    print("GRAPH RESULT:", result)
+
+    return {
+        "answer": result.get("answer"),
+        "confidence": result.get("confidence"),
+        "sources": result.get("sources", []),
+        "escalated": result.get("should_escalate", False),
+        "needs_clarification": result.get("needs_clarification", False)
     }

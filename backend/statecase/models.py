@@ -16,6 +16,8 @@ class StateCaseState(TypedDict):
     # Retrieval
     retrieved_chunks: List[dict]
 
+    sources: List[str]
+
     # Output
     answer: Optional[str]
     confidence: Optional[float]
@@ -26,3 +28,6 @@ class StateCaseState(TypedDict):
 
     # Ticket
     ticket_created: bool
+
+    needs_clarification: bool
+    clarification_question: Optional[str]
