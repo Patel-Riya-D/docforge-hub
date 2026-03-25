@@ -31,3 +31,6 @@ class StateCaseState(TypedDict):
 
     needs_clarification: bool
     clarification_question: Optional[str]
+
+    intent: str
+    doc_set: Optional[List[str]]

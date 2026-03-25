@@ -1260,78 +1260,101 @@ with tab_statecase:
         st.session_state.chat_history = []
 
     # ---------------- INPUT ----------------
-    user_input = st.text_input("Ask anything...", key="statecase_input")
-
-    col1, col2 = st.columns([1, 5])
-
-    with col1:
-        send_clicked = st.button("Send", use_container_width=True)
+    user_input = st.chat_input("Ask anything...")
 
     # ---------------- API CALL ----------------
-    if send_clicked and user_input:
+    if user_input:
 
-        with st.spinner("Thinking... 🤔"):
+        # save user message
+        st.session_state.chat_history.append(("user", user_input))
 
-            try:
-                response = requests.post(
-                    f"{API_BASE_URL}/documents/statecase-chat",
-                    json={
-                        "session_id": st.session_state.session_id,
-                        "question": user_input,
-                        "doc_type": doc_type_filter,
-                        "industry": industry_filter,
-                        "version": version_filter
-                    }
-                )
-                
-                result = response.json()
-                st.write("DEBUG API RESPONSE:", result)
+        with st.chat_message("user"):
+            st.markdown(user_input)
 
-                # save chat
-                st.session_state.chat_history.append(("user", user_input))
-                st.session_state.chat_history.append((
-                    "assistant",
-                    {
-                        "answer": result["answer"],
-                        "sources": result.get("sources", []),
-                        "confidence": result.get("confidence", 0)
-                    }
-                ))
+        with st.chat_message("assistant"):
+            with st.spinner("Thinking..."):
 
-                st.rerun()
+                try:
+                    response = requests.post(
+                        f"{API_BASE_URL}/documents/statecase-chat",
+                        json={
+                            "session_id": st.session_state.session_id,
+                            "question": user_input,
+                            "doc_type": doc_type_filter,
+                            "industry": industry_filter,
+                            "version": version_filter
+                        }
+                    )
 
-            except Exception as e:
-                st.error(f"Error: {e}")
+                    result = response.json()
+
+                    answer = result.get("answer", "")
+                    confidence = result.get("confidence", 0)
+                    sources = result.get("sources", [])
+
+                    # Save to history
+                    st.session_state.chat_history.append((
+                        "assistant",
+                        {
+                            "answer": answer,
+                            "confidence": confidence,
+                            "sources": sources
+                        }
+                    ))
+
+                    st.rerun()
+
+                except Exception as e:
+                    st.error(f"Error: {e}")
 
     # ---------------- CHAT DISPLAY ----------------
     st.divider()
 
     for role, msg in st.session_state.chat_history:
 
-        if role == "user":
-            st.markdown(f"🧑 You: {msg}")
+        with st.chat_message(role):
 
-        else:
-            # ✅ show answer
-            st.markdown(f"🤖 Assistant: {msg['answer']}")
+            if role == "user":
+                st.markdown(msg)
 
-             # 🔥 ADD THIS BLOCK
-            confidence = msg.get("confidence", 0)
-
-            if confidence > 70:
-                st.success(f"🟢 Confidence: {confidence}%")
-            elif confidence > 40:
-                st.warning(f"🟡 Confidence: {confidence}%")
             else:
-                st.error(f"🔴 Confidence: {confidence}%")
+                answer = msg.get("answer", "")
+                confidence = msg.get("confidence", 0)
+                sources = msg.get("sources", [])
 
-            # 🔥 ADD THIS BLOCK (THIS IS MISSING)
-            sources = msg.get("sources", [])
+                import time
 
-            if sources:
-                st.markdown("📚 **Sources:**")
-                for s in msg["sources"]:
-                    st.write(f"- {s}")
+                if role == "assistant":
+
+                    answer = msg.get("answer", "")
+                    confidence = msg.get("confidence", 0)
+                    sources = msg.get("sources", [])
+
+                    # 🔥 typing only for latest message
+                    is_last = (msg == st.session_state.chat_history[-1][1])
+
+                    if is_last:
+                        placeholder = st.empty()
+                        typed = ""
+
+                        for word in answer.split():
+                            typed += word + " "
+                            placeholder.markdown(typed)
+                            time.sleep(0.02)
+                    else:
+                        st.markdown(answer)
+
+                    if confidence > 70:
+                        st.success(f"Confidence: {confidence}%")
+                    elif confidence > 40:
+                        st.warning(f"Confidence: {confidence}%")
+                    else:
+                        st.error(f"Confidence: {confidence}%")
+
+                    if sources:
+                        st.markdown("**Sources:**")
+                        for s in sources:
+                            st.write(f"- {s}")
 
     # ---------------- STATUS ----------------
     if st.session_state.chat_history:

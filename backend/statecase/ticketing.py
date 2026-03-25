@@ -51,6 +51,83 @@ Retrieved Evidence:
 {chunk_text}
 """
 
+def update_ticket_status(ticket_id, status):
+    """
+    Update ticket status in Notion.
+    """
+
+    valid_status = ["Open", "In Progress", "Closed"]
+
+    if status not in valid_status:
+        return {
+            "success": False,
+            "error": f"Invalid status: {status}"
+        }
+
+    try:
+        # 🔍 Step 1: Find ticket by Ticket ID
+        query_url = f"https://api.notion.com/v1/databases/{DATABASE_ID}/query"
+
+        headers = {
+            "Authorization": f"Bearer {NOTION_API_KEY}",
+            "Notion-Version": "2022-06-28",
+            "Content-Type": "application/json"
+        }
+
+        query_data = {
+            "filter": {
+                "property": "Ticket ID",
+                "rich_text": {
+                    "equals": ticket_id
+                }
+            }
+        }
+
+        response = requests.post(query_url, headers=headers, json=query_data)
+
+        if response.status_code != 200:
+            logger.error(f"❌ Query failed: {response.text}")
+            return False
+
+        results = response.json().get("results", [])
+
+        if not results:
+            logger.warning("⚠️ Ticket not found")
+            return False
+
+        page_id = results[0]["id"]
+
+        # 🔄 Step 2: Update status
+        update_url = f"https://api.notion.com/v1/pages/{page_id}"
+
+        update_data = {
+            "properties": {
+                "Status": {
+                    "select": {"name": status}
+                }
+            }
+        }
+
+        update_response = requests.patch(update_url, headers=headers, json=update_data)
+
+        if update_response.status_code == 200:
+            logger.info(f"✅ Ticket updated to {status}")
+            return {
+                "success": True,
+                "ticket_id": ticket_id,
+                "status": status
+            }
+        else:
+            logger.error(f"❌ Update failed: {update_response.text}")
+            return {
+                "success": False,
+                "error": update_response.text
+            }
+
+    except Exception as e:
+        logger.error(f"Update ticket failed: {e}")
+        return False
+
 def ticket_exists(ticket_id):
     """
     Check if ticket already exists in Notion.
@@ -86,7 +163,7 @@ def ticket_exists(ticket_id):
         logger.error(f"Ticket exists check failed: {e}")
         return False
 
-def create_ticket(question, context, filters, confidence, history=None, sources=None):
+def create_ticket(question, context, filters, confidence, history=None, sources=None, user_id="default_user"):
     """
     Create a ticket in Notion with full context.
     """
@@ -97,7 +174,7 @@ def create_ticket(question, context, filters, confidence, history=None, sources=
         # 🔥 CHECK DUPLICATE
         if ticket_exists(ticket_id):
             logger.info("⚠️ Ticket already exists, skipping creation")
-            return True
+            return "created", ticket_id
 
         context_text = format_context(
             question,
@@ -105,7 +182,8 @@ def create_ticket(question, context, filters, confidence, history=None, sources=
             context,
             confidence,
             history,
-            sources
+            sources,
+            user_id
         )
 
         url = "https://api.notion.com/v1/pages"
@@ -134,7 +212,12 @@ def create_ticket(question, context, filters, confidence, history=None, sources=
                     "rich_text": [
                         {"text": {"content": ticket_id}}
                     ]
-                }
+                },
+                "Owner": {
+                    "rich_text": [
+                        {"text": {"content": user_id}}
+                    ]
+                },
             },
             "children": [
                 {
@@ -158,11 +241,10 @@ def create_ticket(question, context, filters, confidence, history=None, sources=
 
         if response.status_code == 200:
             logger.info("✅ Ticket created in Notion")
-            return True
+            return "created", ticket_id
         else:
             logger.error(f"❌ Notion error: {response.text}")
-            return False
-
+            return "error", None
 
     except Exception as e:
         logger.error(f"Ticket creation failed: {e}")

@@ -50,12 +50,18 @@ def retrieve_node(state: StateCaseState):
 
 
 # ---------------- NODE 2: DECISION ----------------
-def decision_node(state: StateCaseState):
+def decision_node(state):
     confidence = state.get("confidence", 0)
     chunks = state.get("retrieved_chunks", [])
+    sources = state.get("sources", [])
 
-    # 🔥 IMPROVED LOGIC
-    if confidence < 40 or len(chunks) < 2:
+    # 🔥 semantic relevance check
+    has_relevance = len(chunks) > 0
+
+    # 🔥 strong retrieval signal
+    strong_match = any(c.get("score", 0) > 0.6 for c in chunks)
+
+    if (confidence < 40 or not sources) and has_relevance and strong_match:
         state["should_escalate"] = True
     else:
         state["should_escalate"] = False
@@ -69,38 +75,19 @@ def answer_node(state):
     return state
 
 # ---------------- NODE 4: ESCALATE ----------------
-def escalate_node(state: StateCaseState):
-    from backend.statecase.ticketing import create_ticket
-
-    if not state.get("ticket_created"):
-
-        result = create_ticket(
-            question=state["question"],
-            context=state["retrieved_chunks"],
-            filters={
-                "doc_type": state.get("doc_type"),
-                "industry": state.get("industry"),
-                "version": state.get("version")
-            },
-            confidence=state.get("confidence"),
-            history=state.get("history"),
-            sources=state.get("sources")
-        )
-
-        # 🔥 HANDLE RESULT PROPERLY
-        if result:
-            state["answer"] = "⚠️ I couldn't find a reliable answer. A ticket has been created."
-            state["ticket_created"] = True
-        else:
-            state["answer"] = "❌ Failed to create ticket. Please try again."
-
-    # 🔥 CLEAR SOURCES + CHUNKS
-    state["sources"] = []
-    state["retrieved_chunks"] = []
-
+def escalate_node(state):
+    state["answer"] = "⚠️ I couldn't find a reliable answer."
     return state
 
+def intent_node(state):
+    question = state["question"].lower()
 
+    if "create" in question or "generate" in question:
+        state["intent"] = "generation"
+    else:
+        state["intent"] = "query"
+
+    return state
 
 # ---------------- BUILD GRAPH ----------------
 def build_graph():
@@ -111,11 +98,14 @@ def build_graph():
     graph.add_node("decision", decision_node)
     graph.add_node("clarity", clarity_node)
     graph.add_node("clarify", clarify_node)
+    graph.add_node("intent",intent_node)
     graph.add_node("answer", answer_node)
     graph.add_node("escalate", escalate_node)
 
     # Flow
-    graph.set_entry_point("clarity")
+    graph.set_entry_point("intent")
+
+    graph.add_edge("intent","clarity")
 
     graph.add_edge("retrieve", "decision")
 

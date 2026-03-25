@@ -52,6 +52,11 @@ from backend.utils.rate_limitter import check_rate_limit
 from backend.statecase.graph import build_graph
 from backend.statecase.models import StateCaseState
 from backend.statecase.memory import memory_store
+from backend.utils.redis_session import update_session_history
+from backend.utils.redis_session import get_user_session, save_user_session
+import uuid
+from fastapi import BackgroundTasks
+from backend.statecase.ticketing import create_ticket
 
 logger = get_logger("API")
 
@@ -998,10 +1003,12 @@ def rag_evaluate():
 
 
 @router.post("/statecase-chat")
-def statecase_chat(data: dict):
+def statecase_chat(data: dict, background_tasks: BackgroundTasks):
     """
     Stateful assistant endpoint using LangGraph.
     """
+    trace_id = str(uuid.uuid4())
+    print("TRACE ID:", trace_id)
 
     question = data.get("question")
     session_id = data.get("session_id", "default")
@@ -1009,17 +1016,24 @@ def statecase_chat(data: dict):
     if not question:
         raise HTTPException(status_code=400, detail="Question is required")
 
-    session_id = data.get("session_id", "default")
+    # Get memory from Redis
+    session_data = get_user_session(session_id)
 
-    #  Get memory
-    history = memory_store.get_history(session_id)
+    history = session_data.get("history") or []
+    context = session_data.get("context") or {}
+    doc_set = context.get("doc_set", [])
 
-    #  Initialize state
+    # Use stored context if not provided
+    industry = data.get("industry") or context.get("industry")
+    doc_type = data.get("doc_type") or context.get("doc_type")
+    version = data.get("version") or context.get("version")
+
+    # Initialize state
     state: StateCaseState = {
         "question": question,
-        "industry": data.get("industry"),
-        "doc_type": data.get("doc_type"),
-        "version": data.get("version"),
+        "industry": industry,
+        "doc_type": doc_type,
+        "version": version,
         "history": history,
         "retrieved_chunks": [],
         "answer": None,
@@ -1027,23 +1041,101 @@ def statecase_chat(data: dict):
         "needs_clarification": False,
         "should_escalate": False,
         "ticket_created": False,
-        "needs_clarification": False,
-        "clarification_question": None
+        "clarification_question": None,
+        "trace_id": trace_id,
+        "session_id": session_id,
+        "doc_set": doc_set,
     }
 
     # Run LangGraph
     result = statecase_graph.invoke(state)
 
-    #  Save conversation
-    memory_store.add_message(session_id, "user", question)
-    memory_store.add_message(session_id, "assistant", result.get("answer"))
+    # 🔥 Async ticket creation
+    if result.get("should_escalate"):
+
+        background_tasks.add_task(
+            create_ticket,
+            question=question,
+            context=state.get("retrieved_chunks"),
+            filters={
+                "doc_type": doc_type,
+                "industry": industry,
+                "version": version
+            },
+            confidence=result.get("confidence"),
+            history=history,
+            sources=result.get("sources"),
+            user_id=session_id
+        )
+
+    # Store doc set (sources used in this query)
+    if result.get("sources"):
+        context["doc_set"] = result.get("sources")
+
+    # 🔥 Track last used document/source
+    if result.get("sources"):
+        context["last_doc"] = result["sources"][0]
+
+    # Update context (only overwrite if new values provided)
+    if data.get("industry"):
+        context["industry"] = data.get("industry")
+
+    if data.get("doc_type"):
+        context["doc_type"] = data.get("doc_type")
+
+    if data.get("version"):
+        context["version"] = data.get("version")
+
+    # Save updated history
+    history.append({
+        "role": "user",
+        "message": question
+    })
+
+    history.append({
+        "role": "assistant",
+        "message": result.get("answer")
+    })
+
+    history = history[-10:]
+
+    # Save session
+    save_user_session(session_id, {
+        "history": history,
+        "context": context
+    })
 
     print("GRAPH RESULT:", result)
 
+    # 🔥 Override answer for async case
+    if result.get("should_escalate"):
+        answer = "⚠️ I couldn't find a reliable answer. A ticket is being created."
+    else:
+        answer = result.get("answer")
+
     return {
-        "answer": result.get("answer"),
+        "answer": answer,
         "confidence": result.get("confidence"),
         "sources": result.get("sources", []),
         "escalated": result.get("should_escalate", False),
-        "needs_clarification": result.get("needs_clarification", False)
+        "needs_clarification": result.get("needs_clarification", False),
+        "trace_id": trace_id
+    }
+
+
+@router.post("/update-ticket")
+def update_ticket(data: dict):
+    ticket_id = data.get("ticket_id")
+    status = data.get("status")
+
+    if not ticket_id or not status:
+        raise HTTPException(status_code=400, detail="ticket_id and status required")
+
+    from backend.statecase.ticketing import update_ticket_status
+
+    success = update_ticket_status(ticket_id, status)
+
+    return {
+        "success": success,
+        "message": f"Updated to {status}" if success else "Failed"
     }
