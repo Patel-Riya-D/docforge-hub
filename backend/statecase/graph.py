@@ -51,48 +51,6 @@ def retrieve_node(state: StateCaseState):
 
     return state
 
-
-# # ---------------- NODE 2: DECISION ----------------
-# def decision_node(state):
-#     state["is_out_of_domain"] = False
-
-#     confidence = state.get("confidence", 0)
-#     chunks = state.get("retrieved_chunks", [])
-#     answer = state.get("answer", "").lower()
-#     similarity = state.get("similarity_score")
-
-#     if similarity is None:
-#         print("⚠️ similarity missing → fallback")
-#         similarity = 999
-
-#     no_answer_detected = any(
-#         phrase in answer for phrase in [
-#             "could not find",
-#             "not available",
-#             "no information"
-#         ]
-#     )
-
-#     print("SIMILARITY:", similarity)
-
-#     # ✅ TRUE OUT-OF-DOMAIN (based on similarity)
-#     if similarity > 0.95:   # 🔥 tune: 1.0–1.5
-#         state["is_out_of_domain"] = True
-#         state["should_escalate"] = False
-#         state["answer"] = "This question is outside the scope of available documents."
-#         state["sources"] = []
-#         return state
-
-#     # ✅ NO ANSWER → ESCALATE
-#     if no_answer_detected or similarity > 0.9 or confidence < 45:
-#         state["should_escalate"] = True
-#         return state
-
-#     # ✅ NORMAL ANSWER
-#     state["should_escalate"] = False
-#     return state
-
-
 # ---------------- NODE 2: DECISION ----------------
 def decision_node(state):
     state["is_out_of_domain"] = False
