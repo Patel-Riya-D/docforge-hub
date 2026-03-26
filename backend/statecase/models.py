@@ -17,6 +17,7 @@ class StateCaseState(TypedDict):
     retrieved_chunks: List[dict]
 
     sources: List[str]
+    is_out_of_domain: bool  
 
     # Output
     answer: Optional[str]
@@ -34,3 +35,4 @@ class StateCaseState(TypedDict):
 
     intent: str
     doc_set: Optional[List[str]]
+    similarity_score: Optional[float]

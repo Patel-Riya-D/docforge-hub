@@ -171,10 +171,10 @@ def create_ticket(question, context, filters, confidence, history=None, sources=
     try:
         ticket_id = generate_ticket_hash(question)
 
-        # 🔥 CHECK DUPLICATE
+        #  CHECK DUPLICATE
         if ticket_exists(ticket_id):
-            logger.info("⚠️ Ticket already exists, skipping creation")
-            return "created", ticket_id
+            logger.info("⚠️ Ticket already exists")
+            return "exists", ticket_id
 
         context_text = format_context(
             question,
@@ -182,8 +182,7 @@ def create_ticket(question, context, filters, confidence, history=None, sources=
             context,
             confidence,
             history,
-            sources,
-            user_id
+            sources
         )
 
         url = "https://api.notion.com/v1/pages"
@@ -248,4 +247,4 @@ def create_ticket(question, context, filters, confidence, history=None, sources=
 
     except Exception as e:
         logger.error(f"Ticket creation failed: {e}")
-        return False
+        return "error", None

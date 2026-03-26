@@ -1039,6 +1039,7 @@ def statecase_chat(data: dict, background_tasks: BackgroundTasks):
         "answer": None,
         "confidence": 0,
         "needs_clarification": False,
+        "is_out_of_domain": False,  
         "should_escalate": False,
         "ticket_created": False,
         "clarification_question": None,
@@ -1051,7 +1052,8 @@ def statecase_chat(data: dict, background_tasks: BackgroundTasks):
     result = statecase_graph.invoke(state)
 
     # 🔥 Async ticket creation
-    if result.get("should_escalate"):
+    if result.get("should_escalate") and not result.get("is_out_of_domain", False):
+        from backend.statecase.ticketing import create_ticket
 
         background_tasks.add_task(
             create_ticket,

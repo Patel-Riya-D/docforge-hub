@@ -169,7 +169,7 @@ def answer_question(question, filters=None):
     chunks = retriever.search(refined_question, k=5, filters=filters)
 
     # ✅ NEW: FILTER LOW QUALITY CHUNKS
-    SIMILARITY_THRESHOLD = 2.0   # tune 0.6–0.8
+    SIMILARITY_THRESHOLD = 1.0   # tune 0.6–0.8
 
     filtered_chunks = [
         c for c in chunks
@@ -186,7 +186,9 @@ def answer_question(question, filters=None):
             "answer": "❌ No relevant information found for selected filters. Try removing version filter.",
             "chunks": [],
             "confidence_score": 0,
-            "sources": []
+            "sources": [],
+            "similarity_score": 999,   # ✅ ADD THIS
+            "cache_hit": False
         }
 
     logger.info(f"Retrieved {len(chunks)} chunks")
@@ -197,25 +199,46 @@ def answer_question(question, filters=None):
     for c in filtered_chunks:
         context += f"\n{c['text']}\n"
         sources.append(f"{c['doc_title']} → {c['section']}")
+    
+    is_summary = any(word in question.lower() for word in [
+        "summary", "summarize", "brief", "overview","detail"
+    ]) and len(question.split()) < 10
 
     #  Step 3: Generate answer
-    prompt = f"""
-Answer the question using the context below.
+    if is_summary:
+        prompt = f"""
+    You are an AI assistant.
 
-Context:
-{context}
+    Summarize the following document clearly and concisely.
 
-Question:
-{refined_question}
+    Context:
+    {context}
 
-Answer in exactly ONE short sentence.
-Answer ONLY based on the provided context.
-Be concise and directly answer the question.
-Do not add extra information.
+    Provide a short structured summary with key points.
+    Do not copy sentences directly.
+    Do not add information outside the context.
+    """
+    else:
+        prompt = f"""
+    You are an AI assistant.
 
-If the answer is not present in the context, say:
-"I could not find the answer in the available documents."
-"""
+    Answer the question using the context below.
+
+    Context:
+    {context}
+
+    Question:
+    {refined_question}
+
+    Answer in exactly ONE short sentence.
+    Answer ONLY based on the provided context.
+    Be concise and directly answer the question.
+    Do not add extra information.
+
+    If the exact answer is NOT explicitly present in the context,
+    STRICTLY respond with:
+    "I could not find the answer in the available documents."
+    """
 
     try:
         response = llm.invoke([
@@ -229,17 +252,20 @@ If the answer is not present in the context, say:
     #  Trim answer
     answer = response.content.strip().split("\n")[0]
 
+    confidence_data = calculate_confidence(filtered_chunks)
+    similarity_score = min([c.get("score", 999) for c in filtered_chunks]) 
+
     # 🚨 CRITICAL FIX
     if is_no_answer(answer):
+
         return {
             "answer": answer,
             "sources": sources,
-            "chunks": [],
-            "confidence_score": 0,
-            "cache_hit": False
+            "chunks": filtered_chunks,   # ✅ KEEP CHUNKS
+            "confidence_score": confidence_data["score"],  # ✅ KEEP REAL SCORE
+            "cache_hit": False,
+            "similarity_score": similarity_score,
         }
-
-    confidence_data = calculate_confidence(filtered_chunks)
 
     # ✅ Build clean sources
     sources = list(set([
@@ -249,13 +275,15 @@ If the answer is not present in the context, say:
 
 
     logger.info(f"Answer generated: {answer}")
+
     #  Step 4: Return result
     result = {
         "answer": answer,
         "sources": sources,
-        "chunks": chunks,
+        "chunks": filtered_chunks,
         "refined_query": refined_question,
         "confidence_score": confidence_data["score"],
+        "similarity_score": similarity_score,
         "cache_hit": False
     }
 
