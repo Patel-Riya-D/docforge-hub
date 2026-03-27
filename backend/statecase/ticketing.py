@@ -2,6 +2,8 @@ import requests
 import os
 import hashlib
 from backend.utils.logger import get_logger
+from backend.statecase.ticket_utils import classify_ticket
+from backend.utils.redis_client import redis_client
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -13,6 +15,13 @@ DATABASE_ID = os.getenv("NOTION_TICKET_DATABASE_ID")
 
 def generate_ticket_hash(question: str) -> str:
     return hashlib.md5(question.lower().encode()).hexdigest()
+
+def set_ticket_status(ticket_id, status):
+    redis_client.set(f"ticket_status:{ticket_id}", status)
+
+
+def get_ticket_status(ticket_id):
+    return redis_client.get(f"ticket_status:{ticket_id}")
 
 
 def format_context(question, filters, chunks, confidence, history, sources):
@@ -169,12 +178,26 @@ def create_ticket(question, context, filters, confidence, history=None, sources=
     """
 
     try:
-        ticket_id = generate_ticket_hash(question)
+
+        # 🔥 classify ticket using AI
+        ticket_meta = classify_ticket(question)
+
+        category = ticket_meta["category"]
+        owner = ticket_meta["owner"]
+        priority = ticket_meta["priority"]
+
+        print("TICKET META:", ticket_meta)
 
         #  CHECK DUPLICATE
+        ticket_id = generate_ticket_hash(question)
+
+        # ✅ check FIRST
         if ticket_exists(ticket_id):
-            logger.info("⚠️ Ticket already exists")
+            set_ticket_status(ticket_id, "exists")   # 🔥 IMPORTANT
             return "exists", ticket_id
+
+        # then creating
+        set_ticket_status(ticket_id, "creating")
 
         context_text = format_context(
             question,
@@ -205,16 +228,19 @@ def create_ticket(question, context, filters, confidence, history=None, sources=
                     "select": {"name": "Open"}
                 },
                 "Priority": {
-                    "select": {"name": "Medium"}
+                    "select": {"name": priority}
+                },
+                "Owner": {
+                    "rich_text": [
+                        {"text": {"content": owner}}
+                    ]
+                },
+                "Category": {
+                    "select": {"name": category}
                 },
                 "Ticket ID": {
                     "rich_text": [
                         {"text": {"content": ticket_id}}
-                    ]
-                },
-                "Owner": {
-                    "rich_text": [
-                        {"text": {"content": user_id}}
                     ]
                 },
             },
@@ -239,12 +265,15 @@ def create_ticket(question, context, filters, confidence, history=None, sources=
         print("NOTION RESPONSE:", response.status_code, response.text)
 
         if response.status_code == 200:
+            set_ticket_status(ticket_id, "created")   # ✅ ADD THIS
             logger.info("✅ Ticket created in Notion")
             return "created", ticket_id
         else:
+            set_ticket_status(ticket_id, "failed")   # ✅ ADD THIS
             logger.error(f"❌ Notion error: {response.text}")
             return "error", None
 
     except Exception as e:
+        set_ticket_status(ticket_id, "failed")   # ✅ ADD THIS
         logger.error(f"Ticket creation failed: {e}")
         return "error", None

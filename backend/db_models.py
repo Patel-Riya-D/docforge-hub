@@ -82,3 +82,20 @@ class CompanyProfile(Base):
     cto_name = Column(String, nullable=True)
     founders = Column(Text, nullable=True)
     company_background = Column(Text, nullable=True)
+
+class AssistantSession(Base):
+    __tablename__ = "assistant_sessions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(String, unique=True, index=True)
+
+    # 🔥 ADD THESE
+    user_id = Column(String, nullable=True)
+    title = Column(String, nullable=True)
+    is_active = Column(Boolean, default=True)
+
+    history = Column(JSONB, default=[])
+    context = Column(JSONB, default={})
+
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())

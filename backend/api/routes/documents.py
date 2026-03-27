@@ -57,6 +57,8 @@ from backend.utils.redis_session import get_user_session, save_user_session
 import uuid
 from fastapi import BackgroundTasks
 from backend.statecase.ticketing import create_ticket
+from backend.statecase.ticketing import get_ticket_status
+from backend.statecase.ticketing import generate_ticket_hash
 
 logger = get_logger("API")
 
@@ -1017,7 +1019,14 @@ def statecase_chat(data: dict, background_tasks: BackgroundTasks):
         raise HTTPException(status_code=400, detail="Question is required")
 
     # Get memory from Redis
+    from backend.statecase.session_db import get_session_db, save_session_db
+
+    # Try Redis first
     session_data = get_user_session(session_id)
+
+    # Fallback to DB
+    if not session_data:
+        session_data = get_session_db(session_id)
 
     history = session_data.get("history") or []
     context = session_data.get("context") or {}
@@ -1050,6 +1059,19 @@ def statecase_chat(data: dict, background_tasks: BackgroundTasks):
 
     # Run LangGraph
     result = statecase_graph.invoke(state)
+
+    # ✅ HANDLE OUT OF DOMAIN FIRST (VERY IMPORTANT)
+    if result.get("is_out_of_domain"):
+        return {
+            "answer": "This question is outside the scope of available documents.",
+            "confidence": 0,
+            "sources": [],
+            "escalated": False,
+            "needs_clarification": False,
+            "trace_id": trace_id,
+            "ticket_id": None,
+            "ticket_status": None
+        }
 
     # 🔥 Async ticket creation
     if result.get("should_escalate") and not result.get("is_out_of_domain", False):
@@ -1107,11 +1129,41 @@ def statecase_chat(data: dict, background_tasks: BackgroundTasks):
         "context": context
     })
 
+    # 🔥 persist to DB
+    save_session_db(session_id, history, context)
+
     print("GRAPH RESULT:", result)
 
     # 🔥 Override answer for async case
+    ticket_id = None
+    ticket_status = None
+
     if result.get("should_escalate"):
-        answer = "⚠️ I couldn't find a reliable answer. A ticket is being created."
+        ticket_id = generate_ticket_hash(question)
+
+        # 🔥 CHECK REDIS STATUS
+        from backend.statecase.ticketing import get_ticket_status
+        ticket_status = get_ticket_status(ticket_id)
+
+        # 🔥 FALLBACK TO NOTION CHECK
+        if ticket_status is None:
+            from backend.statecase.ticketing import ticket_exists
+
+            if ticket_exists(ticket_id):
+                ticket_status = "exists"
+                # ✅ ADD THIS LINE HERE
+                from backend.statecase.ticketing import set_ticket_status
+                set_ticket_status(ticket_id, "exists")
+
+        # ✅ FINAL DECISION
+        if ticket_status == "exists":
+            answer = "📌 A ticket already exists for this query."
+
+        elif ticket_status == "created":
+            answer = "📌 Support ticket created successfully."
+
+        else:
+            answer = "📌 Creating support ticket..."
     else:
         answer = result.get("answer")
 
@@ -1121,7 +1173,9 @@ def statecase_chat(data: dict, background_tasks: BackgroundTasks):
         "sources": result.get("sources", []),
         "escalated": result.get("should_escalate", False),
         "needs_clarification": result.get("needs_clarification", False),
-        "trace_id": trace_id
+        "trace_id": trace_id,
+        "ticket_id": result.get("ticket_id"),
+        "ticket_status": ticket_status
     }
 
 
@@ -1140,4 +1194,13 @@ def update_ticket(data: dict):
     return {
         "success": success,
         "message": f"Updated to {status}" if success else "Failed"
+    }
+
+@router.get("/ticket-status/{ticket_id}")
+def check_ticket_status(ticket_id: str):
+    status = get_ticket_status(ticket_id)
+
+    return {
+        "ticket_id": ticket_id,
+        "status": status or "unknown"
     }

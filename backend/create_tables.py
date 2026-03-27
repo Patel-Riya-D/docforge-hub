@@ -1,5 +1,5 @@
 from backend.database import engine
-from backend.models import Base
+from backend.db_models import Base
 
 def create_tables():
     Base.metadata.create_all(bind=engine)
