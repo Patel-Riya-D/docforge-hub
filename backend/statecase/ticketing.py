@@ -179,7 +179,7 @@ def create_ticket(question, context, filters, confidence, history=None, sources=
 
     try:
 
-        # 🔥 classify ticket using AI
+        #  classify ticket using AI
         ticket_meta = classify_ticket(question)
 
         category = ticket_meta["category"]

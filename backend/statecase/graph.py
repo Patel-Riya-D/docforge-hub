@@ -16,42 +16,100 @@ def _llm(system: str, user: str) -> str:
 
 
 # ────────────────────────────────────────────────────────────────────
-# NODE: INTENT  (LLM-based, no hardcoded keywords)
-# Classifies into: "generation" | "query" | "unclear"
+# HELPER: GET PREVIOUS USER MESSAGES FROM HISTORY
+#
+# IMPORTANT: documents.py appends the CURRENT user question to history
+# BEFORE invoking the graph. So history[-1] is always the current
+# question. To get context we need history[-2] and earlier.
 # ────────────────────────────────────────────────────────────────────
+def _get_prior_user_messages(history: list, n: int = 2) -> list:
+    """
+    Returns the last `n` user messages BEFORE the current one.
+    Skips the last user message (which is the current question).
+    """
+    user_msgs = [h["message"] for h in history if h["role"] == "user"]
+    # drop the last one (current question already in history)
+    prior = user_msgs[:-1] if len(user_msgs) > 1 else []
+    return prior[-n:]
+
+
+def _get_prior_conversation(history: list, n: int = 4) -> str:
+    """
+    Returns last `n` history entries (excluding current user message)
+    as a formatted string for LLM context.
+    """
+    # exclude the last entry which is the current user question
+    prior = history[:-1] if history else []
+    recent = prior[-n:]
+    return "\n".join(
+        f"{h['role'].capitalize()}: {h['message']}" for h in recent
+    )
+
+
+# ────────────────────────────────────────────────────────────────────
+# NODE: INTENT  (LLM-based + verb fast-path)
+#
+# Classifies into: "generation" | "query" | "meta" | "unclear"
+#
+# NEW: "meta" intent for conversational questions about the chat itself
+# e.g. "what was my previous query", "what did I ask before"
+# These are answered directly from history — no RAG needed.
+# ────────────────────────────────────────────────────────────────────
+CREATION_VERBS = {
+    "create", "generate", "make", "draft", "write",
+    "build", "produce", "prepare", "compose", "design"
+}
+
 INTENT_SYSTEM = """
 You are an intent classifier for a document-management assistant.
 
 Classify the user's message into exactly one of these intents:
   - generation : The user wants to CREATE, GENERATE, DRAFT, MAKE, PRODUCE,
                  BUILD, or WRITE a document, report, SOP, template, policy,
-                 letter, or any other artifact. This includes bare imperative
-                 commands like "create document", "generate SOP", "make report",
-                 "draft policy" — even with no extra detail provided.
+                 letter, or any other artifact. Includes short imperative
+                 commands like "create document", "generate SOP", "make report".
   - query      : The user wants to RETRIEVE information, get an explanation,
                  find a procedure, or understand something from existing docs.
-  - unclear    : Cannot be classified as generation or query even after
-                 careful consideration.
+  - meta       : The user is asking about the conversation itself — their
+                 previous questions, what was discussed, chat history.
+                 Examples: "what was my previous query", "what did I ask before",
+                 "what was my last question", "remind me what I asked".
+  - unclear    : Cannot be classified into any of the above even with
+                 careful consideration. Use this ONLY as a last resort.
 
 Prioritisation rules (apply in order):
-  1. If the message starts with or contains a creation verb (create, generate,
-     make, draft, write, build, produce, prepare) followed by any document
-     noun (document, doc, report, SOP, policy, letter, template, guide,
-     handbook, form, plan, checklist) → ALWAYS return "generation",
-     regardless of how short or vague the message is.
-  2. If the message is clearly asking for information or explanation → "query".
-  3. If genuinely ambiguous after rules 1 and 2 → "unclear".
+  1. Creation verb + document noun → always "generation".
+  2. Question about conversation history or previous messages → "meta".
+  3. Question about information, explanation, or procedures → "query".
+  4. Truly ambiguous short fragments with no context → "unclear".
 
-Reply with ONLY the single word: generation | query | unclear
+Reply with ONLY the single word: generation | query | meta | unclear
 No punctuation, no explanation, no extra words.
 """.strip()
 
 
 def intent_node(state: StateCaseState):
-    question = state["question"]
+    question   = state["question"]
+    first_word = question.strip().split()[0].lower().rstrip(".,!?") if question.strip() else ""
+
+    # Fast-path: starts with creation verb → always generation
+    if first_word in CREATION_VERBS:
+        state["intent"] = "generation"
+        print(f"[intent] '{question}' → generation (verb fast-path)")
+        return state
+
+    # Fast-path: meta question keywords
+    meta_signals = ["previous query", "last query", "what did i ask", "my last question",
+                    "what was my", "remind me", "previous question", "history"]
+    if any(sig in question.lower() for sig in meta_signals):
+        state["intent"] = "meta"
+        print(f"[intent] '{question}' → meta (keyword fast-path)")
+        return state
+
+    # Slow-path: LLM classification
     try:
         intent = _llm(INTENT_SYSTEM, question).lower()
-        if intent not in ("generation", "query", "unclear"):
+        if intent not in ("generation", "query", "meta", "unclear"):
             intent = "query"
     except Exception as e:
         print(f"⚠️  intent_node LLM error: {e} → defaulting to 'query'")
@@ -63,61 +121,93 @@ def intent_node(state: StateCaseState):
 
 
 # ────────────────────────────────────────────────────────────────────
+# NODE: META
+# Handles conversational questions about the chat history directly.
+# No RAG, no ticket. Answers from state["history"] only.
+# ────────────────────────────────────────────────────────────────────
+def meta_node(state: StateCaseState):
+    history  = state.get("history", [])
+    question = state["question"].lower()
+
+    # Get prior user messages (exclude current question which is last)
+    prior_user = _get_prior_user_messages(history, n=5)
+
+    if not prior_user:
+        state["answer"] = "I don't have any previous questions recorded in this session."
+        return state
+
+    if any(kw in question for kw in ["previous", "last", "before", "my query", "what did i ask"]):
+        # show the most recent prior question
+        state["answer"] = f"Your previous question was: \"{prior_user[-1]}\""
+    else:
+        # show last few
+        listed = "\n".join(f"  {i+1}. {q}" for i, q in enumerate(prior_user))
+        state["answer"] = f"Here are your recent questions:\n{listed}"
+
+    state["confidence"]       = 100
+    state["sources"]          = []
+    state["should_escalate"]  = False
+    state["is_out_of_domain"] = False
+    return state
+
+
+# ────────────────────────────────────────────────────────────────────
 # NODE: CLARITY
 #
-# Decides if the question has an identifiable subject to search for.
-# Rule-based prompt — no hardcoded query examples.
+# Key fix: history includes the CURRENT question as the last entry
+# (added by documents.py before graph invocation). So we must use
+# _get_prior_conversation() which strips the current message,
+# giving the LLM only the actual prior context to resolve follow-ups.
 #
-# "vague" = subject is unidentifiable (no topic to search)
-# "clear" = subject exists → flow to retrieval
-#
-# Real-time / live-data questions (pending issues, active incidents)
-# are CLEAR — they have a subject. Whether the doc can answer them
-# is decided later in decision_node → escalate → ticket.
+# "vague" = subject unidentifiable even with history context
+# "clear" = subject found in question or prior conversation
 # ────────────────────────────────────────────────────────────────────
 CLARITY_SYSTEM = """
 You are a query clarity checker for a document-management assistant.
 
-Your ONLY job: decide whether this question has an identifiable subject
-that a retrieval system could attempt to search for.
+You will receive:
+  - PRIOR CONVERSATION: recent exchanges BEFORE the current question
+  - CURRENT QUESTION: what the user just asked
 
-You are NOT responsible for deciding:
+Use the prior conversation to resolve what the current question refers to.
+A short or vague-looking message may be a clear follow-up in context.
+
+Your ONLY job: decide whether — using both prior conversation AND
+current question — there is an identifiable subject to search for.
+
+You are NOT deciding:
   - Whether the answer exists in the documents
   - Whether the question is in scope or out of scope
   - Whether the data is real-time or historical
-  Those are handled by other parts of the system. Ignore them completely.
 
-DEFAULT to "clear". Return "vague" only when the subject is genuinely
-unidentifiable — no retrieval system could know what to look for.
+DEFAULT to "clear". Return "vague" only when no subject is identifiable
+even after reading the prior conversation.
 
-VAGUE — the subject is unidentifiable:
-  - A document type is named (report, SOP, policy, document, handbook)
-    but NO topic is attached. The user points at a container, not content.
-  - The question is a bare word, phrase, or fragment with no topic.
-  - The question asks about something that REQUIRES a missing qualifier
-    (role, level, department) to have any single meaningful answer,
-    AND that qualifier is completely absent from the question.
+VAGUE — subject is unidentifiable:
+  - A document container (report, SOP, policy, document, handbook) is
+    named but NO topic appears in question OR prior conversation.
+  - Bare single word or fragment with zero context from history.
+  - Requires a qualifier (role, level, department) absent from both
+    the question and the prior conversation.
 
-CLEAR — a subject exists and can be searched:
-  - A specific topic, concept, process, system, regulation, team,
-    or named thing appears anywhere in the question.
-  - A question word (what, which, how, why, when, who, where) is
-    followed by a recognisable subject — even a broad one.
-  - The question asks about current state, pending items, active
-    issues, compliance status, or real-time data. These questions
-    have a clear subject — current/pending/active just describes
-    the state being asked about, not vagueness.
-  - The question names a person, technology, acronym, or term —
-    even one that is unknown or off-topic.
+CLEAR — subject exists in question or prior conversation:
+  - Prior conversation provides the topic the current message refers to.
+    e.g. prior: "explain policy" → current: "remote work" →
+    combined: "remote work policy" → CLEAR.
+  - A specific topic, concept, process, system, or regulation appears
+    anywhere in the question or prior conversation.
+  - Questions about actions, approvals, steps, requirements, outcomes
+    tied to any process → always clear.
+  - Current state, pending items, active issues, compliance status → clear.
+  - Any named person, technology, acronym, or term → clear.
 
-Internal reasoning steps (do NOT output these):
-  Step 1: Remove question words and helper verbs.
-  Step 2: What noun or concept remains as the core subject?
-  Step 3: Could a search engine use that subject to find content?
-          If yes → clear. If subject is empty or only "document" → vague.
+Internal reasoning (do NOT output):
+  Step 1: What topic was discussed in the prior conversation?
+  Step 2: Does the current question follow on from that topic?
+  Step 3: Combined subject = prior topic + current question.
+          Can a retrieval system search for it? Yes → clear. No → vague.
 
 Reply with ONLY one word: vague | clear
-No punctuation, no explanation, no reasoning in your output.
 """.strip()
 
 
@@ -132,7 +222,28 @@ def clarity_node(state: StateCaseState):
     needs_clarification    = False
     clarification_question = ""
 
+    # intent == "unclear": use history to decide if it's a follow-up
     if intent == "unclear":
+        history = state.get("history", [])
+        prior_conv = _get_prior_conversation(history)
+
+        if prior_conv:
+            # There IS prior context — treat as a follow-up query, not unclear
+            # Re-classify with context
+            try:
+                clarity_input  = f"Prior conversation:\n{prior_conv}\n\nCurrent message: {question}"
+                clarity_result = _llm(CLARITY_SYSTEM, clarity_input).lower()
+                print(f"[clarity/unclear-resolve] '{question}' → {clarity_result}")
+                if clarity_result == "clear":
+                    # Treat as a query follow-up — don't ask for clarification
+                    state["needs_clarification"]    = False
+                    state["clarification_question"] = ""
+                    state["intent"] = "query"   # promote to query so retrieve_node runs
+                    return state
+            except Exception as e:
+                print(f"⚠️  clarity resolve error: {e}")
+
+        # No prior context or still vague after check
         needs_clarification    = True
         clarification_question = (
             "I'm not sure what you're looking for. Could you clarify whether "
@@ -151,8 +262,15 @@ def clarity_node(state: StateCaseState):
         )
 
     elif intent == "query":
+        history    = state.get("history", [])
+        prior_conv = _get_prior_conversation(history)
+
         try:
-            clarity_verdict = _llm(CLARITY_SYSTEM, question).lower()
+            clarity_input = (
+                f"Prior conversation:\n{prior_conv}\n\nCurrent question: {question}"
+                if prior_conv else question
+            )
+            clarity_verdict = _llm(CLARITY_SYSTEM, clarity_input).lower()
             print(f"[clarity] '{question}' → {clarity_verdict}")
         except Exception as e:
             print(f"⚠️  clarity_node LLM error: {e} → assuming clear")
@@ -182,16 +300,23 @@ def clarify_node(state: StateCaseState):
 
 # ────────────────────────────────────────────────────────────────────
 # NODE: RETRIEVE
+# Short follow-up queries are enriched with the previous user question
+# so RAG gets enough context to search correctly.
 # ────────────────────────────────────────────────────────────────────
 def retrieve_node(state: StateCaseState):
-    history      = state.get("history", [])
-    history_text = "\n".join(
-        f"{h['role']}: {h['message']}" for h in history[-2:]
-    )
-    question = (
-        f"{history_text}\nUser: {state['question']}"
-        if history_text else state["question"]
-    )
+    history   = state.get("history", [])
+    current_q = state["question"]
+
+    # For short follow-ups, prepend the previous user question
+    if len(current_q.split()) <= 5:
+        prior_user = _get_prior_user_messages(history, n=1)
+        if prior_user:
+            question = f"{prior_user[-1]} {current_q}"
+            print(f"[retrieve] enriched query: '{question}'")
+        else:
+            question = current_q
+    else:
+        question = current_q
 
     filters = {
         "doc_type": state.get("doc_type"),
@@ -212,20 +337,6 @@ def retrieve_node(state: StateCaseState):
 
 # ────────────────────────────────────────────────────────────────────
 # LLM DOMAIN CHECK
-#
-# Called in decision_node for borderline similarity (0.7–1.1).
-# Determines if a question is about company-internal knowledge
-# OR about general world knowledge (tech concepts, named individuals).
-#
-# CRITICAL DESIGN RULE:
-#   Real-time / live-data questions (pending issues, active incidents,
-#   current compliance status) are ALWAYS in-domain. The company
-#   DOES have policies and procedures about these topics — the static
-#   docs just may not have the current state. That is an answerability
-#   problem, not a domain problem → handled by escalate_node (ticket).
-#
-#   Only flag out-of-domain when the question is about something the
-#   company's documents would NEVER cover regardless of their content.
 # ────────────────────────────────────────────────────────────────────
 DOMAIN_CHECK_SYSTEM = """
 You are a domain classifier for a document-management assistant.
@@ -237,41 +348,26 @@ checklists, technical guides, deployment procedures, and audit records.
 Your job: decide if the user's question is about company-internal
 knowledge OR about general world knowledge.
 
-IN-DOMAIN — the question is about company-internal knowledge:
-  - It asks about how the company operates, what its rules are,
-    what its procedures say, or what its internal records contain.
-  - It asks about company processes, HR policies, security policies,
-    compliance requirements, incident handling, access controls,
-    audit findings, or operational status within the company.
-  - It asks about the current state of something the company manages:
-    pending issues, active incidents, open tickets, compliance gaps.
-    These ARE in-domain — the company has documents about these topics
-    even if the static docs don't have today's live data.
-  - The answer would come from an internal company document,
-    even if that document doesn't currently have the specific answer.
+IN-DOMAIN — company-internal knowledge:
+  - How the company operates, its rules, procedures, or internal records.
+  - Company processes, HR policies, security policies, compliance
+    requirements, incident handling, access controls, audit findings.
+  - Current state of something the company manages: pending issues,
+    active incidents, open tickets, compliance gaps.
 
-OUT-OF-DOMAIN — the question is about general world knowledge:
-  - It asks for a general definition or explanation of a technology,
-    methodology, or concept that exists independently of this company.
-    The company documents would only mention it, not define it.
-    Rule: if Wikipedia would have a better answer than the company's
-    internal docs, it is out-of-domain.
-  - It asks about a specific named individual as a person
-    (their identity, personal background, or who they are)
-    rather than their role in a company process.
+OUT-OF-DOMAIN — general world knowledge:
+  - General definition or explanation of a technology, methodology,
+    or concept that exists independently of this company.
+    Rule: if Wikipedia would have a better answer → out-of-domain.
+  - A specific named individual's identity or personal background.
 
-Reasoning process (internal, do not output):
-  Step 1: What is the core subject of the question?
-  Step 2: Is this subject something the company's internal documents
-          would address (policies, procedures, operations)?
-          OR is it something that exists in the wider world
-          independently of this company?
-  Step 3: If the subject is a general concept any company could ask
-          about (tech term, methodology, person's identity) → out-of-domain.
-          If the subject is about how THIS company operates → in-domain.
+Reasoning (internal, do NOT output):
+  Step 1: What is the core subject?
+  Step 2: Company internal or general world knowledge?
+  Step 3: If general concept any company could ask about → out-of-domain.
+          If about how THIS company operates → in-domain.
 
 Reply with ONLY one word: in-domain | out-of-domain
-No punctuation, no explanation, no reasoning in your output.
 """.strip()
 
 
@@ -288,16 +384,6 @@ def _check_domain(question: str) -> bool:
 
 # ────────────────────────────────────────────────────────────────────
 # NODE: DECISION
-#
-# Priority-ordered routing:
-#   1. similarity > 1.1          → clearly out-of-domain, no LLM needed
-#   2. similarity in [0.7, 1.1]  → LLM domain check
-#      └─ out-of-domain          → "out of scope" message, no ticket
-#      └─ in-domain + weak sim   → escalate → ticket
-#   3. RAG said "no answer"      → escalate → ticket
-#   4. similarity > 0.9          → weak match → escalate → ticket
-#   5. confidence < 60           → low confidence → escalate → ticket
-#   6. good answer               → return directly
 # ────────────────────────────────────────────────────────────────────
 def decision_node(state: StateCaseState):
     state["is_out_of_domain"] = False
@@ -315,7 +401,7 @@ def decision_node(state: StateCaseState):
 
     print(f"[decision] similarity={similarity:.4f}  confidence={confidence}%")
 
-    # 1. Clearly out-of-domain (high distance, skip LLM)
+    # 1. Clearly out-of-domain
     if similarity > 1.1:
         state["is_out_of_domain"] = True
         state["should_escalate"]  = False
@@ -326,9 +412,7 @@ def decision_node(state: StateCaseState):
         state["sources"] = []
         return state
 
-    # 2. Borderline similarity → LLM domain check
-    #    If in-domain: fall through to steps 3-5 (escalate with ticket)
-    #    If out-of-domain: clean message, no ticket
+    # 2. Borderline → LLM domain check
     if 0.7 <= similarity <= 1.1:
         if _check_domain(question):
             state["is_out_of_domain"] = True
@@ -339,15 +423,14 @@ def decision_node(state: StateCaseState):
             )
             state["sources"] = []
             return state
-        # in-domain but borderline → continue to escalation checks below
 
-    # 3. RAG explicitly returned no answer
+    # 3. RAG explicitly no answer
     no_answer_phrases = ["could not find", "not available", "no information"]
     if any(phrase in answer for phrase in no_answer_phrases):
         state["should_escalate"] = True
         return state
 
-    # 4. Weak similarity (in-domain but poor doc match)
+    # 4. Weak similarity
     if similarity > 0.9:
         state["should_escalate"] = True
         return state
@@ -372,7 +455,6 @@ def answer_node(state: StateCaseState):
 
 # ────────────────────────────────────────────────────────────────────
 # NODE: ESCALATE
-# Only called for in-domain questions that couldn't be answered.
 # ────────────────────────────────────────────────────────────────────
 def escalate_node(state: StateCaseState):
     if state.get("is_out_of_domain", False):
@@ -416,11 +498,17 @@ def escalate_node(state: StateCaseState):
 
 # ────────────────────────────────────────────────────────────────────
 # GRAPH ASSEMBLY
+#
+#   intent → [meta]    → END                      (conversational Q)
+#          → clarity → clarify → END              (needs clarification)
+#                    → retrieve → decision → answer   → END
+#                                          → escalate → END
 # ────────────────────────────────────────────────────────────────────
 def build_graph():
     graph = StateGraph(StateCaseState)
 
     graph.add_node("intent",   intent_node)
+    graph.add_node("meta",     meta_node)
     graph.add_node("clarity",  clarity_node)
     graph.add_node("clarify",  clarify_node)
     graph.add_node("retrieve", retrieve_node)
@@ -430,7 +518,13 @@ def build_graph():
 
     graph.set_entry_point("intent")
 
-    graph.add_edge("intent",   "clarity")
+    # intent routes to meta OR clarity
+    graph.add_conditional_edges(
+        "intent",
+        lambda state: "meta" if state.get("intent") == "meta" else "clarity",
+    )
+
+    graph.add_edge("meta",     END)
     graph.add_edge("retrieve", "decision")
 
     graph.add_conditional_edges(

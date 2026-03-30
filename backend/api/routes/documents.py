@@ -1028,7 +1028,7 @@ def statecase_chat(data: dict, background_tasks: BackgroundTasks):
     if not session_data:
         session_data = get_session_db(session_id)
 
-    history = session_data.get("history") or []
+    history = list(session_data.get("history") or [])
     context = session_data.get("context") or {}
     doc_set = context.get("doc_set", [])
 
@@ -1056,6 +1056,15 @@ def statecase_chat(data: dict, background_tasks: BackgroundTasks):
         "session_id": session_id,
         "doc_set": doc_set,
     }
+
+    # ✅ ADD USER MESSAGE BEFORE GRAPH (CRITICAL FIX)
+    history.append({
+        "role": "user",
+        "message": question
+    })
+
+    # update state so graph sees latest history
+    state["history"] = history
 
     # Run LangGraph
     result = statecase_graph.invoke(state)
@@ -1109,12 +1118,6 @@ def statecase_chat(data: dict, background_tasks: BackgroundTasks):
 
     if data.get("version"):
         context["version"] = data.get("version")
-
-    # Save updated history
-    history.append({
-        "role": "user",
-        "message": question
-    })
 
     history.append({
         "role": "assistant",
