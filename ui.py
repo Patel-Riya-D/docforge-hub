@@ -1197,7 +1197,7 @@ with tab_statecase:
                             }
                         ))
 
-                        st.rerun()
+                        # st.rerun()
 
                     except Exception as e:
                         st.error(f"Error: {e}")
