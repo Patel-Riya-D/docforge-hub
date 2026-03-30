@@ -39,16 +39,23 @@ def summarize_document(query, filters=None):
             return cached
 
         # ---------------- RETRIEVER ----------------
+
         try:
-            # 🔥 NEW: fetch all chunks for selected document
+            # 🔥 Fetch ALL chunks of this specific document by title
             chunks = retriever.get_document_chunks(query, filters=filters)
+            
+            # 🔥 Strict filter: only keep chunks that belong to THIS document
+            chunks = [
+                c for c in chunks
+                if c.get("doc_title", "").lower().strip() == query.lower().strip()
+            ]
+
         except Exception as e:
             logger.error(f"Retriever error: {e}")
             return {
                 "summary": "Failed to retrieve document content.",
                 "chunks": []
             }
-        print("🔥 TOTAL CHUNKS BEFORE FILTER:", len(chunks))
         
         # ---------------- VERSION FILTER ----------------
         if filters and filters.get("version") == "latest":

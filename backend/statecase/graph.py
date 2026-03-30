@@ -55,61 +55,41 @@ def _get_prior_conversation(history: list, n: int = 4) -> str:
 # e.g. "what was my previous query", "what did I ask before"
 # These are answered directly from history — no RAG needed.
 # ────────────────────────────────────────────────────────────────────
-CREATION_VERBS = {
-    "create", "generate", "make", "draft", "write",
-    "build", "produce", "prepare", "compose", "design"
-}
-
 INTENT_SYSTEM = """
 You are an intent classifier for a document-management assistant.
 
 Classify the user's message into exactly one of these intents:
-  - generation : The user wants to CREATE, GENERATE, DRAFT, MAKE, PRODUCE,
-                 BUILD, or WRITE a document, report, SOP, template, policy,
-                 letter, or any other artifact. Includes short imperative
-                 commands like "create document", "generate SOP", "make report".
-  - query      : The user wants to RETRIEVE information, get an explanation,
-                 find a procedure, or understand something from existing docs.
-  - meta       : The user is asking about the conversation itself — their
-                 previous questions, what was discussed, chat history.
-                 Examples: "what was my previous query", "what did I ask before",
-                 "what was my last question", "remind me what I asked".
-  - unclear    : Cannot be classified into any of the above even with
-                 careful consideration. Use this ONLY as a last resort.
+  - generation  : The user wants to CREATE, GENERATE, DRAFT, MAKE, PRODUCE,
+                  BUILD, or WRITE a document, report, SOP, template, policy,
+                  letter, or any other artifact.
+  - summarize   : The user wants a SUMMARY, OVERVIEW, or BRIEF of an existing
+                  document. Includes: "summarize", "give me a summary of",
+                  "what is the summary of", "overview of", "brief of".
+  - query       : The user wants to RETRIEVE information, get an explanation,
+                  find a procedure, or understand something from existing docs.
+  - meta        : The user is asking about the conversation itself — their
+                  previous questions, what was discussed, chat history.
+  - unclear     : Cannot be classified into any of the above even with
+                  careful consideration. Use this ONLY as a last resort.
 
 Prioritisation rules (apply in order):
   1. Creation verb + document noun → always "generation".
-  2. Question about conversation history or previous messages → "meta".
-  3. Question about information, explanation, or procedures → "query".
-  4. Truly ambiguous short fragments with no context → "unclear".
+  2. Summary/overview/brief of a document → always "summarize".
+  3. Question about conversation history or previous messages → "meta".
+  4. Question about information, explanation, or procedures → "query".
+  5. Truly ambiguous short fragments with no context → "unclear".
 
-Reply with ONLY the single word: generation | query | meta | unclear
+Reply with ONLY the single word: generation | summarize | query | meta | unclear
 No punctuation, no explanation, no extra words.
 """.strip()
 
 
 def intent_node(state: StateCaseState):
-    question   = state["question"]
-    first_word = question.strip().split()[0].lower().rstrip(".,!?") if question.strip() else ""
+    question = state["question"]
 
-    # Fast-path: starts with creation verb → always generation
-    if first_word in CREATION_VERBS:
-        state["intent"] = "generation"
-        print(f"[intent] '{question}' → generation (verb fast-path)")
-        return state
-
-    # Fast-path: meta question keywords
-    meta_signals = ["previous query", "last query", "what did i ask", "my last question",
-                    "what was my", "remind me", "previous question", "history"]
-    if any(sig in question.lower() for sig in meta_signals):
-        state["intent"] = "meta"
-        print(f"[intent] '{question}' → meta (keyword fast-path)")
-        return state
-
-    # Slow-path: LLM classification
     try:
         intent = _llm(INTENT_SYSTEM, question).lower()
-        if intent not in ("generation", "query", "meta", "unclear"):
+        if intent not in ("generation", "summarize", "query", "meta", "unclear"):
             intent = "query"
     except Exception as e:
         print(f"⚠️  intent_node LLM error: {e} → defaulting to 'query'")
@@ -119,28 +99,41 @@ def intent_node(state: StateCaseState):
     state["intent"] = intent
     return state
 
-
 # ────────────────────────────────────────────────────────────────────
 # NODE: META
 # Handles conversational questions about the chat history directly.
 # No RAG, no ticket. Answers from state["history"] only.
 # ────────────────────────────────────────────────────────────────────
+from word2number import w2n
+import re
+
 def meta_node(state: StateCaseState):
     history  = state.get("history", [])
     question = state["question"].lower()
 
-    # Get prior user messages (exclude current question which is last)
     prior_user = _get_prior_user_messages(history, n=5)
 
     if not prior_user:
         state["answer"] = "I don't have any previous questions recorded in this session."
         return state
 
-    if any(kw in question for kw in ["previous", "last", "before", "my query", "what did i ask"]):
-        # show the most recent prior question
+    # Check if user wants multiple queries
+    num_match = re.search(r'\b(one|two|three|four|five|six|seven|eight|nine|ten|\d+)\b', question)
+
+    if num_match:
+        try:
+            count = w2n.word_to_num(num_match.group())
+        except:
+            count = 2  # fallback
+
+        recent = prior_user[-count:]
+        listed = "\n".join(f"  {i+1}. {q}" for i, q in enumerate(recent))
+        state["answer"] = f"Here are your last {count} questions:\n{listed}"
+
+    elif any(kw in question for kw in ["previous", "last", "before", "my query", "what did i ask"]):
         state["answer"] = f"Your previous question was: \"{prior_user[-1]}\""
+
     else:
-        # show last few
         listed = "\n".join(f"  {i+1}. {q}" for i, q in enumerate(prior_user))
         state["answer"] = f"Here are your recent questions:\n{listed}"
 
@@ -150,7 +143,58 @@ def meta_node(state: StateCaseState):
     state["is_out_of_domain"] = False
     return state
 
+#summarize node
+def summarize_node(state: StateCaseState):
+    from backend.rag.summarizer import summarize_document
 
+    question = state["question"]
+
+    # ✅ Pure LLM extraction — no hardcoded patterns
+    try:
+        doc_name = _llm(
+            "Extract ONLY the document name from the user's message. "
+            "Return just the document name, nothing else. "
+            "If no document name is found, return 'unknown'.",
+            question
+        ).strip()
+
+        if not doc_name or doc_name.lower() == "unknown":
+            doc_name = None
+
+    except Exception as e:
+        print(f"⚠️  doc name extraction failed: {e}")
+        doc_name = None
+
+    if not doc_name:
+        state["answer"]          = "Please specify the document name. Example: 'summarize: Remote Work Policy'"
+        state["confidence"]      = 0
+        state["sources"]         = []
+        state["should_escalate"] = False
+        return state
+
+    try:
+        filters = {
+            "doc_type": state.get("doc_type"),
+            "industry": state.get("industry"),
+            "version":  state.get("version"),
+        }
+
+        result  = summarize_document(doc_name, filters)
+        summary = result.get("summary", "No summary generated.")
+
+        state["answer"]           = summary
+        state["confidence"]       = 100
+        state["sources"]          = []
+        state["should_escalate"]  = False
+        state["is_out_of_domain"] = False
+
+    except Exception as e:
+        print(f"⚠️  summarize_node error: {e}")
+        state["answer"]     = f"Failed to generate summary: {str(e)}"
+        state["confidence"] = 0
+        state["sources"]    = []
+
+    return state
 # ────────────────────────────────────────────────────────────────────
 # NODE: CLARITY
 #
@@ -218,6 +262,12 @@ def clarity_node(state: StateCaseState):
     has_filters = bool(
         state.get("doc_type") or state.get("industry") or state.get("version")
     )
+
+    # ✅ Summarize intent never needs clarification — always has doc name
+    if intent == "summarize":
+        state["needs_clarification"] = False
+        state["clarification_question"] = ""
+        return state
 
     needs_clarification    = False
     clarification_question = ""
@@ -507,25 +557,31 @@ def escalate_node(state: StateCaseState):
 def build_graph():
     graph = StateGraph(StateCaseState)
 
-    graph.add_node("intent",   intent_node)
-    graph.add_node("meta",     meta_node)
-    graph.add_node("clarity",  clarity_node)
-    graph.add_node("clarify",  clarify_node)
-    graph.add_node("retrieve", retrieve_node)
-    graph.add_node("decision", decision_node)
-    graph.add_node("answer",   answer_node)
-    graph.add_node("escalate", escalate_node)
+    graph.add_node("intent",    intent_node)
+    graph.add_node("meta",      meta_node)
+    graph.add_node("summarize", summarize_node)
+    graph.add_node("clarity",   clarity_node)
+    graph.add_node("clarify",   clarify_node)
+    graph.add_node("retrieve",  retrieve_node)
+    graph.add_node("decision",  decision_node)
+    graph.add_node("answer",    answer_node)
+    graph.add_node("escalate",  escalate_node)
 
     graph.set_entry_point("intent")
 
-    # intent routes to meta OR clarity
+    # ✅ Single conditional edge — delete the duplicate above this
     graph.add_conditional_edges(
         "intent",
-        lambda state: "meta" if state.get("intent") == "meta" else "clarity",
+        lambda state: (
+            "meta"      if state.get("intent") == "meta"      else
+            "summarize" if state.get("intent") == "summarize" else
+            "clarity"
+        ),
     )
 
-    graph.add_edge("meta",     END)
-    graph.add_edge("retrieve", "decision")
+    graph.add_edge("meta",      END)
+    graph.add_edge("summarize", END)
+    graph.add_edge("retrieve",  "decision")
 
     graph.add_conditional_edges(
         "clarity",

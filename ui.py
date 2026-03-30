@@ -1176,6 +1176,7 @@ with tab_rag:
                     except Exception as e:
                         st.error(f"Comparison failed: {e}")
 
+
     # ======================================================
     # 📝 SUMMARIZE TAB
     # ======================================================
@@ -1200,7 +1201,6 @@ with tab_rag:
             else:
                 with st.spinner("Generating summary..."):
                     try:
-                        # FIX: Changed 'query' to 'content' as per backend expectation
                         response = requests.post(
                             f"{API_BASE_URL}/documents/rag-summarize",
                             json={
@@ -1220,8 +1220,16 @@ with tab_rag:
                             st.error("❌ Invalid response from backend")
                             st.text(response.text)
                             st.stop()
-                        st.markdown("### 📝 Summary")
-                        st.write(result.get("summary", ""))
+
+                        # ✅ Only show document name + summary — no confidence, no sources
+                        st.markdown(f"### 📝 Summary: {summary_query}")
+                        st.divider()
+                        summary_text = result.get("summary", "No summary available")
+                        if summary_text:
+                            st.markdown(summary_text)
+                        else:
+                            st.warning("No summary could be generated for this document.")
+
                     except Exception as e:
                         st.error(f"Summarization failed: {e}")
 
@@ -1336,11 +1344,13 @@ with tab_statecase:
                     if is_last:
                         placeholder = st.empty()
                         typed = ""
-
-                        for word in answer.split():
-                            typed += word + " "
+                        
+                        # ✅ Split by lines to preserve markdown formatting
+                        lines = answer.split("\n")
+                        for line in lines:
+                            typed += line + "\n"
                             placeholder.markdown(typed)
-                            time.sleep(0.02)
+                            time.sleep(0.05)
                     else:
                         st.markdown(answer)
 
