@@ -4,6 +4,8 @@ from backend.rag.query_search_engine import answer_question as rag_query
 from backend.statecase.ticketing import create_ticket
 from backend.generation.llm_provider import get_llm
 from langchain_core.messages import SystemMessage, HumanMessage
+from word2number import w2n
+import re
 
 
 # ────────────────────────────────────────────────────────────────────
@@ -28,7 +30,6 @@ def _get_prior_user_messages(history: list, n: int = 2) -> list:
     Skips the last user message (which is the current question).
     """
     user_msgs = [h["message"] for h in history if h["role"] == "user"]
-    # drop the last one (current question already in history)
     prior = user_msgs[:-1] if len(user_msgs) > 1 else []
     return prior[-n:]
 
@@ -38,7 +39,6 @@ def _get_prior_conversation(history: list, n: int = 4) -> str:
     Returns last `n` history entries (excluding current user message)
     as a formatted string for LLM context.
     """
-    # exclude the last entry which is the current user question
     prior = history[:-1] if history else []
     recent = prior[-n:]
     return "\n".join(
@@ -47,13 +47,8 @@ def _get_prior_conversation(history: list, n: int = 4) -> str:
 
 
 # ────────────────────────────────────────────────────────────────────
-# NODE: INTENT  (LLM-based + verb fast-path)
-#
-# Classifies into: "generation" | "query" | "meta" | "unclear"
-#
-# NEW: "meta" intent for conversational questions about the chat itself
-# e.g. "what was my previous query", "what did I ask before"
-# These are answered directly from history — no RAG needed.
+# NODE: INTENT
+# Classifies into: "generation" | "summarize" | "query" | "meta" | "unclear"
 # ────────────────────────────────────────────────────────────────────
 INTENT_SYSTEM = """
 You are an intent classifier for a document-management assistant.
@@ -99,14 +94,11 @@ def intent_node(state: StateCaseState):
     state["intent"] = intent
     return state
 
+
 # ────────────────────────────────────────────────────────────────────
 # NODE: META
 # Handles conversational questions about the chat history directly.
-# No RAG, no ticket. Answers from state["history"] only.
 # ────────────────────────────────────────────────────────────────────
-from word2number import w2n
-import re
-
 def meta_node(state: StateCaseState):
     history  = state.get("history", [])
     question = state["question"].lower()
@@ -117,14 +109,13 @@ def meta_node(state: StateCaseState):
         state["answer"] = "I don't have any previous questions recorded in this session."
         return state
 
-    # Check if user wants multiple queries
     num_match = re.search(r'\b(one|two|three|four|five|six|seven|eight|nine|ten|\d+)\b', question)
 
     if num_match:
         try:
             count = w2n.word_to_num(num_match.group())
-        except:
-            count = 2  # fallback
+        except Exception:
+            count = 2
 
         recent = prior_user[-count:]
         listed = "\n".join(f"  {i+1}. {q}" for i, q in enumerate(recent))
@@ -143,13 +134,15 @@ def meta_node(state: StateCaseState):
     state["is_out_of_domain"] = False
     return state
 
-#summarize node
+
+# ────────────────────────────────────────────────────────────────────
+# NODE: SUMMARIZE
+# ────────────────────────────────────────────────────────────────────
 def summarize_node(state: StateCaseState):
     from backend.rag.summarizer import summarize_document
 
     question = state["question"]
 
-    # ✅ Pure LLM extraction — no hardcoded patterns
     try:
         doc_name = _llm(
             "Extract ONLY the document name from the user's message. "
@@ -195,16 +188,14 @@ def summarize_node(state: StateCaseState):
         state["sources"]    = []
 
     return state
+
+
 # ────────────────────────────────────────────────────────────────────
 # NODE: CLARITY
 #
-# Key fix: history includes the CURRENT question as the last entry
-# (added by documents.py before graph invocation). So we must use
-# _get_prior_conversation() which strips the current message,
-# giving the LLM only the actual prior context to resolve follow-ups.
-#
-# "vague" = subject unidentifiable even with history context
-# "clear" = subject found in question or prior conversation
+# FIX: Updated CLARITY_SYSTEM to never flag specific queries
+# (role/salary/hours/multi-noun questions) as vague.
+# FIX: unclear→query promotion now stores enriched_question in state.
 # ────────────────────────────────────────────────────────────────────
 CLARITY_SYSTEM = """
 You are a query clarity checker for a document-management assistant.
@@ -219,37 +210,39 @@ A short or vague-looking message may be a clear follow-up in context.
 Your ONLY job: decide whether — using both prior conversation AND
 current question — there is an identifiable subject to search for.
 
-You are NOT deciding:
-  - Whether the answer exists in the documents
-  - Whether the question is in scope or out of scope
-  - Whether the data is real-time or historical
+DEFAULT to "clear". Return "vague" ONLY as a last resort.
 
-DEFAULT to "clear". Return "vague" only when no subject is identifiable
-even after reading the prior conversation.
+ALWAYS "clear" — never ask for clarification on these:
+  - Any question containing a role, level, or job title
+    (e.g. "senior engineer", "manager", "intern", "developer").
+  - Any question about salary, compensation, pay, benefits, or ranges.
+  - Any question about working hours, schedule, availability, or timing.
+  - Any question that contains two or more specific nouns or concepts.
+  - Any question longer than 6 words with a clear subject.
+  - A single topic word matching a known HR/policy concept
+    (e.g. "remote work", "leave", "onboarding", "reimbursement").
 
-VAGUE — subject is unidentifiable:
-  - A document container (report, SOP, policy, document, handbook) is
-    named but NO topic appears in question OR prior conversation.
-  - Bare single word or fragment with zero context from history.
-  - Requires a qualifier (role, level, department) absent from both
-    the question and the prior conversation.
+VAGUE — ONLY for these:
+  - A bare document container word (policy, SOP, report, handbook)
+    with NO topic at all — in question OR prior conversation.
+  - A single meaningless fragment with zero history context.
 
 CLEAR — subject exists in question or prior conversation:
   - Prior conversation provides the topic the current message refers to.
     e.g. prior: "explain policy" → current: "remote work" →
     combined: "remote work policy" → CLEAR.
-  - A specific topic, concept, process, system, or regulation appears
-    anywhere in the question or prior conversation.
-  - Questions about actions, approvals, steps, requirements, outcomes
-    tied to any process → always clear.
+  - Any specific topic, concept, process, regulation, or term anywhere
+    in the question or prior conversation.
+  - Questions about actions, approvals, steps, requirements, outcomes → clear.
   - Current state, pending items, active issues, compliance status → clear.
-  - Any named person, technology, acronym, or term → clear.
+  - Any named person, technology, acronym → clear.
 
 Internal reasoning (do NOT output):
-  Step 1: What topic was discussed in the prior conversation?
-  Step 2: Does the current question follow on from that topic?
-  Step 3: Combined subject = prior topic + current question.
-          Can a retrieval system search for it? Yes → clear. No → vague.
+  Step 1: Does the question mention a role, salary, hours, or specific noun?
+          → CLEAR immediately, skip remaining steps.
+  Step 2: What topic was in the prior conversation?
+  Step 3: Does the current question follow on? Combined subject findable? → CLEAR.
+  Step 4: Only if truly no subject anywhere → vague.
 
 Reply with ONLY one word: vague | clear
 """.strip()
@@ -263,9 +256,9 @@ def clarity_node(state: StateCaseState):
         state.get("doc_type") or state.get("industry") or state.get("version")
     )
 
-    # ✅ Summarize intent never needs clarification — always has doc name
+    # Summarize intent never needs clarification
     if intent == "summarize":
-        state["needs_clarification"] = False
+        state["needs_clarification"]    = False
         state["clarification_question"] = ""
         return state
 
@@ -274,26 +267,30 @@ def clarity_node(state: StateCaseState):
 
     # intent == "unclear": use history to decide if it's a follow-up
     if intent == "unclear":
-        history = state.get("history", [])
+        history    = state.get("history", [])
         prior_conv = _get_prior_conversation(history)
 
         if prior_conv:
-            # There IS prior context — treat as a follow-up query, not unclear
-            # Re-classify with context
             try:
                 clarity_input  = f"Prior conversation:\n{prior_conv}\n\nCurrent message: {question}"
                 clarity_result = _llm(CLARITY_SYSTEM, clarity_input).lower()
                 print(f"[clarity/unclear-resolve] '{question}' → {clarity_result}")
+
                 if clarity_result == "clear":
-                    # Treat as a query follow-up — don't ask for clarification
                     state["needs_clarification"]    = False
                     state["clarification_question"] = ""
-                    state["intent"] = "query"   # promote to query so retrieve_node runs
+                    state["intent"]                 = "query"
+
+                    # FIX: store enriched query so retrieve_node uses full context
+                    prior_user = _get_prior_user_messages(history, n=1)
+                    if prior_user:
+                        state["enriched_question"] = f"{prior_user[-1]} {question}"
+                        print(f"[clarity/unclear-resolve] enriched: '{state['enriched_question']}'")
+
                     return state
             except Exception as e:
                 print(f"⚠️  clarity resolve error: {e}")
 
-        # No prior context or still vague after check
         needs_clarification    = True
         clarification_question = (
             "I'm not sure what you're looking for. Could you clarify whether "
@@ -350,15 +347,22 @@ def clarify_node(state: StateCaseState):
 
 # ────────────────────────────────────────────────────────────────────
 # NODE: RETRIEVE
-# Short follow-up queries are enriched with the previous user question
-# so RAG gets enough context to search correctly.
+#
+# FIX: Uses enriched_question from state if set by clarity_node
+# (handles the unclear→query promotion with full context).
+# Short follow-up queries are also enriched with the previous question.
 # ────────────────────────────────────────────────────────────────────
 def retrieve_node(state: StateCaseState):
     history   = state.get("history", [])
     current_q = state["question"]
 
-    # For short follow-ups, prepend the previous user question
-    if len(current_q.split()) <= 5:
+    # FIX: use enriched_question if set by clarity_node (unclear→query promotion)
+    if state.get("enriched_question"):
+        question = state["enriched_question"]
+        print(f"[retrieve] using enriched query from clarity: '{question}'")
+        state["enriched_question"] = None  # clear after use
+
+    elif len(current_q.split()) <= 5:
         prior_user = _get_prior_user_messages(history, n=1)
         if prior_user:
             question = f"{prior_user[-1]} {current_q}"
@@ -434,6 +438,10 @@ def _check_domain(question: str) -> bool:
 
 # ────────────────────────────────────────────────────────────────────
 # NODE: DECISION
+#
+# CHANGE ❶: Out of domain → direct reply, no ticket.
+# CHANGE ❷: Good answer found → routes to answer_node with citations.
+# CHANGE ❸+❹: No answer found → routes to escalate_node for ticket logic.
 # ────────────────────────────────────────────────────────────────────
 def decision_node(state: StateCaseState):
     state["is_out_of_domain"] = False
@@ -451,69 +459,104 @@ def decision_node(state: StateCaseState):
 
     print(f"[decision] similarity={similarity:.4f}  confidence={confidence}%")
 
-    # 1. Clearly out-of-domain
+    # ❶ Clearly out-of-domain by similarity
     if similarity > 1.1:
         state["is_out_of_domain"] = True
         state["should_escalate"]  = False
         state["answer"] = (
-            "This question is outside the scope of our knowledge base. "
-            "Please ask something related to our documents."
+            "Your question appears to be outside the scope of our internal knowledge base. "
+            "Our documents cover company policies, SOPs, HR guidelines, and internal procedures. "
+            "For general topics, please refer to external resources."
         )
         state["sources"] = []
         return state
 
-    # 2. Borderline → LLM domain check
+    # ❶ Borderline → LLM domain check
     if 0.7 <= similarity <= 1.1:
         if _check_domain(question):
             state["is_out_of_domain"] = True
             state["should_escalate"]  = False
             state["answer"] = (
-                "This question is outside the scope of our knowledge base. "
-                "Please ask something related to our documents."
+                "Your question appears to be outside the scope of our internal knowledge base. "
+                "Our documents cover company policies, SOPs, HR guidelines, and internal procedures. "
+                "For general topics, please refer to external resources."
             )
             state["sources"] = []
             return state
 
-    # 3. RAG explicitly no answer
+    # ❸ RAG explicitly returned no answer
     no_answer_phrases = ["could not find", "not available", "no information"]
     if any(phrase in answer for phrase in no_answer_phrases):
         state["should_escalate"] = True
         return state
 
-    # 4. Weak similarity
+    # ❸ Weak similarity — answer not reliable
     if similarity > 0.9:
         state["should_escalate"] = True
         return state
 
-    # 5. Low confidence
+    # ❸ Low confidence — answer not reliable
     if confidence < 60:
         state["should_escalate"] = True
         return state
 
-    # 6. Good answer
+    # ❷ Good answer found — route to answer_node for citation formatting
     state["should_escalate"] = False
     return state
 
 
 # ────────────────────────────────────────────────────────────────────
 # NODE: ANSWER
+#
+# CHANGE ❷: Appends a formatted citation block from sources.
 # ────────────────────────────────────────────────────────────────────
 def answer_node(state: StateCaseState):
-    state["sources"] = state.get("sources", [])
+    sources = state.get("sources", [])
+    answer  = state.get("answer", "")
+
+    if sources:
+        # Deduplicate and format source labels
+        seen = []
+        for s in sources:
+            if isinstance(s, str):
+                label = s
+            elif isinstance(s, dict):
+                label = s.get("title") or s.get("source") or s.get("name") or str(s)
+            else:
+                label = str(s)
+
+            if label and label not in seen:
+                seen.append(label)
+
+        if seen:
+            citation_lines = "\n".join(f"  • {label}" for label in seen)
+            state["answer"] = (
+                f"{answer}\n\n"
+                f"---\n"
+                f"📚 **Sources:**\n{citation_lines}"
+            )
+
+    state["sources"] = sources
     return state
 
 
 # ────────────────────────────────────────────────────────────────────
 # NODE: ESCALATE
+#
+# CHANGE ❸: In-domain, no answer found → create new ticket in Notion.
+# CHANGE ❹: Ticket already exists in Notion → show existing ticket ID.
 # ────────────────────────────────────────────────────────────────────
 def escalate_node(state: StateCaseState):
+    # Guard: out-of-domain should never reach here, but handle gracefully
     if state.get("is_out_of_domain", False):
         state["answer"] = (
-            "This question is outside the scope of our knowledge base. "
-            "Please ask something related to our documents."
+            "Your question appears to be outside the scope of our internal knowledge base. "
+            "Our documents cover company policies, SOPs, HR guidelines, and internal procedures. "
+            "For general topics, please refer to external resources."
         )
         return state
 
+    # In-domain but answer not found — check Notion for existing ticket
     status, ticket_id = create_ticket(
         question=state["question"],
         context=state.get("retrieved_chunks", []),
@@ -527,20 +570,26 @@ def escalate_node(state: StateCaseState):
         sources=state.get("sources", []),
     )
 
-    if status == "created":
+    if status == "exists":
+        # ❹ Ticket already in Notion
         state["answer"] = (
-            f"I couldn't find a reliable answer in our documents. "
-            f"A support ticket has been created (ID: {ticket_id}) and our team will follow up."
+            f"I couldn't find a reliable answer in our documents.\n\n"
+            f"🔁 A support ticket for this query **already exists in Notion** "
+            f"(ID: `{ticket_id}`). Our team is already working on it — "
+            f"no duplicate ticket was created."
         )
-    elif status == "exists":
+    elif status == "created":
+        # ❸ New ticket created in Notion
         state["answer"] = (
-            "A support ticket for this query already exists — our team is already on it. "
-            "No duplicate ticket was created."
+            f"I couldn't find a reliable answer in our documents.\n\n"
+            f"🎫 A new support ticket has been **created in Notion** "
+            f"(ID: `{ticket_id}`). Our team will review and follow up with you."
         )
     else:
+        # Ticket creation failed
         state["answer"] = (
-            "I couldn't find a reliable answer and ticket creation failed. "
-            "Please contact support directly."
+            "I couldn't find a reliable answer in our documents, "
+            "and ticket creation failed. Please contact support directly."
         )
 
     return state
@@ -549,10 +598,12 @@ def escalate_node(state: StateCaseState):
 # ────────────────────────────────────────────────────────────────────
 # GRAPH ASSEMBLY
 #
-#   intent → [meta]    → END                      (conversational Q)
-#          → clarity → clarify → END              (needs clarification)
-#                    → retrieve → decision → answer   → END
-#                                          → escalate → END
+#   intent → [meta]    → END
+#          → [summarize] → END
+#          → clarity → clarify  → END
+#                    → retrieve → decision → answer   → END   (❷ with citations)
+#                                          → escalate → END   (❸ new ticket / ❹ exists)
+#                                          → out-of-domain reply in decision → END (❶)
 # ────────────────────────────────────────────────────────────────────
 def build_graph():
     graph = StateGraph(StateCaseState)
@@ -569,7 +620,6 @@ def build_graph():
 
     graph.set_entry_point("intent")
 
-    # ✅ Single conditional edge — delete the duplicate above this
     graph.add_conditional_edges(
         "intent",
         lambda state: (
@@ -587,9 +637,14 @@ def build_graph():
         "clarity",
         lambda state: "clarify" if state["needs_clarification"] else "retrieve",
     )
+
     graph.add_conditional_edges(
         "decision",
-        lambda state: "escalate" if state["should_escalate"] else "answer",
+        lambda state: (
+            "escalate" if state.get("should_escalate")  else
+            "escalate" if state.get("is_out_of_domain") else  # out-of-domain already has answer set
+            "answer"
+        ),
     )
 
     graph.add_edge("clarify",  END)
