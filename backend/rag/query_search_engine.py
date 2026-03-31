@@ -23,6 +23,8 @@ Used by:
 - FastAPI endpoint: /documents/rag-query
 """
 
+from warnings import filters
+
 from backend.rag.retriever import Retriever
 from backend.generation.llm_provider import get_llm
 from langchain_core.messages import SystemMessage, HumanMessage
@@ -148,12 +150,14 @@ def answer_question(question, filters=None):
 
     #  Step 2: Search using refined query
     #  Generate cache key
-    cache_key = generate_rag_cache_key(question, filters)
+    normalized_q = question.lower().strip()
+    cache_key = generate_rag_cache_key(normalized_q, filters)
     cached = None   # 🚨 ADD THIS LINE
 
     # ⚡ Try cache
     # ⚡ Step 2: Try full RAG cache
-    # cached = get_rag_cache(cache_key)
+    cached = get_rag_cache(cache_key)
+    logger.info(f"[CACHE KEY] {cache_key}")
 
     if cached:
         if isinstance(cached, dict):
