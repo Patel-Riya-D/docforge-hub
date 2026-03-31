@@ -8,7 +8,7 @@ This project is a complete AI-powered enterprise assistant platform consisting o
 
 Together, they form a unified system for document creation, querying, and intelligent enterprise support automation.
 
-```
+
 
 # 📘 Phase 1 - DocForge Hub
 
