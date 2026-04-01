@@ -685,7 +685,7 @@ These endpoints manage the lifecycle of support tickets created by the StateCase
 
 ### 1️⃣ Update Ticket Status
 
-Update the status of an existing ticket (e.g., Open → In Progress → Resolved).
+Update the status of an existing ticket (e.g., Open → In Progress → Closed).
 
 ---
 
@@ -702,7 +702,7 @@ POST /documents/update-ticket
 ```json id="s7d2k9"
 {
   "ticket_id": "a1b2c3d4",
-  "status": "resolved"
+  "status": "closed"
 }
 ```
 
@@ -713,7 +713,7 @@ POST /documents/update-ticket
 ```json id="k9d3w1"
 {
   "success": true,
-  "message": "Updated to resolved"
+  "message": "Updated to Closed"
 }
 ```
 
@@ -726,7 +726,6 @@ POST /documents/update-ticket
 
   * `open`
   * `in_progress`
-  * `resolved`
   * `closed`
 
 ---

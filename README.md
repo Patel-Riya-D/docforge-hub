@@ -489,17 +489,17 @@ Decision Engine
 
 * Full enterprise AI assistant (not just RAG)
 * Combines generation, retrieval, and decision-making
-* Real-world use case: HR, IT, Security policies
+* Real-world use case: HR, IT, Security policies etc.
 * Designed for scalability and production readiness
 
 ---
 
 ## ▶ Run Backend
 
-uvicorn main:app --reload
+uvicorn backend.api.main:app --reload
 
 ---
 
 ## ▶ Run Frontend
 
-streamlit run app.py
+streamlit run ui.py
