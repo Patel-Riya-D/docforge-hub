@@ -329,7 +329,7 @@ Return Response to UI
 ---
 ---
 
-# 🤖 Phase 3 – StateCase AI Assistant (Enterprise Decision Layer)
+# 🤖 Phase 3 – StateCase AI Assistant
 
 StateCase is the intelligent orchestration layer built on top of DocForge Hub and CiteRAG Lab.
 It acts as a smart enterprise assistant that understands user queries, retrieves relevant information, and makes decisions such as answering, clarifying, or creating support tickets.
@@ -491,6 +491,8 @@ Decision Engine
 * Combines generation, retrieval, and decision-making
 * Real-world use case: HR, IT, Security policies
 * Designed for scalability and production readiness
+
+---
 
 ## ▶ Run Backend
 

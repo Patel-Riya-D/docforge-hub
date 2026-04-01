@@ -554,6 +554,253 @@ POST /documents/rag-evaluate
 ```
 ---
 
+## 1️⃣8️⃣ StateCase Assistant (Conversational AI)
+
+This endpoint powers the StateCase AI Assistant.
+It supports:
+
+* Conversational queries
+* Memory & follow-ups
+* Clarification questions
+* Ticket creation
+* Out-of-domain detection
+* Cached responses
+
+---
+
+### **Endpoint**
+
+```
+POST /documents/statecase-chat
+```
+
+---
+
+### **Request Body**
+
+```json
+{
+  "question": "What are the working hours for remote employees?",
+  "session_id": "user_123",
+  "doc_type": "policy",
+  "industry": "technology",
+  "version": "latest"
+}
+```
+
+---
+
+### **Successful Response (Answer Found)**
+
+```json
+{
+  "answer": "Remote employees must follow core working hours from 10:00 AM to 4:00 PM.",
+  "confidence": 63,
+  "sources": [
+    "Remote Work Policy → Work Hours & Availability"
+  ],
+  "ticket_created": false,
+  "cache_hit": false
+}
+```
+
+---
+
+### **Out-of-Domain Response**
+
+```json
+{
+  "answer": "This question is outside the scope of available documents.",
+  "confidence": 0,
+  "sources": [],
+  "ticket_created": false
+}
+```
+
+---
+
+### **Low Confidence → Ticket Created**
+
+```json
+{
+  "answer": "I couldn't find a reliable answer. A support ticket has been created.",
+  "confidence": 45,
+  "ticket_created": true,
+  "ticket_id": "a1b2c3d4"
+}
+```
+
+---
+
+### **Duplicate Ticket Detected**
+
+```json
+{
+  "answer": "A ticket for this query already exists. No duplicate created.",
+  "confidence": 50,
+  "ticket_created": false
+}
+```
+
+---
+
+### **Clarification Required**
+
+```json
+{
+  "answer": "Could you provide more details? Which policy or department are you referring to?",
+  "confidence": 0
+}
+```
+
+---
+
+### **Meta (Chat History)**
+
+```json
+{
+  "answer": "Your previous question was: 'Explain remote work policy'",
+  "confidence": 100
+}
+```
+
+---
+
+### **Features Covered by This Endpoint**
+
+* Multi-turn memory
+* RAG-based retrieval
+* Semantic duplicate ticket detection
+* Out-of-domain filtering
+* Intelligent clarification
+* Redis caching
+
+---
+
+## 🎫 Ticket Management APIs (StateCase)
+
+These endpoints manage the lifecycle of support tickets created by the StateCase assistant.
+
+---
+
+### 1️⃣ Update Ticket Status
+
+Update the status of an existing ticket (e.g., Open → In Progress → Resolved).
+
+---
+
+#### **Endpoint**
+
+```id="s4g5v2"
+POST /documents/update-ticket
+```
+
+---
+
+#### **Request Body**
+
+```json id="s7d2k9"
+{
+  "ticket_id": "a1b2c3d4",
+  "status": "resolved"
+}
+```
+
+---
+
+#### **Response**
+
+```json id="k9d3w1"
+{
+  "success": true,
+  "message": "Updated to resolved"
+}
+```
+
+---
+
+#### **Notes**
+
+* `ticket_id` must exist in the system
+* `status` can be:
+
+  * `open`
+  * `in_progress`
+  * `resolved`
+  * `closed`
+
+---
+
+### 2️⃣ Check Ticket Status
+
+Retrieve the current status of a ticket.
+
+---
+
+#### **Endpoint**
+
+```id="d3j9x1"
+GET /documents/ticket-status/{ticket_id}
+```
+
+---
+
+#### **Example**
+
+```id="x8m2p7"
+GET /documents/ticket-status/a1b2c3d4
+```
+
+---
+
+#### **Response**
+
+```json id="l2q8z5"
+{
+  "ticket_id": "a1b2c3d4",
+  "status": "in_progress"
+}
+```
+
+---
+
+#### **Fallback Response**
+
+```json id="f8n1c4"
+{
+  "ticket_id": "a1b2c3d4",
+  "status": "unknown"
+}
+```
+
+---
+
+## 🔄 Ticket Lifecycle
+
+```id="y6k2t9"
+User Query → Low Confidence
+        ↓
+Ticket Created
+        ↓
+Update Status (via API)
+        ↓
+Resolved / Closed
+```
+
+---
+
+## 🧠 Integration with StateCase
+
+* Tickets are automatically created by:
+
+  * `/documents/statecase-chat`
+* These APIs allow:
+
+  * Manual updates by admin
+  * Integration with dashboards
+  * Tracking ticket resolution status
+
+
 # 📘 Interactive API Docs
 
 Swagger UI

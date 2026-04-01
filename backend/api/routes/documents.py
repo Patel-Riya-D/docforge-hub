@@ -1007,24 +1007,67 @@ def rag_evaluate():
 @router.post("/statecase-chat")
 def statecase_chat(data: dict, background_tasks: BackgroundTasks):
     """
-    Stateful assistant endpoint using LangGraph.
+    Stateful conversational endpoint for StateCase Assistant.
+
+    This endpoint processes user queries using a LangGraph-based pipeline
+    with full session awareness, retrieval, summarization, and ticket escalation.
+
+    Args:
+        data (dict):
+            - question (str): User query
+            - session_id (str): Unique session identifier
+            - conversation_context (str): UI-provided recent chat context
+            - industry (str, optional)
+            - doc_type (str, optional)
+            - version (str/int, optional)
+
+        background_tasks (BackgroundTasks):
+            Used for asynchronous ticket creation
+
+    Returns:
+        dict:
+            {
+                "answer": str,
+                "confidence": float,
+                "sources": list,
+                "escalated": bool,
+                "needs_clarification": bool,
+                "trace_id": str,
+                "ticket_id": str | None,
+                "ticket_status": str | None
+            }
+
+    Key Features:
+        - Merges UI conversation context with stored session history
+        - Maintains short-term + long-term memory (Redis + DB)
+        - Runs LangGraph pipeline for intelligent routing
+        - Handles:
+            • Query answering (RAG)
+            • Summarization
+            • Clarification
+            • Out-of-domain detection
+        - Automatically escalates low-confidence queries into tickets
+        - Supports async ticket creation
+
+    Notes:
+        - Ensures continuity even if session cache is cold
+        - Deduplicates history to prevent repetition
     """
     trace_id = str(uuid.uuid4())
     print("TRACE ID:", trace_id)
 
-    question = data.get("question")
-    session_id = data.get("session_id", "default")
+    question             = data.get("question")
+    session_id           = data.get("session_id", "default")
+    # FIX: receive conversation_context sent by ui.py
+    conversation_context = data.get("conversation_context", "")
 
     if not question:
         raise HTTPException(status_code=400, detail="Question is required")
 
-    # Get memory from Redis
+    # ── Get session from Redis / DB ──────────────────────────────────
     from backend.statecase.session_db import get_session_db, save_session_db
 
-    # Try Redis first
     session_data = get_user_session(session_id)
-
-    # Fallback to DB
     if not session_data:
         session_data = get_session_db(session_id)
 
@@ -1032,57 +1075,77 @@ def statecase_chat(data: dict, background_tasks: BackgroundTasks):
     context = session_data.get("context") or {}
     doc_set = context.get("doc_set", [])
 
-    # Use stored context if not provided
+    if conversation_context:
+        # Parse "User: ...\nAssistant: ..." format built by build_chat_context()
+        ctx_entries = []
+        for line in conversation_context.strip().splitlines():
+            if line.startswith("User: "):
+                ctx_entries.append({"role": "user",      "message": line[6:].strip()})
+            elif line.startswith("Assistant: "):
+                ctx_entries.append({"role": "assistant", "message": line[11:].strip()})
+
+        if ctx_entries:
+            existing_msgs = {h["message"] for h in history}
+            merged = []
+            for entry in ctx_entries:
+                if entry["message"] not in existing_msgs:
+                    merged.append(entry)
+            # Prepend missing context entries, then keep existing history
+            history = merged + history
+            # Deduplicate while preserving order
+            seen_msgs = set()
+            deduped   = []
+            for h in history:
+                if h["message"] not in seen_msgs:
+                    seen_msgs.add(h["message"])
+                    deduped.append(h)
+            history = deduped
+            print(f"[statecase-chat] merged context → history length: {len(history)}")
+
     industry = data.get("industry") or context.get("industry")
     doc_type = data.get("doc_type") or context.get("doc_type")
-    version = data.get("version") or context.get("version")
+    version  = data.get("version")  or context.get("version")
 
-    # Initialize state
+    # ── Build initial state ──────────────────────────────────────────
     state: StateCaseState = {
-        "question": question,
-        "industry": industry,
-        "doc_type": doc_type,
-        "version": version,
-        "history": history,
-        "retrieved_chunks": [],
-        "answer": None,
-        "confidence": 0,
-        "needs_clarification": False,
-        "is_out_of_domain": False,  
-        "should_escalate": False,
-        "ticket_created": False,
+        "question":             question,
+        "industry":             industry,
+        "doc_type":             doc_type,
+        "version":              version,
+        "history":              history,
+        "retrieved_chunks":     [],
+        "answer":               None,
+        "confidence":           0,
+        "needs_clarification":  False,
+        "is_out_of_domain":     False,
+        "should_escalate":      False,
+        "ticket_created":       False,
         "clarification_question": None,
-        "trace_id": trace_id,
-        "session_id": session_id,
-        "doc_set": doc_set,
+        "trace_id":             trace_id,
+        "session_id":           session_id,
+        "doc_set":              doc_set,
     }
 
-    # ✅ ADD USER MESSAGE BEFORE GRAPH (CRITICAL FIX)
-    history.append({
-        "role": "user",
-        "message": question
-    })
-
-    # update state so graph sees latest history
+    history.append({"role": "user", "message": question})
     state["history"] = history
 
-    # Run LangGraph
+    # ── Run LangGraph ────────────────────────────────────────────────
     result = statecase_graph.invoke(state)
 
-    # ✅ HANDLE OUT OF DOMAIN FIRST (VERY IMPORTANT)
+    # ── Handle out-of-domain ─────────────────────────────────────────
     if result.get("is_out_of_domain"):
         return {
-            "answer": "This question is outside the scope of available documents.",
-            "confidence": 0,
-            "sources": [],
-            "escalated": False,
+            "answer":              "This question is outside the scope of available documents.",
+            "confidence":          0,
+            "sources":             [],
+            "escalated":           False,
             "needs_clarification": False,
-            "trace_id": trace_id,
-            "ticket_id": None,
-            "ticket_status": None
+            "trace_id":            trace_id,
+            "ticket_id":           None,
+            "ticket_status":       None
         }
 
-    # 🔥 Async ticket creation
+    # ── Async ticket creation ─────────────────────────────────────────
     if result.get("should_escalate") and not result.get("is_out_of_domain", False):
         from backend.statecase.ticketing import create_ticket
 
@@ -1090,100 +1153,103 @@ def statecase_chat(data: dict, background_tasks: BackgroundTasks):
             create_ticket,
             question=question,
             context=state.get("retrieved_chunks"),
-            filters={
-                "doc_type": doc_type,
-                "industry": industry,
-                "version": version
-            },
+            filters={"doc_type": doc_type, "industry": industry, "version": version},
             confidence=result.get("confidence"),
             history=history,
             sources=result.get("sources"),
             user_id=session_id
         )
 
-    # Store doc set (sources used in this query)
+    # ── Update context ────────────────────────────────────────────────
     if result.get("sources"):
         context["doc_set"] = result.get("sources")
-
-    # 🔥 Track last used document/source
-    if result.get("sources"):
         context["last_doc"] = result["sources"][0]
 
-    # Update context (only overwrite if new values provided)
     if data.get("industry"):
         context["industry"] = data.get("industry")
-
     if data.get("doc_type"):
         context["doc_type"] = data.get("doc_type")
-
     if data.get("version"):
         context["version"] = data.get("version")
 
-    history.append({
-        "role": "assistant",
-        "message": result.get("answer")
-    })
-
+    # ── Append assistant reply to history ─────────────────────────────
+    history.append({"role": "assistant", "message": result.get("answer")})
     history = history[-10:]
 
-    # Save session
-    save_user_session(session_id, {
-        "history": history,
-        "context": context
-    })
-
-    # 🔥 persist to DB
+    # ── Persist session ───────────────────────────────────────────────
+    save_user_session(session_id, {"history": history, "context": context})
     save_session_db(session_id, history, context)
 
     print("GRAPH RESULT:", result)
 
-    # 🔥 Override answer for async case
-    ticket_id = None
+    # ── Ticket status resolution ──────────────────────────────────────
+    ticket_id     = None
     ticket_status = None
 
     if result.get("should_escalate"):
-        ticket_id = generate_ticket_hash(question)
-
-        # 🔥 CHECK REDIS STATUS
-        from backend.statecase.ticketing import get_ticket_status
+        ticket_id     = generate_ticket_hash(question)
         ticket_status = get_ticket_status(ticket_id)
 
-        # 🔥 FALLBACK TO NOTION CHECK
         if ticket_status is None:
             from backend.statecase.ticketing import ticket_exists
-
             if ticket_exists(ticket_id):
                 ticket_status = "exists"
-                # ✅ ADD THIS LINE HERE
                 from backend.statecase.ticketing import set_ticket_status
                 set_ticket_status(ticket_id, "exists")
 
-        # ✅ FINAL DECISION
         if ticket_status == "exists":
             answer = "📌 A ticket already exists for this query."
-
         elif ticket_status == "created":
             answer = "📌 Support ticket created successfully."
-
         else:
             answer = "📌 Creating support ticket..."
     else:
         answer = result.get("answer")
 
     return {
-        "answer": answer,
-        "confidence": result.get("confidence"),
-        "sources": result.get("sources", []),
-        "escalated": result.get("should_escalate", False),
+        "answer":              answer,
+        "confidence":          result.get("confidence"),
+        "sources":             result.get("sources", []),
+        "escalated":           result.get("should_escalate", False),
         "needs_clarification": result.get("needs_clarification", False),
-        "trace_id": trace_id,
-        "ticket_id": result.get("ticket_id"),
-        "ticket_status": ticket_status
+        "trace_id":            trace_id,
+        "ticket_id":           result.get("ticket_id"),
+        "ticket_status":       ticket_status
     }
-
 
 @router.post("/update-ticket")
 def update_ticket(data: dict):
+    """
+    Update the status of an existing support ticket.
+
+    This endpoint allows updating the ticket status stored in Notion
+    via the ticketing service.
+
+    Args:
+        data (dict):
+            - ticket_id (str): Unique identifier of the ticket
+            - status (str): New status value (e.g., "Open", "In Progress", "Closed")
+
+    Returns:
+        dict:
+            {
+                "success": bool,
+                "message": str
+            }
+
+    Raises:
+        HTTPException:
+            - 400 if ticket_id or status is missing
+
+    Behavior:
+        - Validates required inputs
+        - Calls `update_ticket_status` to update ticket in Notion
+        - Returns success/failure response
+
+    Notes:
+        - Status values must match predefined options in Notion
+        - Used by UI or admin actions to manage ticket lifecycle
+    """
     ticket_id = data.get("ticket_id")
     status = data.get("status")
 
@@ -1201,6 +1267,36 @@ def update_ticket(data: dict):
 
 @router.get("/ticket-status/{ticket_id}")
 def check_ticket_status(ticket_id: str):
+    """
+    Retrieve the current status of a ticket.
+
+    This endpoint checks the ticket status stored in Redis,
+    which reflects real-time ticket state during creation
+    or after processing.
+
+    Args:
+        ticket_id (str): Unique identifier of the ticket
+
+    Returns:
+        dict:
+            {
+                "ticket_id": str,
+                "status": str
+            }
+
+    Behavior:
+        - Fetches ticket status from Redis cache
+        - Returns "unknown" if status is not found
+
+    Notes:
+        - Used by frontend polling to track ticket creation progress
+        - Possible statuses:
+            • "creating"
+            • "created"
+            • "exists"
+            • "failed"
+            • "unknown"
+    """
     status = get_ticket_status(ticket_id)
 
     return {

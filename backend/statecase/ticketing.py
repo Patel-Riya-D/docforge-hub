@@ -14,17 +14,66 @@ DATABASE_ID = os.getenv("NOTION_TICKET_DATABASE_ID")
 
 
 def generate_ticket_hash(question: str) -> str:
+    """
+    Generate a deterministic hash for a ticket.
+
+    Args:
+        question (str): User query
+
+    Returns:
+        str: MD5 hash used as unique ticket ID
+
+    Purpose:
+        - Prevent duplicate ticket creation
+    """
     return hashlib.md5(question.lower().encode()).hexdigest()
 
 def set_ticket_status(ticket_id, status):
+    """
+    Store ticket status in Redis.
+
+    Args:
+        ticket_id (str): Unique ticket identifier
+        status (str): Status value (creating, created, exists, failed)
+
+    Returns:
+        None
+    """
     redis_client.set(f"ticket_status:{ticket_id}", status)
 
 
 def get_ticket_status(ticket_id):
+    """
+    Retrieve ticket status from Redis.
+
+    Args:
+        ticket_id (str): Unique ticket identifier
+
+    Returns:
+        str | None: Current ticket status
+    """
     return redis_client.get(f"ticket_status:{ticket_id}")
 
 
 def format_context(question, filters, chunks, confidence, history, sources):
+    """
+    Build structured context for ticket creation.
+
+    Args:
+        question (str): User query
+        filters (dict): Applied filters (doc_type, industry, version)
+        chunks (list): Retrieved document chunks
+        confidence (float): Confidence score
+        history (list): Conversation history
+        sources (list): Source document references
+
+    Returns:
+        str: Formatted context string
+
+    Purpose:
+        - Provide full traceability inside ticket
+        - Helps support team understand issue context
+    """
 
     history_text = "\n".join([
         f"{h['role']}: {h['message']}"
@@ -174,7 +223,32 @@ def ticket_exists(ticket_id):
 
 def create_ticket(question, context, filters, confidence, history=None, sources=None, user_id="default_user"):
     """
-    Create a ticket in Notion with full context.
+    Create a support ticket in Notion.
+
+    Args:
+        question (str): User query
+        context (list): Retrieved document chunks
+        filters (dict): Metadata filters
+        confidence (float): Confidence score
+        history (list, optional): Conversation history
+        sources (list, optional): Source documents
+        user_id (str): User identifier
+
+    Returns:
+        tuple:
+            ("created" | "exists" | "error", ticket_id)
+
+    Workflow:
+        1. Classify ticket using AI
+        2. Generate unique ticket ID
+        3. Check for duplicates
+        4. Format context
+        5. Create ticket in Notion
+        6. Update status in Redis
+
+    Notes:
+        - Prevents duplicate tickets
+        - Stores full conversational context
     """
 
     try:

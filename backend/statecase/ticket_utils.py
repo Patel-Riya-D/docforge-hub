@@ -5,6 +5,30 @@ llm = get_llm()
 
 
 def classify_ticket_llm(question: str):
+    """
+    Classify a user query into ticket metadata using LLM.
+
+    The function prompts an LLM to categorize the query into:
+    - Category (Policy Missing, Data Request, General Query)
+    - Owner (HR, Finance, IT, General Support)
+    - Priority (High, Medium, Low)
+
+    Args:
+        question (str): User query
+
+    Returns:
+        dict:
+            {
+                "category": str,
+                "owner": str,
+                "priority": str
+            }
+
+    Behavior:
+        - Uses LLM for intelligent classification
+        - Extracts JSON safely from LLM response
+        - Falls back to rule-based classification on failure
+    """
     prompt = f"""
 You are a support ticket classifier.
 
@@ -62,6 +86,24 @@ Query:
 
 # 🔧 FALLBACK (KEEP YOUR OLD LOGIC)
 def classify_ticket_rules(question: str):
+    """
+    Rule-based fallback for ticket classification.
+
+    Args:
+        question (str): User query
+
+    Returns:
+        dict:
+            {
+                "category": str,
+                "owner": str,
+                "priority": str
+            }
+
+    Logic:
+        - Keyword-based classification
+        - Ensures system reliability when LLM fails
+    """
     q = question.lower()
 
     if any(word in q for word in ["policy", "leave", "process"]):
@@ -96,4 +138,17 @@ def classify_ticket_rules(question: str):
 
 # 🔥 MAIN FUNCTION (USE THIS)
 def classify_ticket(question: str):
+    """
+    Main ticket classification entry point.
+
+    Args:
+        question (str): User query
+
+    Returns:
+        dict: Ticket metadata (category, owner, priority)
+
+    Notes:
+        - Uses LLM-based classification primarily
+        - Automatically falls back to rule-based logic if needed
+    """
     return classify_ticket_llm(question)
