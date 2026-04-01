@@ -114,8 +114,8 @@ def _notion_paragraph_blocks(text: str) -> list:
     """Split text into Notion paragraph blocks respecting the 2000-char limit."""
     chunks = []
     while text:
-        chunks.append(text[:2000])
-        text = text[2000:]
+        chunks.append(text[:1900])
+        text = text[1900:]
     return [
         {
             "object": "block",
