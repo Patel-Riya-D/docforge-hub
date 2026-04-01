@@ -4,7 +4,7 @@ This project is a complete AI-powered enterprise assistant platform consisting o
 
 1. **DocForge Hub** – AI Document Generation  
 2. **CiteRAG Lab** – Retrieval-Augmented Generation (RAG)  
-3. **StateCase Assistant** – Intelligent Query Handling & Decision Engine  
+3. **StateCase Assistant** – Intelligent Query Handling, Decision Engine, smart ticketing system  
 
 Together, they form a unified system for document creation, querying, and intelligent enterprise support automation.
 
