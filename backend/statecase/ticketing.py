@@ -109,6 +109,24 @@ Retrieved Evidence:
 {chunk_text}
 """
 
+# ── Helper: split long text into ≤2000-char Notion paragraph blocks ──
+def _notion_paragraph_blocks(text: str) -> list:
+    """Split text into Notion paragraph blocks respecting the 2000-char limit."""
+    chunks = []
+    while text:
+        chunks.append(text[:2000])
+        text = text[2000:]
+    return [
+        {
+            "object": "block",
+            "type": "paragraph",
+            "paragraph": {
+                "rich_text": [{"text": {"content": chunk}}]
+            }
+        }
+        for chunk in chunks
+    ]
+
 def update_ticket_status(ticket_id, status):
     """
     Update ticket status in Notion.
@@ -318,21 +336,7 @@ def create_ticket(question, context, filters, confidence, history=None, sources=
                     ]
                 },
             },
-            "children": [
-                {
-                    "object": "block",
-                    "type": "paragraph",
-                    "paragraph": {
-                        "rich_text": [
-                            {
-                                "text": {
-                                    "content": f"Context:\n{context_text}"
-                                }
-                            }
-                        ]
-                    }
-                }
-            ]
+            "children": _notion_paragraph_blocks(f"Context:\n{context_text}")           
         }
 
         response = requests.post(url, headers=headers, json=data)
