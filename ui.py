@@ -51,6 +51,34 @@ Key Advantages:
 - Supports follow-up queries
 - Integrates RAG + LLM + ticketing
 - Clean UI without CSS hacks
+
+My Tickets Tab:
+
+Displays support tickets fetched from Notion database.
+
+Features:
+- Refresh tickets from Notion API
+- Display ticket metrics:
+    • Total
+    • Open
+    • In Progress
+    • Closed
+- Filtering:
+    • Status
+    • Priority
+    • Search by title
+- Card-based UI layout
+
+Data Fields:
+- Title
+- Status
+- Priority
+- Category
+- Owner
+
+Notes:
+- Uses Notion API directly
+- Syncs with backend ticket creation system
 """
 
 import os
@@ -1452,35 +1480,6 @@ with tab_statecase:
 
 # ==================== MY TICKETS TAB ====================
 with tab_tickets:
-    """
-    My Tickets Tab:
-
-    Displays support tickets fetched from Notion database.
-
-    Features:
-    - Refresh tickets from Notion API
-    - Display ticket metrics:
-        • Total
-        • Open
-        • In Progress
-        • Closed
-    - Filtering:
-        • Status
-        • Priority
-        • Search by title
-    - Card-based UI layout
-
-    Data Fields:
-    - Title
-    - Status
-    - Priority
-    - Category
-    - Owner
-
-    Notes:
-    - Uses Notion API directly
-    - Syncs with backend ticket creation system
-    """
 
     if "sc_tickets" not in st.session_state:
         st.session_state.sc_tickets = []
