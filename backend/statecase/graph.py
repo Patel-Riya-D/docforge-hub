@@ -49,7 +49,7 @@ import re
 def greeting_node(state):
     question = state["question"].lower().strip()
 
-    greetings = ["hi", "hello", "hey", "good morning", "good evening"]
+    greetings = ["hi", "hello", "hey", "good morning", "good evening","hiii","heyy","how are you","what's up","greetings"]
 
     if any(g in question for g in greetings):
         state["is_greeting"] = True

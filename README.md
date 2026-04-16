@@ -470,7 +470,7 @@ Decision Engine
 ### 📌 3. Duplicate Ticket Detected
 
 **User:** What is the salary range for junior developers?
-**Assistant:** A support ticket for this query already exists — our team is already working on it. No duplicate ticket was created.
+**Assistant:** A support ticket for this query already exists. No duplicate ticket was created.
 
 **Confidence:** 52%
 

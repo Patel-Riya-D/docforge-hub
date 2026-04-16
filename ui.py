@@ -94,7 +94,7 @@ API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000")
 
 # -------------------- UI CONFIG --------------------
 st.set_page_config(
-    page_title="DocForge Hub",
+    page_title="DocMind AI",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -669,7 +669,7 @@ def render_draft_review(draft_detail, prefix=""):
 
 # -------------------- SIDEBAR --------------------
 with st.sidebar:
-    st.title("⚡ DocForge Hub")
+    st.title(" DocMind AI")
     st.caption("AI-Powered Document Generation")
     st.divider()
 
@@ -711,14 +711,14 @@ with st.sidebar:
     if document_filename:
         st.info(f"Selected: {document_filename}")
 
-    st.caption("💡 Default is Latest (recommended). Select a specific version only if needed.")
+    st.caption("💡Select a specific version only if needed. Default is Latest (recommended).")
 
 
 # -------------------- MAIN CONTENT --------------------
-st.header("⚡ DocForge Hub")
+st.header("DocMind AI")
 st.caption("Intelligent document generation platform powered by AI")
 
-tabs = st.tabs(["✨ Generate Draft", "📚 Draft Library", "🔎 CiteRag Lab", "🤖 StateCase Assistant", "🎫 My Tickets"])
+tabs = st.tabs([" Generate Draft", " Draft Library", " CiteRag Lab", " StateCase Assistant", " My Tickets"])
 tab_gen       = tabs[0]
 tab_lib       = tabs[1]
 tab_rag       = tabs[2]
@@ -1364,7 +1364,7 @@ with tab_statecase:
     # ── Title row ─────────────────────────────────────────────────
     title_col, clear_col = st.columns([8, 1])
     with title_col:
-        st.subheader("🤖 StateCase Assistant")
+        st.subheader(" StateCase Assistant")
         st.caption("Conversational AI with memory + ticketing")
     with clear_col:
         st.write("")
@@ -1376,7 +1376,7 @@ with tab_statecase:
     if not st.session_state.chat_history:
         st.info(
             "👋 Ask me anything about company policies, procedures, or raise a support ticket.",
-            icon="🤖"
+       
         )
     else:
         for role, msg in st.session_state.chat_history:
@@ -1446,7 +1446,7 @@ with tab_tickets:
     with hdr1:
         st.caption("All support tickets raised via StateCase Assistant")
     with hdr2:
-        if st.button("↻ Refresh", use_container_width=True, key="tab_refresh_tickets"):
+        if st.button(" Refresh", use_container_width=True, key="tab_refresh_tickets"):
             try:
                 url = (f"https://api.notion.com/v1/databases/"
                        f"{os.getenv('NOTION_TICKET_DATABASE_ID')}/query")
@@ -1578,5 +1578,5 @@ with tab_tickets:
 st.divider()
 col1, col2, col3 = st.columns(3)
 with col2:
-    st.caption("⚡ DocForge Hub - AI-Powered Intelligent Document Generation Platform")
+    st.caption(" DocMind AI - AI-Powered Intelligent Document Generation Platform")
     st.caption("© 2024 All rights reserved")
