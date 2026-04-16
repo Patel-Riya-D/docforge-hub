@@ -507,19 +507,19 @@ streamlit run ui.py
 
 ## Try out this queries:
 
-Users are facing issues after recent configuration changes
-working hours for remote work
-Explain leave policy for employees
-who won the world cup
-Change was done without proper documentation
-explain SOP
-give me summary of remote work policy
-Who approved the latest remote work policy?
-Who is responsible for audit compliance?
-Who manages employee salary decisions?
-Who approved the last incident response?
-What is the salary range for senior engineers?
-What is the exact salary breakdown for employees?
-What is the bonus percentage for employees?
-What is the salary increment policy for 2025?
-What is the salary of a software engineer in this company?
+* Users are facing issues after recent configuration changes
+* working hours for remote work
+* Explain leave policy for employees
+* who won the world cup
+* Change was done without proper documentation
+* explain SOP
+* give me summary of remote work policy
+* Who approved the latest remote work policy?
+* Who is responsible for audit compliance?
+* Who manages employee salary decisions?
+* Who approved the last incident response?
+* What is the salary range for senior engineers?
+* What is the exact salary breakdown for employees?
+* What is the bonus percentage for employees?
+* What is the salary increment policy for 2025?
+* What is the salary of a software engineer in this company?
