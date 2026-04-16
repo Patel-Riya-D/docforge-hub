@@ -9,7 +9,7 @@ http://localhost:8000
 All document APIs are under:
 
 ```
-/documents
+backend/api/routes/documents
 ```
 
 ---

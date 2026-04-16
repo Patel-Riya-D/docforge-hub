@@ -46,6 +46,18 @@ from langchain_core.messages import SystemMessage, HumanMessage
 from word2number import w2n
 import re
 
+def greeting_node(state):
+    question = state["question"].lower().strip()
+
+    greetings = ["hi", "hello", "hey", "good morning", "good evening"]
+
+    if any(g in question for g in greetings):
+        state["is_greeting"] = True
+        state["answer"] = "👋 Hi! I'm your AI assistant. You can ask me about policies, documents, or anything related to your company."
+    else:
+        state["is_greeting"] = False
+
+    return state
 
 # ────────────────────────────────────────────────────────────────────
 # HELPER: LLM CALL
@@ -149,6 +161,7 @@ Reply with ONLY the single word: generation | summarize | query | meta | unclear
 """.strip()
 
 
+
 def intent_node(state: StateCaseState):
     """
     Classify the user's intent based on full conversation context.
@@ -175,10 +188,23 @@ def intent_node(state: StateCaseState):
         - Entry point of the graph
         - Determines entire flow direction
     """
-    question = state["question"]
+    question = state["question"].lower().strip()
     history  = state.get("history", [])
 
+    # ✅ STEP 1: GREETING DETECTION (ADD THIS BLOCK)
+    greetings = ["hi", "hello", "hey", "good morning", "good evening"]
+
+    if any(g in question for g in greetings):
+        state["intent"] = "greeting"
+        state["answer"] = (
+            "👋 Hi! I'm your AI assistant. "
+            "You can ask me about policies, SOPs, documents, or company processes."
+        )
+        return state
+
+    # ✅ STEP 2: EXISTING LOGIC (NO CHANGE BELOW)
     full_conv = _get_prior_conversation(history, n=8)
+
     intent_input = (
         f"Conversation so far:\n{full_conv}\n\nClassify the intent of the LAST user message."
         if full_conv else question
@@ -926,6 +952,7 @@ def build_graph():
     """
     graph = StateGraph(StateCaseState)
 
+    graph.add_node("greeting", greeting_node)
     graph.add_node("intent",    intent_node)
     graph.add_node("meta",      meta_node)
     graph.add_node("summarize", summarize_node)
@@ -941,6 +968,7 @@ def build_graph():
     graph.add_conditional_edges(
         "intent",
         lambda state: (
+            "answer"    if state.get("intent") == "greeting" else
             "meta"      if state.get("intent") == "meta"      else
             "summarize" if state.get("intent") == "summarize" else
             "clarity"
