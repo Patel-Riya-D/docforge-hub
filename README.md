@@ -1,4 +1,4 @@
-## 🌐 Project Overview
+## 🌐 DocMind AI Project Overview
 
 This project is a complete AI-powered enterprise assistant platform consisting of three major components:
 
@@ -74,8 +74,6 @@ Each document definition includes:
 - Section structure
 - Validation rules
 - Industry tags
-
-This allows new document types to be added without modifying core code.
 
 🧠 Human-in-the-Loop Workflow
 
