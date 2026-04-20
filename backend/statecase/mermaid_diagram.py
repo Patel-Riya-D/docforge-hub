@@ -12,4 +12,4 @@ graph.get_graph().draw_mermaid_png(
     output_file_path="langgraph.png"
 )
 
-print("✅ PNG saved at uploads/diagrams/langgraph.png")
+print("✅ PNG saved at langgraph.png")
