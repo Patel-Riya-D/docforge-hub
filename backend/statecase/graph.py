@@ -968,29 +968,42 @@ def build_graph():
     graph.add_conditional_edges(
         "intent",
         lambda state: (
-            "answer"    if state.get("intent") == "greeting" else
-            "meta"      if state.get("intent") == "meta"      else
+            "greeting" if state.get("intent") == "greeting" else
+            "meta" if state.get("intent") == "meta" else
             "summarize" if state.get("intent") == "summarize" else
             "clarity"
         ),
+        {
+            "greeting": "greeting",
+            "meta":     "meta",
+            "summarize":"summarize",
+            "clarity":  "clarity",
+        }
     )
 
     graph.add_edge("meta",      END)
     graph.add_edge("summarize", END)
+    graph.add_edge("greeting", END)
     graph.add_edge("retrieve",  "decision")
 
     graph.add_conditional_edges(
         "clarity",
         lambda state: "clarify" if state["needs_clarification"] else "retrieve",
+        {
+            "clarify":  "clarify",
+            "retrieve": "retrieve",
+        }
     )
 
     graph.add_conditional_edges(
         "decision",
-        lambda state: (
-            "escalate" if state.get("should_escalate")  else
-            "escalate" if state.get("is_out_of_domain") else
-            "answer"
-        ),
+        lambda state: "escalate" if (
+            state.get("should_escalate") or state.get("is_out_of_domain")
+        ) else "answer",
+        {
+            "escalate": "escalate",
+            "answer":   "answer",
+        }
     )
 
     graph.add_edge("clarify",  END)
